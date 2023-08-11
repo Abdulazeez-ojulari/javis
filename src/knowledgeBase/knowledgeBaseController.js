@@ -1,6 +1,6 @@
 const errorMiddleware = require('../middlewares/error');
 const { KnowledgeBase } = require('./knowledgeBaseModel');
-const { createKnowledgeBaseService } = require('./knowledgeBaseService');
+const { createKnowledgeBaseService, updateKnowledgeBaseService } = require('./knowledgeBaseService');
 
 module.exports.createKnowledgeBase = errorMiddleware(async (req, res) => {
     let { businessId, knowledgeBase } = req.body;
@@ -19,6 +19,6 @@ module.exports.updateKnowledgeBase = errorMiddleware(async (req, res) => {
         return res.status(404).send("This business dosen't exists");
     }
 
-    let newKnowledgeBase = await this.updateKnowledgeBase(businessId, knowledgeBase)
+    let newKnowledgeBase = await updateKnowledgeBaseService(businessId, knowledgeBase)
     return res.send(newKnowledgeBase)
 })

@@ -14,11 +14,11 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
     let revChatKnowledge = [
         {
             "role": "system", 
-            "content": `"You are a customer support agent. Do not mention that you're an AI or resemble it. Your task is to generate short and concise responses based on the knowledge base provided, do not instruct the user to email anyone or call any number nor provide wrong information. Simply respond as instructed and assure the user that the issue has been escalated... Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries like 'good morning' or 'hello', you should respond with pleasantries as well. If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI. Instead, inform them that you will refer them to an agent and they should stand by"`
+            "content": `knowledge base to answer from and always send image link when showing or sending details of products to user: ${JSON.stringify(knowledgeBase.knowledgeBase)}.`
         },
         {
             "role": "system", 
-            "content": `knowledge base to answer from: ${JSON.stringify(knowledgeBase.knowledgeBase)}.`
+            "content": `"Always send image link attached to knowledge base"`
         },
     ]
     // let messages = Chat.find().select('role content -_id')
@@ -29,7 +29,7 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
     messages.unshift(...revChatKnowledge)
     let reply = await replyChatService(promptMsg, messages, chatId)
 
-    chat.messages = reply.data.choices[0].message;
+    chat.messages.push(reply.data.choices[0].message);
     await chat.save();
     let data = {
         message: reply.data.choices[0].message,
