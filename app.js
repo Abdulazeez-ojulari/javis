@@ -229,6 +229,10 @@ app.use(cors())
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+app.get("/", (req, res) => {
+  res.send("Express on Vercel");
+});
+
 app.use('/ai/business', business);
 app.use('/ai/chat', chat);
 app.use('/ai/knowledge-base', knowledgeBase);
@@ -238,3 +242,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log("Server Listening on PORT:", PORT);
 });
+
+module.exports = app;
