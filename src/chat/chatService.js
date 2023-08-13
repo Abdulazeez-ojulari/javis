@@ -9,13 +9,23 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-module.exports.replyChatService = async (promptMsg, messages, chatId) => {
+module.exports.replyChatService = async (promptMsg, messages, chatId, chat) => {
+    let previousMsg = chat.messages.map(msg => {
+        return {role: msg.role, content: msg.content}
+    })
+    // console.log(previousMsg)
+    let delimiter = '#####'
+    previousMsg = {
+        "role": "system",
+        "content": `Previous messages between you and the customer${JSON.stringify(previousMsg)}`
+    }
+    // console.log(previousMsg)
     let newMsg = {
         "role": "user",
-        "content": promptMsg
+        "content": `${delimiter}${promptMsg}${delimiter}`
     }
+    messages.push(previousMsg)
     messages.push(newMsg);
-    console.log(messages);
     
     try{
         const completion = await openai.createChatCompletion({
@@ -25,11 +35,12 @@ module.exports.replyChatService = async (promptMsg, messages, chatId) => {
             temperature:0.4,
             frequency_penalty:0.3,
             presence_penalty:0.7,
+            user: chatId,
         });
         // console.log(completion)
         return completion
     }catch(e){
-        // console.log(e)
+        console.log(e)
         return e
     }
 }
@@ -37,7 +48,7 @@ module.exports.replyChatService = async (promptMsg, messages, chatId) => {
 module.exports.createChatService = async(businessId, channel, customer) => {
     // let knowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
     let id = uuid.v4() + uuid.v4()
-    console.log(channel, businessId, customer);
+    // console.log(channel, businessId, customer);
     let newChat = new Chat({
         chatId: id,
         businessId: businessId,

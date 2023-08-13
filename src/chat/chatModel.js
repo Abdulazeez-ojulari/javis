@@ -1,5 +1,13 @@
 const mongoose = require('mongoose');
-const message = new mongoose.Schema({ role: String, content: String })
+const message = new mongoose.Schema({ 
+    role: String, 
+    content: String, 
+    created_date: {
+        type: Date,
+        required: true,
+        default: Date.now()
+    } 
+})
 
 let schema = new mongoose.Schema({
     chatId: {
@@ -15,7 +23,6 @@ let schema = new mongoose.Schema({
     },
     customer: {
         type: String,
-        required: true,
         minlength: 3,
         maxlength: 50,
     },
@@ -37,6 +44,15 @@ let schema = new mongoose.Schema({
         type: String,
         required: true,
         minlength: 1,
+    },
+    category: {
+        type: String,
+    },
+    type: {
+        type: String,
+    },
+    department: {
+        type: String,
     },
     created_date: {
 		type: Date,
