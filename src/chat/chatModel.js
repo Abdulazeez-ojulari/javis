@@ -54,6 +54,9 @@ let schema = new mongoose.Schema({
     department: {
         type: String,
     },
+    escalation_department: {
+        type: String,
+    },
     created_date: {
 		type: Date,
 		required: true,

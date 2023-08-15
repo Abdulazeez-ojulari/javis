@@ -31,7 +31,6 @@ module.exports.replyChatService = async (promptMsg, messages, chatId, chat) => {
         const completion = await openai.createChatCompletion({
             model: "gpt-3.5-turbo",
             messages: messages,
-            max_tokens:250, 
             temperature:0.4,
             frequency_penalty:0.3,
             presence_penalty:0.7,
