@@ -14,6 +14,9 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
     let delimiter = '#####'
 
     chat = await Chat.findOne({chatId: chatId})
+
+    let business = await Business.findOne({businessId: businessId})
+
     let knowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
     let systemKnowledge = [
         {
@@ -21,6 +24,7 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
             "content": `
             You will be provided with customer service queries.
             The customer service query will be delimited with ${delimiter} characters.
+            You are to escalate customer query if request is not in the knowledge base, faqs and company informations that was sent with the query.
             Always classify each query into a category.
             Always classify each query into a sentiment.
             Always classify each query into a type.
@@ -32,9 +36,13 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
             Categories: General Inquiries, Order, Issue, Complains.
             Sentiment: Happy, Neutral, Angry.
             Type: Bugs, Features, Refunds,Payment, Fruad, Inquiry, Feedback, Request, Order.
-            Department: Sales, Product, Finance, Operatons, Legal, Logistics, Collection.
-            Escalation Department: Sales, Product, Finance, Operatons, Legal, Logistics, Collection.
+            Department: ${business.departments}.
+            Escalation Department: ${business.departments}.
             `
+        },
+        {
+            "role": "system", 
+            "content": `Company Informations: ${JSON.stringify(knowledgeBase.companyInformation)}.`
         },
         {
             "role": "system", 
