@@ -14,6 +14,7 @@ const cors = require('cors');
 var business = require('./src/business/businessRoute');
 var chat = require('./src/chat/chatRoute');
 var knowledgeBase = require('./src/knowledgeBase/knowledgeBaseRoute');
+var user = require('./src/user/userRoute');
 
 let data =
   [
@@ -232,6 +233,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use('/ai/business', business);
 app.use('/ai/chat', chat);
 app.use('/ai/knowledge-base', knowledgeBase);
+app.use('/ai/user', user);
 
 const PORT = process.env.PORT || 3000;
 
