@@ -1,12 +1,38 @@
+const { Business } = require('../business/businessModel');
 const errorMiddleware = require('../middlewares/error');
+const { User } = require('../user/userModel');
 const { KnowledgeBase } = require('./knowledgeBaseModel');
 const { createKnowledgeBaseService, updateKnowledgeBaseService, getKnowledgeBaseFromFileService } = require('./knowledgeBaseService');
 
 module.exports.createKnowledgeBase = errorMiddleware(async (req, res) => {
-    let { businessId, knowledgeBase, type } = req.body;
+    let { userId, businessId, knowledgeBase, type } = req.body;
+
+    const user = await User.findOne({userId: userId})
+    if(!user){
+        return res.status(400).send({message: "User doesn't exists"});
+    }
+
+    const business = await Business.findOne({businessId: businessId})
+    if(!business){
+        return res.status(404).send({message: "Business doesn't exists"});
+    }
+
+    let teams = business.teams.map(team => {
+        if(team.userId == user.id && team.role == "owner")
+        return team
+    })
+
+    if(teams.length <= 0){
+        return res.status(400).send({message: "Team member not authorized"});
+    }
+
     const knowledge = await KnowledgeBase.findOne({businessId: businessId})
     if(knowledge){
-        return res.status(400).send("A knowledge base already exists for this business");
+        return res.status(400).send({message: "A knowledge base already exists for this business"});
+    }
+
+    if(type == "file" && req.files){
+        knowledgeBase = await getKnowledgeBaseFromFileService(req.files)   
     }
 
     let newKnowledgeBase = await createKnowledgeBaseService(businessId, knowledgeBase)
@@ -14,10 +40,30 @@ module.exports.createKnowledgeBase = errorMiddleware(async (req, res) => {
 })
 
 module.exports.updateKnowledgeBase = errorMiddleware(async (req, res) => {
-    let { businessId, knowledgeBase, type, faqs, companyInformation,  } = req.body;
+    let { userId, businessId, knowledgeBase, type, faqs, companyInformation,  } = req.body;
+
+    const user = await User.findOne({userId: userId})
+    if(!user){
+        return res.status(400).send({message: "User doesn't exists"});
+    }
+
+    const business = await Business.findOne({businessId: businessId})
+    if(!business){
+        return res.status(404).send({message: "Business doesn't exists"});
+    }
+
+    let teams = business.teams.map(team => {
+        if(team.userId == user.id && team.role == "owner")
+        return team
+    })
+
+    if(teams.length <= 0){
+        return res.status(400).send({message: "Team member not authorized"});
+    }
+
     const knowledge = await KnowledgeBase.findOne({businessId: businessId})
     if(!knowledge){
-        return res.status(404).send("This business dosen't exists");
+        return res.status(404).send({message: "This business dosen't exists"});
     }
 
     if(type == "file" && req.files){

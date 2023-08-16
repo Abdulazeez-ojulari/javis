@@ -104,7 +104,7 @@ module.exports.getChat = errorMiddleware(async (req, res) => {
     let { chatId } = req.params;
     let chat = await Chat.findOne({chatId: chatId})
     if(!chat){
-        return res.status(404).send("Chat dosen't exists");
+        return res.status(404).send({message: "Chat dosen't exists"});
     }
 
     return res.send(chat)
@@ -115,7 +115,7 @@ module.exports.getChats = errorMiddleware(async (req, res) => {
 
     const business = await Business.findOne({businessId: businessId})
     if(!business){
-        return res.status(400).send("Business dosen't exists");
+        return res.status(400).send({message: "Business dosen't exists"});
     }
 
     let chats = await Chat.find({businessId: businessId})

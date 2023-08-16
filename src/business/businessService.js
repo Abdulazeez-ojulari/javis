@@ -1,12 +1,20 @@
 const { Business } = require("./businessModel");
 const uuid = require('uuid');
 
-module.exports.createBusinessService = async (companyName, departments) => {
+module.exports.createBusinessService = async (businessName, departments, user) => {
     let id = uuid.v4() + uuid.v4()
+    let teams = [
+        {
+            userId: user.id,
+            role: "owner"
+        }
+    ]
     let newBusiness = new Business({
         businessId: id,
-        companyName: companyName,
+        businessName: businessName,
         departments: departments,
+        teams: teams
+
     });
     try{
         await newBusiness.save();

@@ -3,9 +3,11 @@ const errorMiddleWare = require('../middlewares/error');
 // const Joi = require('joi');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
+const uuid = require('uuid');
 
 exports.signup = errorMiddleWare( async (req, res) => {
     const { firstName, lastName, email, password, confirm_password } = req.body;
+    let id = uuid.v4() + uuid.v4()
     // const { error } = validate(req.body);
     // if(error) return res.status(400).send({message: error.details[0].message});
 
@@ -15,6 +17,7 @@ exports.signup = errorMiddleWare( async (req, res) => {
     if(user) return res.status(400).send({message: 'User already available with that email'});
 
     user = new User({
+        userId: id,
         firstName: firstName,
         lastName: lastName,
         email: email,
@@ -32,7 +35,7 @@ exports.signup = errorMiddleWare( async (req, res) => {
     let newtoken = await token.save()
     if(!newtoken) {
         // console.log(err.message)
-        return res.status(500).send("Could not save user")
+        return res.status(500).send({message: "Could not save user"})
     }
     await user.save();
 

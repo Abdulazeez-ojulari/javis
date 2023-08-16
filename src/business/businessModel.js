@@ -1,5 +1,20 @@
 const mongoose = require('mongoose');
 
+const teamSchema = new mongoose.Schema({
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
+    },
+    department: {
+        type: String,
+    },
+    role: {
+        type: String,
+        default: "Member"
+    }
+})
+
 let schema = new mongoose.Schema({
     businessId: {
         type: String,
@@ -7,12 +22,16 @@ let schema = new mongoose.Schema({
         minlength: 1,
         unique: true
     },
-    companyName: {
+    businessName: {
         type: String,
         required: true,
         minlength: 3,
         maxlength: 50,
         unique: true
+    },
+    teams: {
+        type: [teamSchema],
+        required: true,
     },
     departments: {
         type: [String],

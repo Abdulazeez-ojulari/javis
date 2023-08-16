@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 
 const userSchema = new mongoose.Schema({
+    userId: {
+        type: String,
+        required: true,
+        minlength: 1,
+        unique: true
+    },
     firstName: {
         type: String,
         minlength: 3,
