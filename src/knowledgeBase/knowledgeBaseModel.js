@@ -7,9 +7,6 @@ let schema = new mongoose.Schema({
         minlength: 1,
         unique: true
     },
-    companyInformation: {
-        type: Object,
-    },
     faqs: {
         type: [Object],
     },

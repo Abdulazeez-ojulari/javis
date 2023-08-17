@@ -42,7 +42,7 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
         },
         {
             "role": "system", 
-            "content": `Company Informations: ${JSON.stringify(knowledgeBase.companyInformation)}.`
+            "content": `Company Informations: ${JSON.stringify(business.companyInformation)}.`
         },
         {
             "role": "system", 

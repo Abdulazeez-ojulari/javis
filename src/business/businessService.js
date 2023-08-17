@@ -1,7 +1,7 @@
 const { Business } = require("./businessModel");
 const uuid = require('uuid');
 
-module.exports.createBusinessService = async (businessName, departments, user) => {
+module.exports.createBusinessService = async (businessName, companyInformation, departments, user) => {
     let id = uuid.v4() + uuid.v4()
     let teams = [
         {
@@ -13,6 +13,7 @@ module.exports.createBusinessService = async (businessName, departments, user) =
         businessId: id,
         businessName: businessName,
         departments: departments,
+        companyInformation: companyInformation,
         teams: teams
 
     });

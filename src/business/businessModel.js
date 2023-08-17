@@ -29,6 +29,9 @@ let schema = new mongoose.Schema({
         maxlength: 50,
         unique: true
     },
+    companyInformation: {
+        type: Object,
+    },
     teams: {
         type: [teamSchema],
         required: true,

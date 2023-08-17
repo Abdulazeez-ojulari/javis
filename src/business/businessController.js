@@ -4,7 +4,7 @@ const { Business } = require('./businessModel');
 const { createBusinessService, updateBusinessService } = require('./businessService');
 
 module.exports.createBusiness = errorMiddleware(async (req, res) => {
-    let { userId, businessName, departments } = req.body;
+    let { userId, businessName, companyInformation, departments } = req.body;
 
     const user = await User.findOne({userId: userId})
     if(!user){
@@ -16,7 +16,7 @@ module.exports.createBusiness = errorMiddleware(async (req, res) => {
         return res.status(400).send({message: "Business already exists"});
     }
 
-    let newBusiness = await createBusinessService(businessName, departments, user)
+    let newBusiness = await createBusinessService(businessName, companyInformation, departments, user)
     return res.send(newBusiness)
 })
 
