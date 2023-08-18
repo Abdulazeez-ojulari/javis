@@ -4,6 +4,7 @@ const errorMiddleWare = require('../middlewares/error');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const uuid = require('uuid');
+const { Business } = require('../business/businessModel');
 
 exports.signup = errorMiddleWare( async (req, res) => {
     const { firstName, lastName, email, password, confirm_password } = req.body;
@@ -57,11 +58,13 @@ exports.login = errorMiddleWare( async (req, res) => {
         return res.status(401).send({ message: 'Your email as not been verified'})
     }
 
+    const business = await Business.find({userId: user.id})
+    console.log(business)
     const token = user.generateToken();
     res.set('x-auth-token', token)
 	res.set('Access-Control-Expose-Headers', 'x-auth-token')
-
-    return res.send(user)
+    user["business"] = business
+    return res.send({user: user, business: business})
     
 });
 

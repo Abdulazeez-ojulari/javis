@@ -11,7 +11,7 @@ const teamSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        default: "Member"
+        default: "member"
     }
 })
 
@@ -21,6 +21,11 @@ let schema = new mongoose.Schema({
         required: true,
         minlength: 1,
         unique: true
+    },
+    userId: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: 'User'
     },
     businessName: {
         type: String,

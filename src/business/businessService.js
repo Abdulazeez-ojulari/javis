@@ -10,6 +10,7 @@ module.exports.createBusinessService = async (businessName, companyInformation, 
         }
     ]
     let newBusiness = new Business({
+        userId: user.id,
         businessId: id,
         businessName: businessName,
         departments: departments,
