@@ -33,7 +33,7 @@ let data =
       "color": "Onyx Gray",
       "size": "6.67 inches",
       "brand": "Xiaomi",
-      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/50/0158722/1.jpg?7371"
+      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/product/50/0158722/1.jpg?7371"
     },
     {
       "name": "Samsung Galaxy A14",
@@ -50,7 +50,7 @@ let data =
       "color": "Black",
       "size": "6.6 inches",
       "brand": "Samsung",
-      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/82/8440622/1.jpg?2300"
+      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/product/82/8440622/1.jpg?2300"
     },
     {
       "name": "Tecno Spark 10c",
@@ -67,7 +67,7 @@ let data =
       "color": "Blue",
       "size": "6.6 inches",
       "brand": "Tecno",
-      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/43/6203722/1.jpg?3605"
+      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/product/43/6203722/1.jpg?3605"
     },
     {
       "name": "Infinix Hot 12",
@@ -101,7 +101,7 @@ let data =
       "color": "Copper",
       "size": "6.5 inches",
       "brand": "Samsung",
-      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/14/4289691/1.jpg?1002"
+      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/product/14/4289691/1.jpg?1002"
     },
     {
       "name": "Tecno Pop 5",
@@ -118,7 +118,7 @@ let data =
       "color": "Blue",
       "size": "6.5 inches",
       "brand": "Tecno",
-      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/89/1051931/1.jpg?4930"
+      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/product/89/1051931/1.jpg?4930"
     },
     {
       "name": "Infinix Hot 12 Play",
@@ -135,7 +135,7 @@ let data =
       "color": "Green",
       "size": "6.82 inches",
       "brand": "Infinix",
-      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/19/0631702/1.jpg?7078"
+      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/product/19/0631702/1.jpg?7078"
     },
     {
       "name": "Nokia G11 Plus",
@@ -169,7 +169,7 @@ let data =
       "color": "Meteorite Gray",
       "size": "6.8 inches",
       "brand": "Tecno",
-      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/43/2638171/1.jpg?2801"
+      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/product/43/2638171/1.jpg?2801"
     },
     {
       "name": "Infinix Note 12 VIP",
@@ -186,7 +186,7 @@ let data =
       "color": "Cayenne",
       "size": "6.7 inches",
       "brand": "Infinix",
-      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/00/3771631/1.jpg?6191"
+      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/product/00/3771631/1.jpg?6191"
     },
     {
       "name": "POCO M4 Pro 5G",
@@ -203,7 +203,7 @@ let data =
       "color": "Cool Blue",
       "size": "6.6 inches",
       "brand": "POCO",
-      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/29/9680261/1.jpg?6511"
+      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/product/29/9680261/1.jpg?6511"
     },
     {
       "name": "Samsung Galaxy A53 5G",
@@ -220,7 +220,7 @@ let data =
       "color": "Peach",
       "size": "6.5 inches",
       "brand": "Samsung",
-      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/filters:fill(white)/product/86/8956901/1.jpg?3913"
+      "image": "https://ng.jumia.is/unsafe/fit-in/500x500/product/86/8956901/1.jpg?3913"
     }    
   ]
 

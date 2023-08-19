@@ -1,3 +1,4 @@
+const { KnowledgeBase } = require('../knowledgeBase/knowledgeBaseModel');
 const errorMiddleware = require('../middlewares/error');
 const { User } = require('../user/userModel');
 const { Business } = require('./businessModel');
@@ -51,4 +52,25 @@ module.exports.updateBusiness = errorMiddleware(async (req, res) => {
 
     let updatedBusiness = await updateBusinessService(data)
     return res.send(updatedBusiness)
+})
+
+module.exports.getBusiness = errorMiddleware(async (req, res) => {
+    let { businessId } = req.params;
+
+    const business = await Business.findOne({businessId: businessId})
+    if(!business){
+        return res.status(404).send({message: "Business doesn't exists"});
+    }
+
+    let knowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
+
+    // let teams = await business.populate(business.teams[0].userId)
+
+    let data = {
+        business: business,
+        knowledgeBase: knowledgeBase,
+        // teams: teams
+    }
+
+    return res.send(data)
 })

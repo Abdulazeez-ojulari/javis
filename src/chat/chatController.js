@@ -5,6 +5,7 @@ const { Chat } = require('./chatModel');
 const { createChatService, replyChatService } = require('./chatService');
 
 module.exports.replyChat = errorMiddleware(async (req, res) => {
+    
     let { chatId, businessId, channel, customer, promptMsg } = req.body;
     let chat = await Chat.findOne({chatId: chatId})
     if(!chat){
@@ -18,10 +19,21 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
     let business = await Business.findOne({businessId: businessId})
 
     let knowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
+
+    let knowledge_base = []
+    let faqs = []
+
+    if(knowledgeBase){
+        knowledge_base = knowledgeBase.knowledgeBase
+        faqs = knowledgeBase.faqs
+    }
+
     let systemKnowledge = [
         {
             "role": "system", 
             "content": `
+            You are a sales representative.
+            Do not mention or act like an AI to the customer.
             You will be provided with customer service queries.
             The customer service query will be delimited with ${delimiter} characters.
             You are to escalate customer query if request is not in the knowledge base, faqs and company informations that was sent with the query.
@@ -46,12 +58,12 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
         },
         {
             "role": "system", 
-            "content": `Company faqs to answer related questions: ${JSON.stringify(knowledgeBase.faqs)}.`
+            "content": `Company faqs to answer related questions: ${JSON.stringify(faqs)}.`
         },
         {
             "role": "system", 
             "content": `
-            Knowledge base to answer from: ${JSON.stringify(knowledgeBase.knowledgeBase)}.
+            Knowledge base to answer from: ${JSON.stringify(knowledge_base)}.
             Only answer from your knowledge base.
             If customer service query is regarding a product in your knowledge base you must include the image of that product from your knowledge base in your response key.
             If customer service query is not related to your knowledge base then inform the customer that you will escalate their query then set escalated key to true and classify the escalation_department key in your json response.
