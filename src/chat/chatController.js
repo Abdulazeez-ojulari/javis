@@ -114,8 +114,9 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
 
     await chat.save();
     let data = {
-        message: {role: "assistance", content: msg},
-        chatId: chatId
+        message: newMessages[newMessages.length-2],
+        chatId: chatId,
+        reply: newMessages[newMessages.length-1]
     }
     return res.send(data)
 })
