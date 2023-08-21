@@ -15,9 +15,10 @@ module.exports.replyChatService = async (promptMsg, messages, chatId, chat) => {
     })
     // console.log(previousMsg)
     let delimiter = '#####'
+    let delimiter2 = '####'
     previousMsg = {
         "role": "system",
-        "content": `Previous messages between you and the customer${JSON.stringify(previousMsg)}`
+        "content": `Previous messages between you and the customer${delimiter2}${JSON.stringify(previousMsg)}${delimiter2}`
     }
     // console.log(previousMsg)
     let newMsg = {

@@ -13,6 +13,7 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
        chatId = id;
     }
     let delimiter = '#####'
+    let delimiter2 = '####'
 
     chat = await Chat.findOne({chatId: chatId})
 
@@ -36,13 +37,16 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
             Do not mention or act like an AI to the customer.
             You will be provided with customer service queries.
             The customer service query will be delimited with ${delimiter} characters.
-            You are to escalate customer query if request is not in the knowledge base, faqs and company informations that was sent with the query.
+            Your previous chat with customer will be delimited with ${delimiter2} characters.
+            If request is not in the knowledge base, faqs and company informations that was sent with the query you are to return a json format with escalated set to true and escalation_department to the appropriate department.
             Always classify each query into a category.
-            Always classify each query into a sentiment.
+            Always classify each query and your previous chat with customer into a sentiment.
             Always classify each query into a type.
-            Always classify each query into a department.
-            Always classify each query into an escalation_department if escalated is set to true else set escalation_department to null
+            Always classify each query and your previous chat with customer into a escalated.
+            Always classify each query and your previous chat with customer into a department.
             Set escalated to true if customer query is not related to your knowledge base else set escalated to false.
+            Always check if your response demands that you check for or requires more details regarding customer query then set escalated to true in your json response.
+            Always classify each query and your previous chat with customer into an escalation_department if escalated is set to true else set escalation_department to null
             Make sure you don't add any other key aside this keys response, category, sentiment, type, department, escalated and escalation_department in your json response.
 
             Categories: General Inquiries, Order, Issue, Complains.
@@ -92,6 +96,7 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
         department = jsonResponse.department
         sentiment = jsonResponse.sentiment
         escalated = jsonResponse.escalated
+        escalation_department = jsonResponse.escalation_department
 
         if(category && category.length > 0)
         chat.category = category;

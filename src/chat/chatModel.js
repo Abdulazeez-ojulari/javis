@@ -52,15 +52,19 @@ let schema = new mongoose.Schema({
     },
     category: {
         type: String,
+        default: null
     },
     type: {
         type: String,
+        default: null
     },
     department: {
         type: String,
+        default: null
     },
     escalation_department: {
         type: String,
+        default: null
     },
     created_date: {
 		type: Date,
