@@ -6,10 +6,10 @@ const { createChatService, replyChatService } = require('./chatService');
 
 module.exports.replyChat = errorMiddleware(async (req, res) => {
     
-    let { chatId, businessId, channel, customer, promptMsg } = req.body;
+    let { chatId, email, businessId, channel, customer, promptMsg } = req.body;
     let chat = await Chat.findOne({chatId: chatId})
     if(!chat){
-       let id = await createChatService(businessId, channel, customer);
+       let id = await createChatService(businessId, email, channel, customer);
        chatId = id;
     }
     let delimiter = '#####'
@@ -121,17 +121,39 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
     return res.send(data)
 })
 
-module.exports.getChat = errorMiddleware(async (req, res) => {
-    let { chatId } = req.params;
+module.exports.getUserChat = errorMiddleware(async (req, res) => {
+    let { email, chatId } = req.params;
+
+    if(email){
+        let chats = await Chat.find({email: email})
+        return res.send(chats)
+    }
+
     let chat = await Chat.findOne({chatId: chatId})
     if(!chat){
         return res.status(404).send({message: "Chat dosen't exists"});
     }
 
-    return res.send(chat)
+    if(!chat.email){
+        return res.send(chat)
+    }
+
+    let chats = await Chat.find({email: chat.email})
+    return res.send(chats)    
 })
 
-module.exports.getChats = errorMiddleware(async (req, res) => {
+module.exports.getConversation = errorMiddleware(async (req, res) => {
+    let { chatId } = req.params;
+
+    let chat = await Chat.findOne({chatId: chatId})
+    if(!chat){
+        return res.status(404).send({message: "Chat dosen't exists"});
+    }
+
+    return res.send(chat)    
+})
+
+module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
     let { businessId } = req.params;
 
     const business = await Business.findOne({businessId: businessId})

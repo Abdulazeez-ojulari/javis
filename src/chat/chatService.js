@@ -44,12 +44,13 @@ module.exports.replyChatService = async (promptMsg, messages, chatId, chat) => {
     }
 }
 
-module.exports.createChatService = async(businessId, channel, customer) => {
+module.exports.createChatService = async(businessId, email, channel, customer) => {
     // let knowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
     let id = uuid.v4() + uuid.v4()
     // console.log(channel, businessId, customer);
     let newChat = new Chat({
         chatId: id,
+        email: email,
         businessId: businessId,
         customer: customer,
         messages: [],

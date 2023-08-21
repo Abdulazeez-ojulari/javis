@@ -4,8 +4,10 @@ const router = express.Router();
 
 router.post('/send', chatController.replyChat);
 
-router.get('/:chatId', chatController.getChat);
+router.get('/user/:email/:chatId', chatController.getUserChat);
 
-router.get('/all-chat/:businessId', chatController.getChats);
+router.get('/conversation/:chatId', chatController.getConversation);
+
+router.get('/all-chat/:businessId', chatController.getBusinessChats);
 
 module.exports = router;

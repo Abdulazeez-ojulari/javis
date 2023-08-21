@@ -16,6 +16,11 @@ let schema = new mongoose.Schema({
         minlength: 1,
         unique: true
     },
+    email: {
+        type: String,
+        minlength: 3,
+        maxlength: 255,
+    },
     businessId: {
         type: String,
         required: true,
