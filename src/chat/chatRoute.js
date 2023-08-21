@@ -4,7 +4,7 @@ const router = express.Router();
 
 router.post('/send', chatController.replyChat);
 
-router.get('/user/:email/:chatId', chatController.getUserChat);
+router.get('/user/:email', chatController.getUserChat);
 
 router.get('/conversation/:chatId', chatController.getConversation);
 

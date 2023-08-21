@@ -122,24 +122,14 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
 })
 
 module.exports.getUserChat = errorMiddleware(async (req, res) => {
-    let { email, chatId } = req.params;
+    let { email } = req.params;
 
-    if(email){
-        let chats = await Chat.find({email: email})
-        return res.send(chats)
+    if(!email){
+        return res.status(404).send({message: "Email not provided"});
     }
 
-    let chat = await Chat.findOne({chatId: chatId})
-    if(!chat){
-        return res.status(404).send({message: "Chat dosen't exists"});
-    }
-
-    if(!chat.email){
-        return res.send(chat)
-    }
-
-    let chats = await Chat.find({email: chat.email})
-    return res.send(chats)    
+    let chats = await Chat.find({email: email})
+    return res.send(chats)
 })
 
 module.exports.getConversation = errorMiddleware(async (req, res) => {
