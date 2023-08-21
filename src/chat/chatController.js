@@ -4,8 +4,17 @@ const errorMiddleware = require('../middlewares/error');
 const { Chat } = require('./chatModel');
 const { createChatService, replyChatService } = require('./chatService');
 
+module.exports.newChat = errorMiddleware(async (req, res) => {
+    let { email, businessId, channel, customer } = req.body;
+
+    let id = await createChatService(businessId, email, channel, customer);
+
+    let chat = await Chat.findOne({chatId: id})
+
+    return res.send(chat)
+})
+
 module.exports.replyChat = errorMiddleware(async (req, res) => {
-    
     let { chatId, email, businessId, channel, customer, promptMsg } = req.body;
     let chat = await Chat.findOne({chatId: chatId})
     if(!chat){
@@ -45,7 +54,6 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
             Always classify each query and your previous chat with customer into a escalated.
             Always classify each query and your previous chat with customer into a department.
             Set escalated to true if customer query is not related to your knowledge base else set escalated to false.
-            Always check if your response demands that you check for or requires more details regarding customer query then set escalated to true in your json response.
             Always classify each query and your previous chat with customer into an escalation_department if escalated is set to true else set escalation_department to null
             Make sure you don't add any other key aside this keys response, category, sentiment, type, department, escalated and escalation_department in your json response.
 

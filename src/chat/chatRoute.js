@@ -10,4 +10,6 @@ router.get('/conversation/:chatId', chatController.getConversation);
 
 router.get('/all-chat/:businessId', chatController.getBusinessChats);
 
+router.post('/new-chat', chatController.newChat);
+
 module.exports = router;
