@@ -66,6 +66,16 @@ let schema = new mongoose.Schema({
         type: String,
         default: null
     },
+    titles: {
+        type: [String],
+    },
+    title: {
+        type: String,
+    },
+    isCompleted: {
+        type: Boolean,
+        default: false
+    },
     created_date: {
 		type: Date,
 		required: true,

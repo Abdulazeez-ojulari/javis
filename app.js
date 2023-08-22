@@ -15,6 +15,7 @@ var business = require('./src/business/businessRoute');
 var chat = require('./src/chat/chatRoute');
 var knowledgeBase = require('./src/knowledgeBase/knowledgeBaseRoute');
 var user = require('./src/user/userRoute');
+var order = require('./src/order/orderRoute');
 
 let data =
   [
@@ -234,6 +235,7 @@ app.use('/ai/business', business);
 app.use('/ai/chat', chat);
 app.use('/ai/knowledge-base', knowledgeBase);
 app.use('/ai/user', user);
+app.use('/ai/order', order);
 
 const PORT = process.env.PORT || 3000;
 
