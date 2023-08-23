@@ -2,7 +2,7 @@ const readXlsxFile = require('read-excel-file/node')
 const { KnowledgeBase } = require("../knowledgeBase/knowledgeBaseModel");
 const parse = require('csv-parse').parse
 
-module.exports.createKnowledgeBaseService = async (businessId, knowledgeBase) => {
+const createKnowledgeBaseService = async (businessId, knowledgeBase) => {
     let newKnowledgeBase = new KnowledgeBase({
         businessId: businessId,
         knowledgeBase: knowledgeBase,
@@ -15,6 +15,8 @@ module.exports.createKnowledgeBaseService = async (businessId, knowledgeBase) =>
     }
     return newKnowledgeBase;
 }
+
+module.exports.createKnowledgeBaseService = createKnowledgeBaseService;
 
 module.exports.updateKnowledgeBaseService = async (businessId, knowledgeBase, faqs, companyInformation) => {
     const updateKnowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
@@ -58,7 +60,31 @@ module.exports.getKnowledgeBaseFromFileService = async (files) => {
             }
         })
     }else if(file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'){
-        readXlsxFile(file.buffer).then((records) => {
+        let records = await readXlsxFile(file.buffer);
+        
+        let head = records[0];
+        for (let i = 1; i < records.length; i++) {
+            const record = records[i];
+            let cont = {}
+            for (let j = 0; j < head.length; j++){
+                cont[head[j]] = record[j]
+            }
+            knowledgeBase.push(cont)
+        }
+    }
+    return knowledgeBase;
+}
+
+module.exports.createKnowledgeBaseFromCsvService = async (files, res, businessId) => {
+    let file = files[0];
+    if(file.mimetype === 'text/csv'){
+        let records = []
+        let knowledgeBase = []
+        parse(file.buffer)
+        .on("data", (data) => {
+            records.push(data);
+        })
+        .on("end", async () => {
             let head = records[0];
             for (let i = 1; i < records.length; i++) {
                 const record = records[i];
@@ -68,7 +94,8 @@ module.exports.getKnowledgeBaseFromFileService = async (files) => {
                 }
                 knowledgeBase.push(cont)
             }
-        })
+            let newKnowledgeBase = await createKnowledgeBaseService(businessId, knowledgeBase)
+            return res.send(newKnowledgeBase)
+        });
     }
-    return knowledgeBase;
 }

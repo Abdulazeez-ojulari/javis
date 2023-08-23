@@ -8,4 +8,6 @@ router.post('/create', multerInstance.any(), knowledgeBaseController.createKnowl
 
 router.post('/update', multerInstance.any(), knowledgeBaseController.updateKnowledgeBase);
 
+router.post('/get', knowledgeBaseController.getKnowledgeBase);
+
 module.exports = router;
