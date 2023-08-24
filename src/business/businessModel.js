@@ -43,7 +43,8 @@ let schema = new mongoose.Schema({
     },
     aiMode: {
         type: String,
-        default: "auto"
+        default: "auto",
+        enum: ['auto', 'hybrid', 'supervised']
     },
     departments: {
         type: [String],
