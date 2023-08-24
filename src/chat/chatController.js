@@ -6,6 +6,11 @@ const { createChatService, processChatService } = require('./chatService');
 module.exports.newChat = errorMiddleware(async (req, res) => {
     let { email, businessId, channel, customer } = req.body;
 
+    const business = await Business.findOne({businessId: businessId})
+    if(!business){
+        return res.status(400).send({message: "Business dosen't exists"});
+    }
+
     let id = await createChatService(businessId, email, channel, customer);
 
     let chat = await Chat.findOne({chatId: id})

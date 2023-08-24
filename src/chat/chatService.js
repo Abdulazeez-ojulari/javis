@@ -25,6 +25,10 @@ module.exports.processChatService = async (chatId, email, businessId, channel, c
 
     let business = await Business.findOne({businessId: businessId})
 
+    if(!business){
+        return {message: "Business dosen't exists"};
+    }
+
     let knowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
 
     let knowledge_base = []
