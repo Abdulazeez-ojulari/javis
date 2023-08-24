@@ -5,7 +5,7 @@ const { KnowledgeBase } = require('./knowledgeBaseModel');
 const { createKnowledgeBaseService, updateKnowledgeBaseService, getKnowledgeBaseFromFileService, createKnowledgeBaseFromCsvService } = require('./knowledgeBaseService');
 
 module.exports.createKnowledgeBase = errorMiddleware(async (req, res) => {
-    let { userId, businessId, knowledgeBase, type } = req.body;
+    let { userId, businessId, knowledgeBase, type, faqs } = req.body;
 
     const user = await User.findOne({userId: userId})
     if(!user){
@@ -34,14 +34,14 @@ module.exports.createKnowledgeBase = errorMiddleware(async (req, res) => {
     if(type == "file" && req.files){
         let file = req.files[0];
         if(file.mimetype === 'text/csv'){
-            await createKnowledgeBaseFromCsvService(req.files, res, businessId)
+            await createKnowledgeBaseFromCsvService(req.files, res, businessId, faqs)
             return
         }else{
             knowledgeBase = await getKnowledgeBaseFromFileService(req.files)
         }   
     }
 
-    let newKnowledgeBase = await createKnowledgeBaseService(businessId, knowledgeBase)
+    let newKnowledgeBase = await createKnowledgeBaseService(businessId, knowledgeBase, faqs)
     return res.send(newKnowledgeBase)
 })
 

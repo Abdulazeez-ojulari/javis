@@ -41,6 +41,10 @@ let schema = new mongoose.Schema({
         type: [teamSchema],
         required: true,
     },
+    aiMode: {
+        type: String,
+        default: "auto"
+    },
     departments: {
         type: [String],
         required: true,

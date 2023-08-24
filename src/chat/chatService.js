@@ -86,6 +86,19 @@ module.exports.processChatService = async (chatId, email, businessId, channel, c
         }
     ]
 
+    if(!business.aiMode || business.aiMode == 'auto'){
+        let reply = await autoReply(promptMsg, systemKnowledge, chatId, chat, businessId)
+
+        return reply;
+    }else if(business.aiMode == 'supervised'){
+       let reply = await supervisedReply(promptMsg, systemKnowledge, chatId, chat, businessId)
+
+       return reply;
+    }
+}
+
+const autoReply = async (promptMsg, systemKnowledge, chatId, chat, businessId) => {
+
     let reply = await replyChatService(promptMsg, systemKnowledge, chatId, chat)
     console.log(reply.data.choices[0].message)
 
@@ -182,9 +195,115 @@ module.exports.processChatService = async (chatId, email, businessId, channel, c
 
     await chat.save();
     let data = {
+        replyMode: "auto",
         message: newMessages[newMessages.length-2],
         chatId: chatId,
         reply: newMessages[newMessages.length-1]
+    }
+
+    return data
+}
+
+const supervisedReply = async (promptMsg, systemKnowledge, chatId, chat, businessId) => {
+    let reply = await replyChatService(promptMsg, systemKnowledge, chatId, chat)
+    console.log(reply.data.choices[0].message)
+
+    let content = reply.data.choices[0].message.content;
+    let msg = reply.data.choices[0].message.content;
+    let category = ""
+    let type = ""
+    let department = ""
+    let sentiment = ""
+    let escalation_department = ""
+    let title = ""
+    let isCompleted
+    if(content.charAt(0) == '{'){
+        if(content.charAt(content.length - 1) !== '}')
+        content.push('}')
+        let jsonResponse = JSON.parse(content);
+        msg = jsonResponse.response
+        category = jsonResponse.category
+        type = jsonResponse.type
+        department = jsonResponse.department
+        sentiment = jsonResponse.sentiment
+        escalated = jsonResponse.escalated
+        escalation_department = jsonResponse.escalation_department
+        title = jsonResponse.title
+        isCompleted = jsonResponse.isCompleted
+
+        if(!jsonResponse.response && jsonResponse.placingOrder){
+            msg = 'Created your order'
+        }
+
+        if(category && category.length > 0)
+        chat.category = category;
+        if(type && type.length > 0)
+        chat.type = type;
+        if(department && department.length > 0)
+        chat.department = department;
+        if(sentiment && sentiment.length > 0)
+        chat.sentiment = sentiment;
+        if(escalation_department && escalation_department.length > 0)
+        chat.escalation_department = escalation_department;
+        if(title && title.length > 0){
+            let newTitles = chat.titles;
+            newTitles.push(title)
+            chat.titles = newTitles
+        }
+        if(jsonResponse.escalated !== undefined)
+        chat.escalated = escalated;
+
+        if(jsonResponse.isCompleted)
+        chat.isCompleted = isCompleted;
+
+        if(jsonResponse.placingOrder){
+            chat.escalated = escalated;
+            let newOrder = new Order({
+                chatId: chatId,
+                email: email,
+                businessId: businessId,
+                customer: customer,
+                items: jsonResponse.items
+            });
+
+            await newOrder.save()
+        }
+    }
+
+    let newMessages = chat.messages;
+    newMessages.push({role: "user", content: promptMsg})
+    newMessages.push({role: "assistance", content: msg, status: "draft"})
+    chat.messages = newMessages;
+
+    if(chat.titles.length > 0){
+        let overall = await metricsService(chat.titles)
+        console.log(overall.data.choices[0].message)
+
+        let overallMetrics = overall.data.choices[0].message.content;
+
+        let title = ""
+        let common_title = ""
+        if(overallMetrics.charAt(0) == '{'){
+            if(overallMetrics.charAt(overallMetrics.length - 1) !== '}')
+            overallMetrics.push('}')
+            let jsonResponse = JSON.parse(overallMetrics);
+            title = jsonResponse.title
+            common_title = jsonResponse.common_title
+
+            if(title && title.length > 0)
+            chat.title = title;
+
+            if(common_title && common_title.length > 0)
+            chat.title = common_title;
+
+        }
+    }
+
+    await chat.save();
+    let data = {
+        replyMode: "supervised",
+        message: newMessages[newMessages.length-2],
+        chatId: chatId
     }
 
     return data

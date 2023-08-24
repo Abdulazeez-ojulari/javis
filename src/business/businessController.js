@@ -22,7 +22,7 @@ module.exports.createBusiness = errorMiddleware(async (req, res) => {
 })
 
 module.exports.updateBusiness = errorMiddleware(async (req, res) => {
-    let { userId, businessId, departments } = req.body;
+    let { userId, businessId, departments, companyInformation } = req.body;
 
     let data = {}
 
@@ -49,6 +49,9 @@ module.exports.updateBusiness = errorMiddleware(async (req, res) => {
 
     if(departments && departments.length > 0)
     data['departments'] = departments
+
+    if(companyInformation)
+    data['companyInformation'] = companyInformation
 
     let updatedBusiness = await updateBusinessService(data)
     return res.send(updatedBusiness)

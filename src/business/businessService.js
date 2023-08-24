@@ -28,12 +28,15 @@ module.exports.createBusinessService = async (businessName, companyInformation, 
 }
 
 module.exports.updateBusinessService = async (data) => {
-    let { businessId, departments } = data;
+    let { businessId, departments, companyInformation } = data;
 
     const business = await Business.findOne({businessId: businessId})
     
     if(departments && departments.length > 0)
     business.departments = departments;
+
+    if(companyInformation)
+    business.companyInformation = companyInformation;
 
     try{
         await business.save();

@@ -1,7 +1,12 @@
 const mongoose = require('mongoose');
 const message = new mongoose.Schema({ 
     role: String, 
-    content: String, 
+    content: String,
+    status: {
+        type: String,
+        required: true,
+        default: 'sent'
+    }, 
     created_date: {
         type: Date,
         required: true,

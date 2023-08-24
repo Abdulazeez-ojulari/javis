@@ -2,10 +2,11 @@ const readXlsxFile = require('read-excel-file/node')
 const { KnowledgeBase } = require("../knowledgeBase/knowledgeBaseModel");
 const parse = require('csv-parse').parse
 
-const createKnowledgeBaseService = async (businessId, knowledgeBase) => {
+const createKnowledgeBaseService = async (businessId, knowledgeBase, faqs) => {
     let newKnowledgeBase = new KnowledgeBase({
         businessId: businessId,
         knowledgeBase: knowledgeBase,
+        faqs: faqs
     });
     try{
         await newKnowledgeBase.save();
@@ -75,7 +76,7 @@ module.exports.getKnowledgeBaseFromFileService = async (files) => {
     return knowledgeBase;
 }
 
-module.exports.createKnowledgeBaseFromCsvService = async (files, res, businessId) => {
+module.exports.createKnowledgeBaseFromCsvService = async (files, res, businessId, faqs) => {
     let file = files[0];
     if(file.mimetype === 'text/csv'){
         let records = []
@@ -94,7 +95,7 @@ module.exports.createKnowledgeBaseFromCsvService = async (files, res, businessId
                 }
                 knowledgeBase.push(cont)
             }
-            let newKnowledgeBase = await createKnowledgeBaseService(businessId, knowledgeBase)
+            let newKnowledgeBase = await createKnowledgeBaseService(businessId, knowledgeBase, faqs)
             return res.send(newKnowledgeBase)
         });
     }
