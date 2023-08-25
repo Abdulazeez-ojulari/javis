@@ -7,7 +7,7 @@ const uuid = require('uuid');
 const { Business } = require('../business/businessModel');
 
 exports.signup = errorMiddleWare( async (req, res) => {
-    const { firstName, lastName, email, password, confirm_password } = req.body;
+    const { firstName, lastName, email, phoneNo, password, confirm_password } = req.body;
     let id = uuid.v4() + uuid.v4()
     // const { error } = validate(req.body);
     // if(error) return res.status(400).send({message: error.details[0].message});
@@ -22,6 +22,7 @@ exports.signup = errorMiddleWare( async (req, res) => {
         firstName: firstName,
         lastName: lastName,
         email: email,
+        phoneNo: phoneNo,
         password: password
     });
 
@@ -59,10 +60,9 @@ exports.login = errorMiddleWare( async (req, res) => {
     }
 
     const business = await Business.find({userId: user.id})
-    console.log(business)
     const token = user.generateToken();
-    res.set('x-auth-token', token)
-	res.set('Access-Control-Expose-Headers', 'x-auth-token')
+    res.set('Authorization', token)
+	res.set('Access-Control-Expose-Headers', 'Authorization')
     user["business"] = business
     return res.send({user: user, business: business})
     

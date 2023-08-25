@@ -34,6 +34,66 @@ let schema = new mongoose.Schema({
         maxlength: 50,
         unique: true
     },
+    industry: {
+        type: String,
+        required: true,
+        minlength: 3,
+        maxlength: 50,
+    },
+    phoneNo: {
+        type: String,
+        minlength: 7,
+    },
+    address: {
+        type: String,
+        required: true,
+        minlength: 3,
+    },
+    bankName: {
+        type: String,
+        required: true,
+        minlength: 3,
+        maxlength: 50,
+    },
+    accountNo: {
+        type: String,
+        required: true,
+        minlength: 3,
+    },
+    description: {
+        type: String,
+        required: true,
+        minlength: 3,
+    },
+    ownerName: {
+        type: String,
+        minlength: 3,
+        maxlength: 50,
+    },
+    ownerPhoneNo: {
+        type: String,
+        minlength: 7,
+    },
+    ownwerEmail: {
+        type: String,
+        minlength: 3,
+        maxlength: 255,
+    },
+    instagramHandle: {
+        type: String,
+        minlength: 3,
+        maxlength: 255,
+    },
+    facebookHandle: {
+        type: String,
+        minlength: 3,
+        maxlength: 255,
+    },
+    twitterHandle: {
+        type: String,
+        minlength: 3,
+        maxlength: 255,
+    },
     companyInformation: {
         type: Object,
     },
@@ -45,6 +105,10 @@ let schema = new mongoose.Schema({
         type: String,
         default: "auto",
         enum: ['auto', 'hybrid', 'supervised']
+    },
+    plan: {
+        type: String,
+        enum: ['monthly', 'quaterly', 'annually']
     },
     departments: {
         type: [String],

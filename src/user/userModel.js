@@ -71,11 +71,11 @@ const userSchema = new mongoose.Schema({
     //     minlength: 10,
     //     maxlength: 1024
     // },
-    // userPhoneNo: {
-    //     type: String,
-    //     minlength: 7,
-    //     maxlength: 15
-    // },
+    phoneNo: {
+        type: String,
+        minlength: 7,
+        required: true
+    },
     isVerified: {
         type: Boolean,
         default: true
@@ -107,7 +107,7 @@ userSchema.method('toJson',function() {
 });
 
 userSchema.methods.generateToken = function() {
-    const token = jwt.sign({ id: this.id, isVerified: this.isVerified, isAdmin: this.isAdmin}, process.env.ENIF_SECRET)
+    const token = jwt.sign({ id: this.id, isVerified: this.isVerified, isAdmin: this.isAdmin, userId: this.userId}, process.env.ENIF_SECRET)
     return token;
 }
 

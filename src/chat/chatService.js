@@ -358,7 +358,7 @@ const javis = async (messages, chatId = null) => {
     return completion
 }
 
-const createChatService = async(businessId, email, channel, customer) => {
+const createChatService = async(businessId, email, channel, customer, phoneNo) => {
     // let knowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
     let id = uuid.v4() + uuid.v4()
     // console.log(channel, businessId, customer);
@@ -367,6 +367,7 @@ const createChatService = async(businessId, email, channel, customer) => {
         email: email,
         businessId: businessId,
         customer: customer,
+        phoneNo: phoneNo,
         messages: [],
         channel: channel
     });

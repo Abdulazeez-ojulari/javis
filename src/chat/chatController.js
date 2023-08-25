@@ -4,14 +4,14 @@ const { Chat } = require('./chatModel');
 const { createChatService, processChatService } = require('./chatService');
 
 module.exports.newChat = errorMiddleware(async (req, res) => {
-    let { email, businessId, channel, customer } = req.body;
+    let { email, businessId, channel, customer, phoneNo } = req.body;
 
     const business = await Business.findOne({businessId: businessId})
     if(!business){
         return res.status(400).send({message: "Business dosen't exists"});
     }
 
-    let id = await createChatService(businessId, email, channel, customer);
+    let id = await createChatService(businessId, email, channel, customer, phoneNo);
 
     let chat = await Chat.findOne({chatId: id})
 
@@ -92,7 +92,7 @@ module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
         return res.status(400).send({message: "Business dosen't exists"});
     }
 
-    let chats = await Chat.find({businessId: businessId})
+    let chats = await Chat.find({businessId: businessId}).sort({created_date: -1})
 
     return res.send(chats)
 })

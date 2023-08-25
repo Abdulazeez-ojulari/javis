@@ -36,6 +36,10 @@ let schema = new mongoose.Schema({
         minlength: 3,
         maxlength: 50,
     },
+    phoneNo: {
+        type: String,
+        minlength: 7,
+    },
     messages: {
         type: [message],
         required: true,

@@ -1,7 +1,24 @@
 const { Business } = require("./businessModel");
 const uuid = require('uuid');
 
-module.exports.createBusinessService = async (businessName, companyInformation, departments, user) => {
+module.exports.createBusinessService = async (
+    businessName, 
+    industry, 
+    phoneNo, 
+    address, 
+    bankName, 
+    accountNo, 
+    description,
+    ownerName,
+    ownerPhoneNo,
+    ownwerEmail,
+    instagramHandle,
+    facebookHandle,
+    twitterHandle,
+    companyInformation, 
+    departments, 
+    user
+) => {
     let id = uuid.v4() + uuid.v4()
     let teams = [
         {
@@ -13,6 +30,18 @@ module.exports.createBusinessService = async (businessName, companyInformation, 
         userId: user.id,
         businessId: id,
         businessName: businessName,
+        industry, 
+        phoneNo, 
+        address, 
+        bankName, 
+        accountNo, 
+        description,
+        ownerName,
+        ownerPhoneNo,
+        ownwerEmail,
+        instagramHandle,
+        facebookHandle,
+        twitterHandle,
         departments: departments,
         companyInformation: companyInformation,
         teams: teams
@@ -28,18 +57,60 @@ module.exports.createBusinessService = async (businessName, companyInformation, 
 }
 
 module.exports.updateBusinessService = async (data) => {
-    let { businessId, departments, companyInformation, aiMode } = data;
+    const { 
+        businessId, 
+        industry, 
+        phoneNo, 
+        address, 
+        bankName, 
+        accountNo, 
+        description,
+        ownerName,
+        ownerPhoneNo,
+        ownwerEmail,
+        instagramHandle,
+        facebookHandle,
+        twitterHandle,
+        departments, 
+        companyInformation, 
+        aiMode ,
+        plan
+    } = data;
 
     const business = await Business.findOne({businessId: businessId})
     
     if(departments && departments.length > 0)
     business.departments = departments;
 
-    if(companyInformation)
-    business.companyInformation = companyInformation;
+    if(companyInformation) business.companyInformation = companyInformation;
 
-    if(aiMode)
-    business.aiMode = aiMode;
+    if(industry) business.industry = industry;
+
+    if(phoneNo) business.phoneNo = phoneNo;
+
+    if(address) business.address = address;
+
+    if(bankName) business.bankName = bankName;
+
+    if(accountNo) business.accountNo = accountNo;
+
+    if(description) business.description = description;
+
+    if(ownerName) business.ownerName = ownerName;
+
+    if(ownerPhoneNo) business.ownerPhoneNo = ownerPhoneNo;
+
+    if(ownwerEmail) business.ownwerEmail = ownwerEmail;
+
+    if(instagramHandle) business.instagramHandle = instagramHandle;
+
+    if(facebookHandle) business.facebookHandle = facebookHandle;
+
+    if(twitterHandle) business.twitterHandle = twitterHandle;
+
+    if(aiMode) business.aiMode = aiMode;
+
+    if(plan) business.plan = plan;
 
     try{
         await business.save();
