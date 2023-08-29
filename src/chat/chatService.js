@@ -20,6 +20,7 @@ module.exports.processChatService = async (chatId, email, businessId, channel, c
     }
     let delimiter = '#####'
     let delimiter2 = '####'
+    let delimiter3 = '*****'
 
     chat = await Chat.findOne({chatId: chatId})
 
@@ -47,8 +48,9 @@ module.exports.processChatService = async (chatId, email, businessId, channel, c
             Do not mention or act like an AI to the customer.
             You will be provided with customer service queries.
             The customer service query will be delimited with ${delimiter} characters.
-            Your previous chat with customer will be delimited with ${delimiter2} characters.
-            If request is not in the knowledge base, faqs and company informations that was sent with the query you are to return a json format with escalated set to true and escalation_department to the appropriate department.
+            Your previous messages with customer will be delimited with ${delimiter2} characters.
+            Always use only the information delimited with ${delimiter3} to responde to user query. 
+            If request is not in the inventory, faqs and company informations that was sent with the query you are to return a json format with escalated set to true and escalation_department to the appropriate department.
             Always classify each query into a category.
             Always classify each query and your previous chat with customer into a sentiment.
             Always classify each query into a type.
@@ -59,7 +61,7 @@ module.exports.processChatService = async (chatId, email, businessId, channel, c
             If placingOrder is true return and array of object of the items the user has selected, each object should contain product name, price and image, return the array using the items key in your json response. 
             Determine if user has completed their chat using their current query and set isCompleted to true.
             Always respond to customer query.
-            Set escalated to true if customer query is not related to your knowledge base else set escalated to false.
+            Set escalated to true if customer query is not related to your inventory else set escalated to false.
             Always classify each query and your previous chat with customer into an escalation_department if escalated is set to true else set escalation_department to null
             Make sure you don't add any other key aside this keys response, category, sentiment, type, department, escalated, escalation_department, placingOrder, items, isCompleted and title in your json response.
 
@@ -81,11 +83,10 @@ module.exports.processChatService = async (chatId, email, businessId, channel, c
         {
             "role": "system", 
             "content": `
-            Knowledge base to answer from: ${JSON.stringify(knowledge_base)}.
-            Only answer from your knowledge base.
-            If customer service query is regarding a product in your knowledge base you must include the image of that product from your knowledge base in your response key.
-            If customer service query is not related to your knowledge base then inform the customer that you will escalate their query then set escalated key to true and classify the escalation_department key in your json response.
-            Use the response key to return all the content of your response of the customer query including content from your knowledge base.
+            Inventory to answer from: ${JSON.stringify(knowledge_base)}.
+            If customer service query is regarding a product in your inventory you must include the image of that product from your inventory in your response key.
+            If customer service query is not related to your inventory then inform the customer that you will escalate their query then set escalated key to true and classify the escalation_department key in your json response.
+            Use the response key to return all the content of your response of the customer query including content from your inventory.
             `
         }
     ]
