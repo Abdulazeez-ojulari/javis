@@ -74,11 +74,11 @@ module.exports.processChatService = async (chatId, email, businessId, channel, c
         },
         {
             "role": "system", 
-            "content": `Company Informations: ${JSON.stringify(business.companyInformation)}.`
+            "content": `Company Informations: ${delimiter3}${JSON.stringify(business.companyInformation)}${delimiter3}.`
         },
         {
             "role": "system", 
-            "content": `Company faqs to answer related questions: ${JSON.stringify(faqs)}.`
+            "content": `Company faqs to answer related questions: ${delimiter3}${JSON.stringify(faqs)}${delimiter3}.`
         },
         {
             "role": "system", 
