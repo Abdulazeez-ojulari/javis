@@ -9,8 +9,6 @@ const { Business } = require('../business/businessModel');
 exports.signup = errorMiddleWare( async (req, res) => {
     const { firstName, lastName, email, phoneNo, password, confirm_password } = req.body;
     let id = uuid.v4() + uuid.v4()
-    // const { error } = validate(req.body);
-    // if(error) return res.status(400).send({message: error.details[0].message});
 
     if(password !== confirm_password) return res.status(400).send({message: 'Confirm password'});
 
