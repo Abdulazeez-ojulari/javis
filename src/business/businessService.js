@@ -74,7 +74,8 @@ module.exports.updateBusinessService = async (data) => {
         departments, 
         companyInformation, 
         aiMode ,
-        plan
+        plan,
+        gmail
     } = data;
 
     const business = await Business.findOne({businessId: businessId})
@@ -111,6 +112,8 @@ module.exports.updateBusinessService = async (data) => {
     if(aiMode) business.aiMode = aiMode;
 
     if(plan) business.plan = plan;
+    
+    if(gmail) business.gmail = gmail;
 
     try{
         await business.save();

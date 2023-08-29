@@ -15,6 +15,23 @@ const teamSchema = new mongoose.Schema({
     }
 })
 
+const gmailSchema = new mongoose.Schema({
+    isConfigured: {
+        type: Boolean,
+        required: true,
+        default: false
+    },
+    code: {
+        type: String,
+    },
+    access_token: {
+        type: String,
+    },
+    refresh_token: {
+        type: String,
+    },
+})
+
 let schema = new mongoose.Schema({
     businessId: {
         type: String,
@@ -114,6 +131,9 @@ let schema = new mongoose.Schema({
         type: [String],
         required: true,
         minlength: 1,
+    },
+    gmail: {
+        type: gmailSchema
     },
     created_date: {
 		type: Date,

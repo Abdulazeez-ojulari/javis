@@ -74,7 +74,8 @@ module.exports.updateBusiness = errorMiddleware(async (req, res) => {
         departments, 
         companyInformation, 
         aiMode, 
-        plan 
+        plan,
+        gmail
     } = req.body;
 
     let data = {}
@@ -133,6 +134,8 @@ module.exports.updateBusiness = errorMiddleware(async (req, res) => {
     if(aiMode) data['aiMode'] = aiMode;
 
     if(plan) data['plan'] = plan;
+
+    if(gmail) data['gmail'] = gmail;
 
     let updatedBusiness = await updateBusinessService(data)
     return res.send(updatedBusiness)
