@@ -5,7 +5,23 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const uuid = require("uuid");
 const { Business } = require("../business/businessModel");
+const Invitation = require("../user/invitationModel");
 const { validationResult } = require("express-validator");
+const event = require("events");
+const eventemitter = new event.EventEmitter();
+
+eventemitter.on("acknowledgeInvitation", async (user) => {
+  const { _id, email } = user;
+  const invitations = await Invitation.find({ email });
+  let business;
+  // console.log(_id, invitations);
+  for (const invitation of invitations) {
+    business = await Business.findOne({ businessId: invitation.businessId });
+    // console.log(business);
+    business.teams.push({ userId: _id.toString(), role: "member" });
+    await business.save();
+  }
+});
 
 exports.signup = errorMiddleWare(async (req, res) => {
   const { firstName, lastName, email, phoneNo, password, confirm_password } =
@@ -44,6 +60,8 @@ exports.signup = errorMiddleWare(async (req, res) => {
     return res.status(500).send({ message: "Could not save user" });
   }
   await user.save();
+
+  eventemitter.emit("acknowledgeInvitation", user);
 
   return res.send(user);
 });
