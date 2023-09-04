@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      body {
+        background-color: white;
+        color: black;
+      }
+
+      section.wrapper {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .enif_logo {
+        width: 70px;
+        margin-bottom: 10px;
+      }
+
+      #p1 {
+        margin-bottom: 10px;
+      }
+
+      #p2 {
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="wrapper">
+      <img
+        id="enif_logo"
+        src="../../../../../public/assets/enif_logo.png"
+        alt="enif"
+      />
+      <% if (hasAccount) { %>
+      <p id="p1">
+        <%= inviterName %> has added you as a member to <%= businessName %>
+        business
+      </p>
+      <% } else { %>
+      <p id="p2">
+        <%= inviterName %> has invited you to become a member of <%=
+        businessName %> business
+      </p>
+      <p>Click <a href="<%= frontendUrl %>">here</a> to signup and continue.</p>
+      <% } %>
+    </section>
+  </body>
+</html>
