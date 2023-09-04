@@ -5,6 +5,7 @@ const errorMiddleWare = require("../middlewares/error");
 const Invitation = require("../user/invitationModel");
 const uuid = require("uuid");
 const Mailer = require("../utils/mailer/mailer");
+const s3 = require("../utils/aws");
 
 // const isThisAdminMemberOfBusiness = async function (businessId, adminId) {
 //   return await business.teams.filter(
@@ -213,6 +214,17 @@ exports.inventoryImagesUpload = errorMiddleWare(async (req, res) => {
   }
 
   // upload images to s3 bucket
+  const promises = req.files.map(async (file) => {
+    const params = {
+      Bucket: process.env.S3_BUCKET,
+      Key: file.originalname,
+      Body: file.buffer,
+    };
+
+    await s3.putObject(params).promise();
+  });
+
+  await Promise.all(promises);
 
   return res
     .status(200)
