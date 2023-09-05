@@ -187,3 +187,17 @@ module.exports.getBusinessFaqs = errorMiddleware(async (req, res) => {
 
   return res.send(knowledgeBase.faqs);
 });
+
+module.exports.getAllBusiness = errorMiddleware(async (req, res) => {
+  let { gmail } = req.query;
+  let businesses = await Business.find();
+
+  if (gmail.toLowerCase() === "true") {
+    businesses = await Business.find({ gmail: { $exists: true } });
+  }
+
+  return res.send({
+    message: "All businesses fetched successfully ",
+    data: businesses,
+  });
+});
