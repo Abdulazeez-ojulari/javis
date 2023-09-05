@@ -101,6 +101,7 @@ module.exports.processChatService = async (chatId, email, businessId, channel, c
     }
 }
 
+
 const autoReply = async (promptMsg, systemKnowledge, chatId, chat, businessId, email, customer) => {
 
     let reply = await replyChatService(promptMsg, systemKnowledge, chatId, chat)
