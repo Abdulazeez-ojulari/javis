@@ -1,38 +1,38 @@
-const mongoose = require('mongoose');
-const jwt = require('jsonwebtoken');
+const mongoose = require("mongoose");
+const jwt = require("jsonwebtoken");
 
 const userSchema = new mongoose.Schema({
-    userId: {
-        type: String,
-        required: true,
-        minlength: 1,
-        unique: true
-    },
-    firstName: {
-        type: String,
-        minlength: 3,
-        maxlength: 50,
-        required: true
-    },
-    lastName: {
-        type: String,
-        minlength: 3,
-        maxlength: 50,
-        required: true
-    },
-    email: {
-        type: String,
-        minlength: 3,
-        maxlength: 255,
-        required: true
-    },
-    role: {
-        type: String,
-        minlength: 3,
-        maxlength: 255,
-        // required: true,
-    //     enum: ['executive creative director', 
-    //     'creative director', 
+  userId: {
+    type: String,
+    required: true,
+    minlength: 1,
+    unique: true,
+  },
+  firstName: {
+    type: String,
+    minlength: 3,
+    maxlength: 50,
+    required: true,
+  },
+  lastName: {
+    type: String,
+    minlength: 3,
+    maxlength: 50,
+    required: true,
+  },
+  email: {
+    type: String,
+    minlength: 3,
+    maxlength: 255,
+    required: true,
+  },
+  role: {
+    type: String,
+    minlength: 3,
+    maxlength: 255,
+    // required: true,
+    //     enum: ['executive creative director',
+    //     'creative director',
     //     'deputy creative director',
     //     'head of design',
     //     'group head team lead',
@@ -44,103 +44,109 @@ const userSchema = new mongoose.Schema({
     //     'management trainee',
     //     'intern',
     // ]
-    },
-    // department: {
-    //     type: String,
-    //     minlength: 3,
-    //     maxlength: 255,
-    //     required: true,
-    //     // enum: ['creative', 'brand', 'hr admin', 'finance', 'media 100']
-    // },
-    password: {
-        type: String,
-        minlength: 8,
-        maxlength: 1024,
-        required: true
-    },
-    // passwordResetToken: {
-    //     type: String,
-    //     minlength: 8,
-    //     maxlength: 1024
-    // },
-    // password: {
-    //     type: Date
-    // },
-    // userAddress: {
-    //     type: String,
-    //     minlength: 10,
-    //     maxlength: 1024
-    // },
-    phoneNo: {
-        type: String,
-        minlength: 7,
-        required: true
-    },
-    isVerified: {
-        type: Boolean,
-        default: true
-    },
-    isAdmin: {
-        type: Boolean,
-        default: false
-    },
-	created_date: {
-		type: Date,
-		required: true,
-        default: Date.now()
-	},
-	update_date: {
-		type: Date,
-		required: true,
-        default: Date.now()
-	},
-    isActive: {
-        type: Boolean,
-        default: true
-    },
-})
-
-userSchema.method('toJson',function() {
-    const {__v, _id, ...object } = this.toObject();
-    object.id = _id;
-    return object
+  },
+  // department: {
+  //     type: String,
+  //     minlength: 3,
+  //     maxlength: 255,
+  //     required: true,
+  //     // enum: ['creative', 'brand', 'hr admin', 'finance', 'media 100']
+  // },
+  password: {
+    type: String,
+    minlength: 8,
+    maxlength: 1024,
+    required: true,
+  },
+  // passwordResetToken: {
+  //     type: String,
+  //     minlength: 8,
+  //     maxlength: 1024
+  // },
+  // password: {
+  //     type: Date
+  // },
+  // userAddress: {
+  //     type: String,
+  //     minlength: 10,
+  //     maxlength: 1024
+  // },
+  phoneNo: {
+    type: String,
+    minlength: 7,
+    required: true,
+  },
+  isVerified: {
+    type: Boolean,
+    default: true,
+  },
+  isAdmin: {
+    type: Boolean,
+    default: false,
+  },
+  created_date: {
+    type: Date,
+    required: true,
+    default: Date.now(),
+  },
+  update_date: {
+    type: Date,
+    required: true,
+    default: Date.now(),
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
 });
 
-userSchema.methods.generateToken = function() {
-    const token = jwt.sign({ id: this.id, isVerified: this.isVerified, isAdmin: this.isAdmin, userId: this.userId}, process.env.ENIF_SECRET)
-    return token;
-}
+userSchema.method("toJson", function () {
+  const { __v, _id, ...object } = this.toObject();
+  object.id = _id;
+  return object;
+});
 
-const User = mongoose.model('User', userSchema);
+userSchema.methods.generateToken = function () {
+  const token = jwt.sign(
+    {
+      id: this.id,
+      isVerified: this.isVerified,
+      isAdmin: this.isAdmin,
+      userId: this.userId,
+    },
+    process.env.ENIF_SECRET
+  );
+  return token;
+};
+
+const User = mongoose.model("User", userSchema);
 
 const tokenSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: 'User'
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "User",
+  },
+  token: {
+    type: String,
+    required: true,
+  },
+  expireAt: {
+    type: Date,
+    default: Date.now(),
+    index: {
+      expires: 86400000,
     },
-    token: {
-        type: String,
-        required: true
-    },
-    expireAt: {
-        type: Date,
-        default: Date.now(),
-        index: {
-            expires: 86400000
-        }
-    }
-})
-
-userSchema.method('toJson',function() {
-    const {__v, _id, ...object } = this.toObject();
-    object.id = _id;
-    return object
+  },
 });
 
-const Token = mongoose.model('Token', tokenSchema);
+userSchema.method("toJson", function () {
+  const { __v, _id, ...object } = this.toObject();
+  object.id = _id;
+  return object;
+});
 
-
+const Token = mongoose.model("Token", tokenSchema);
 
 exports.User = User;
 exports.Token = Token;
