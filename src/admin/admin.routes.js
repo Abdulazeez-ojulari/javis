@@ -30,7 +30,7 @@ module.exports = function (app) {
 
   router.put(
     "/resolve-ticket/business/:businessId/chat/:chatId",
-    controller.resolveTicket
+    controller.resolveTicket 
   );
 
   app.use("/ai/admin", [auth], router);

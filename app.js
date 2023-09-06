@@ -248,6 +248,7 @@ app.use("/ai/knowledge-base", knowledgeBase);
 app.use("/ai/user", user);
 app.use("/ai/order", order);
 require("./src/admin/admin.routes")(app);
+require("./")
 
 const PORT = process.env.PORT || 3000;
 
