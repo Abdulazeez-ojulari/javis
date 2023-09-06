@@ -10,9 +10,9 @@ module.exports = function (req, res, next) {
     if (authToken[0] !== "Bearer") {
       res.status(400).send({ messsage: "wrong auth type" });
     }
-    
+
     const decoded = jwt.verify(authToken[1], process.env.ENIF_SECRET);
-    
+
     if (decoded.isVerified) {
       req.user = decoded;
       next();

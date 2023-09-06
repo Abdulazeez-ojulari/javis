@@ -27,6 +27,7 @@
     "nodemailer": "^6.9.4",
     "nodemon": "^2.0.22",
     "openai": "^3.3.0",
+    "paystack": "^2.0.1",
     "read-excel-file": "^5.6.1",
     "uuid": "^9.0.0"
   }
