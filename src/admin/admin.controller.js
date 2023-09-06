@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const { Business } = require("../business/businessModel");
 const { User } = require("../user/userModel");
+const { Chat } = require("../chat/chatModel");
 const errorMiddleWare = require("../middlewares/error");
 const Invitation = require("../user/invitationModel");
 const uuid = require("uuid");
@@ -229,4 +230,41 @@ exports.inventoryImagesUpload = errorMiddleWare(async (req, res) => {
   return res
     .status(200)
     .json({ message: "Inventory images uploaded successfully" });
+});
+
+exports.resolveTicket = errorMiddleWare(async (req, res) => {
+  const { businessId, chatId } = req.params;
+  const user = req.user;
+  const business = await Business.findOne({ businessId: businessId });
+  if (!business) {
+    return res.status(404).json({ message: "Invalid business ID provided" });
+  }
+
+  /* checks that admin initiating the resolve ticket request is a member of the business
+  and that role is either admin or owner*/
+  const isThisAdminMemberOfBusiness = business.teams.filter(
+    (team) =>
+      team.userId.toString() === user.id &&
+      (team.role === "admin" || team.role === "owner")
+  );
+
+  if (isThisAdminMemberOfBusiness.length <= 0) {
+    return res.status(403).json({
+      message: "You do not possess the permission to access this route",
+    });
+  }
+
+  const chat = await Chat.findOne({ businessId, chatId });
+
+  if (!chat) {
+    return res.status(404).json({ message: "Chat not found", data: chat });
+  }
+
+  chat.escalated = false;
+
+  await chat.save();
+
+  return res
+    .status(200)
+    .json({ message: "Ticket resolved successfully", data: chat });
 });

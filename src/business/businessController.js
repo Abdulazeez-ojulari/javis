@@ -192,7 +192,8 @@ module.exports.getAllBusiness = errorMiddleware(async (req, res) => {
   let { gmail } = req.query;
   let businesses = await Business.find();
 
-  if (gmail.toLowerCase() === "true") {
+  // gmail is true, only fetch business where the gmail field is valid or exists
+  if (gmail && gmail.toLowerCase() === "true") {
     businesses = await Business.find({ gmail: { $exists: true } });
   }
 

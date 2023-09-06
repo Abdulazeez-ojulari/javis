@@ -28,5 +28,10 @@ module.exports = function (app) {
     controller.inventoryImagesUpload
   );
 
+  router.put(
+    "/resolve-ticket/business/:businessId/chat/:chatId",
+    controller.resolveTicket
+  );
+
   app.use("/ai/admin", [auth], router);
 };

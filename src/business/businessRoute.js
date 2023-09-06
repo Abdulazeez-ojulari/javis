@@ -11,6 +11,6 @@ router.get("/get/:businessId", auth, businessController.getBusiness);
 
 router.get("/get-faqs/:businessId", businessController.getBusinessFaqs);
 
-router.get("/", businessController.getAllBusiness);
+router.get("/all", businessController.getAllBusiness);
 
 module.exports = router;
