@@ -6,9 +6,8 @@ module.exports = function (app) {
   const controller = require("./payment.controller");
 
   router.post(
-    "/plan/pay/business/:businessId",
+    "",
     [
-      auth,
       body("amount")
         .isInt({ min: 1000 })
         .withMessage("Enter valid plan amount"),
@@ -17,7 +16,8 @@ module.exports = function (app) {
     controller.pay
   );
 
-  router.post("/webhook", controller.verifyPayment);
+  // router.post("/webhook", controller.verifyPayment);
+  router.post("/verify/:trxRef", controller.verifyPayment);
 
-  app.use("/ai", router);
+  app.use("/ai/plan/pay", auth, router);
 };

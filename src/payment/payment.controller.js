@@ -14,7 +14,7 @@ const crypto = require("crypto");
 
 exports.pay = errorMiddleWare(async (req, res) => {
   const { id, userId, isAdmin } = req.user;
-  const { businessId } = req.params;
+  // const { businessId } = req.params;
   const errors = validationResult(req);
   const transactionId = uuid.v4();
   const reference = generateTransactionReference();
@@ -39,32 +39,32 @@ exports.pay = errorMiddleWare(async (req, res) => {
     return res.status(403).json({ message: "User not found", data: user });
   }
 
-  const business = await Business.findOne({ businessId: businessId });
+  // const business = await Business.findOne({ businessId: businessId });
 
-  if (!business) {
-    return res
-      .status(404)
-      .json({ message: "Business not found", data: business });
-  }
+  // if (!business) {
+  //   return res
+  //     .status(404)
+  //     .json({ message: "Business not found", data: business });
+  // }
 
   /* checks that admin initiating the admin delete request is a member of the business
   and that role is either admin or owner*/
-  const isThisAdminMemberOfBusiness = business.teams.filter((team) => {
-    // console.log(team.userId._id.toString());
-    return (
-      team.userId._id.toString() === id &&
-      (team.role === "admin" || team.role === "owner")
-    );
-  });
+  // const isThisAdminMemberOfBusiness = business.teams.filter((team) => {
+  //   return (
+  //     team.userId._id.toString() === id &&
+  //     (team.role === "admin" || team.role === "owner")
+  //   );
+  // });
 
-  if (isThisAdminMemberOfBusiness.length <= 0) {
-    return res.status(403).json({
-      message: "You do not possess the permission to access this route",
-    });
-  }
+  // if (isThisAdminMemberOfBusiness.length <= 0) {
+  //   return res.status(403).json({
+  //     message: "You do not possess the permission to access this route",
+  //   });
+  // }
 
   const ongoingPlan = await PlanPayment.findOne({
-    businessId: business.id,
+    // businessId: business.id,
+    userId: user.id,
     transactionStatus: PAYMENT_STATUS["SUCCESS"],
     transactionExpirationDate: { $gt: currentDate },
   });
@@ -87,14 +87,13 @@ exports.pay = errorMiddleWare(async (req, res) => {
   const transactionResponse = await paystack.transaction.initialize({
     ...paymentData,
   });
-  // console.log(transactionResponse);
 
   const planPaymentObj = {
     transactionId: transactionId,
     plan,
     amount,
     userId: id,
-    businessId: business.id,
+    // businessId: business.id,
     reference,
     paystackReference: transactionResponse.data.reference,
     transactionStatus: PAYMENT_STATUS["PENDING"],
@@ -114,35 +113,78 @@ exports.pay = errorMiddleWare(async (req, res) => {
   });
 });
 
+// exports.verifyPayment = errorMiddleWare(async (req, res) => {
+//   const event = req.body;
+//   const secret = process.env.PAYSTACK_SECRET;
+//   const hash = crypto
+//     .createHmac("sha512", secret)
+//     .update(JSON.stringify(req.body))
+//     .digest("hex");
+
+//   if (hash != req.headers["x-paystack-signature"]) {
+//     console.log("Invalid request from paystack");
+//     return;
+//   }
+//   const trxReference = event.data.reference;
+//   const paymentDate = event.data.paid_at;
+//   const created_at = event.data.created_at;
+
+//   const transaction = await PlanPayment.findOne({ reference: trxReference });
+//   if (!transaction) {
+//     console.log("invalid transaction reference");
+//     return;
+//   }
+
+//   // verify transaction reference
+//   const verifyResponse = await paystack.transaction.verify(trxReference);
+//   // console.log(verifyResponse, hash, req.headers["x-paystack-signature"]);
+//   transaction.transactionDate = paymentDate;
+//   transaction.created_date = created_at;
+//   transaction.updated_date = new Date();
+//   if (verifyResponse.data.status === "success") {
+//     transaction.transactionStatus = PAYMENT_STATUS["SUCCESS"];
+//   } else {
+//     transaction.transactionStatus = PAYMENT_STATUS["FAILED"];
+//   }
+
+//   await transaction.save();
+
+//   // console.log(
+//   //   transaction,
+//   //   "-----------------------------------------------------",
+//   //   verifyResponse
+//   // );
+
+//   // Verify the webhook event (using Paystack's library or manually)
+//   // Handle the event and update your database accordingly
+
+//   res.status(200).json({ message: "Webhook received" });
+// });
+
 exports.verifyPayment = errorMiddleWare(async (req, res) => {
-  const event = req.body;
-  const secret = process.env.PAYSTACK_SECRET;
-  const hash = crypto
-    .createHmac("sha512", secret)
-    .update(JSON.stringify(req.body))
-    .digest("hex");
+  const { trxRef } = req.params;
 
-  if (hash != req.headers["x-paystack-signature"]) {
-    console.log("Invalid request from paystack");
-    return;
-  }
-  const trxReference = event.data.reference;
-  const paymentDate = event.data.paid_at;
-  const created_at = event.data.created_at;
-
-  const transaction = await PlanPayment.findOne({ reference: trxReference });
+  const transaction = await PlanPayment.findOne({ reference: trxRef });
   if (!transaction) {
     console.log("invalid transaction reference");
     return;
   }
 
+  if (transaction.transactionStatus === PAYMENT_STATUS["SUCCESS"]) {
+    return res.status(200).json({
+      message: "Transaction verified successfully",
+      data: transaction,
+    });
+  }
+
   // verify transaction reference
-  const verifyResponse = await paystack.transaction.verify(trxReference);
-  // console.log(verifyResponse, hash, req.headers["x-paystack-signature"]);
-  transaction.transactionDate = paymentDate;
-  transaction.created_date = created_at;
+  const { data } = await paystack.transaction.verify(trxRef);
+  // console.log(data);
+
+  transaction.transactionDate = data.paid_at;
+  transaction.created_date = data.created_at;
   transaction.updated_date = new Date();
-  if (verifyResponse.data.status === "success") {
+  if (data.status === "success") {
     transaction.transactionStatus = PAYMENT_STATUS["SUCCESS"];
   } else {
     transaction.transactionStatus = PAYMENT_STATUS["FAILED"];
@@ -150,14 +192,7 @@ exports.verifyPayment = errorMiddleWare(async (req, res) => {
 
   await transaction.save();
 
-  // console.log(
-  //   transaction,
-  //   "-----------------------------------------------------",
-  //   verifyResponse
-  // );
-
-  // Verify the webhook event (using Paystack's library or manually)
-  // Handle the event and update your database accordingly
-
-  res.status(200).json({ message: "Webhook received" });
+  res
+    .status(200)
+    .json({ message: "Transaction verified successfully", data: transaction });
 });

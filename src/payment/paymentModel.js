@@ -31,7 +31,7 @@ const planSchema = new mongoose.Schema({
   },
   businessId: {
     type: mongoose.Types.ObjectId,
-    required: true,
+    // required: true,
     ref: "Business",
   },
   reference: {
