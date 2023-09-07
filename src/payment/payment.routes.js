@@ -6,7 +6,7 @@ module.exports = function (app) {
   const controller = require("./payment.controller");
 
   router.post(
-    "",
+    "/",
     [
       body("amount")
         .isInt({ min: 1000 })
