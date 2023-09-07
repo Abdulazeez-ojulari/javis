@@ -248,7 +248,7 @@ app.use("/ai/knowledge-base", knowledgeBase);
 app.use("/ai/user", user);
 app.use("/ai/order", order);
 require("./src/admin/admin.routes")(app);
-require("./")
+require("./src/payment/payment.routes")(app);
 
 const PORT = process.env.PORT || 3000;
 

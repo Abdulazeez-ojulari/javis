@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { PAYMENT_STATUS } = require("../utils/const");
+const { PAYMENT_STATUS, PLAN } = require("../utils/const");
 
 // enum PaymentStatus {
 //     SUCCESS = 'success',
@@ -8,7 +8,7 @@ const { PAYMENT_STATUS } = require("../utils/const");
 // }
 
 const planSchema = new mongoose.Schema({
-  userId: {
+  transactionId: {
     type: String,
     required: true,
     minlength: 1,
@@ -18,6 +18,7 @@ const planSchema = new mongoose.Schema({
     type: String,
     required: true,
     minlength: 1,
+    enum: Object.values(PLAN),
   },
   amount: {
     type: Number,
@@ -27,6 +28,11 @@ const planSchema = new mongoose.Schema({
     type: mongoose.Types.ObjectId,
     ref: "User",
     required: true,
+  },
+  businessId: {
+    type: mongoose.Types.ObjectId,
+    required: true,
+    ref: "Business",
   },
   reference: {
     type: String,
@@ -38,24 +44,25 @@ const planSchema = new mongoose.Schema({
   },
   transactionDate: {
     type: Date,
-    required: true,
+    required: false,
   },
   metaData: {
     type: String,
     required: false,
   },
-  paymentStatus: {
+  transactionStatus: {
     type: String,
     required: true,
     default: "failed",
     enum: Object.values(PAYMENT_STATUS),
   },
+  transactionExpirationDate: { type: Date, required: true },
   created_date: {
     type: Date,
     required: true,
     default: Date.now(),
   },
-  update_date: {
+  updated_date: {
     type: Date,
     required: true,
     default: Date.now(),
