@@ -5,24 +5,22 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const uuid = require("uuid");
 const { Business } = require("../business/businessModel");
-const Invitation = require("../user/invitationModel");
 const { validationResult } = require("express-validator");
-const event = require("events");
-const eventemitter = new event.EventEmitter();
+const eventEmitter = require("../event/events");
 const s3 = require("../utils/aws");
 
-eventemitter.on("acknowledgeInvitation", async (user) => {
-  const { _id, email } = user;
-  const invitations = await Invitation.find({ email });
-  let business;
-  // console.log(_id, invitations);
-  for (const invitation of invitations) {
-    business = await Business.findOne({ businessId: invitation.businessId });
-    // console.log(business);
-    business.teams.push({ userId: _id.toString(), role: "member" });
-    await business.save();
-  }
-});
+// eventEmitter.on("acknowledgeInvitation", async (user) => {
+//   const { _id, email } = user;
+//   const invitations = await Invitation.find({ email });
+//   let business;
+//   // console.log(_id, invitations);
+//   for (const invitation of invitations) {
+//     business = await Business.findOne({ businessId: invitation.businessId });
+//     // console.log(business);
+//     business.teams.push({ userId: _id.toString(), role: "member" });
+//     await business.save();
+//   }
+// });
 
 exports.signup = errorMiddleWare(async (req, res) => {
   const { firstName, lastName, email, phoneNo, password, confirm_password } =
@@ -62,7 +60,7 @@ exports.signup = errorMiddleWare(async (req, res) => {
   }
   await user.save();
 
-  eventemitter.emit("acknowledgeInvitation", user);
+  eventEmitter.emit("acknowledgeInvitation", user);
 
   return res.send(user);
 });
