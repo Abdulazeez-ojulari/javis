@@ -9,6 +9,7 @@ const Invitation = require("../user/invitationModel");
 const { validationResult } = require("express-validator");
 const event = require("events");
 const eventemitter = new event.EventEmitter();
+const s3 = require("../utils/aws");
 
 eventemitter.on("acknowledgeInvitation", async (user) => {
   const { _id, email } = user;
@@ -462,5 +463,40 @@ exports.changePassword = errorMiddleWare(async (req, res) => {
     message: "Password changed successfully",
     userInfo,
     passwordMatch,
+  });
+});
+
+exports.imagesUpload = errorMiddleWare(async (req, res) => {
+  const user = req.user;
+  const files = req.files;
+  const folder = "images";
+  const uploadedUrls = [];
+
+  /* checks that admin initiating the admin delete request is a member of the business
+  and that role is either admin or owner*/
+
+  if (!files || files.length <= 0) {
+    return res
+      .status(400)
+      .json({ message: "You must at least upload one image" });
+  }
+
+  // upload images to s3 bucket
+  for (const file of files) {
+    const params = {
+      Bucket: process.env.S3_BUCKET,
+      Key: `${folder}/${file.originalname}-${user.userId}`,
+      Body: file.buffer,
+    };
+
+    // const uploadResult = await s3.putObject(params).promise();
+    const uploadResult = await s3.upload(params).promise();
+    uploadedUrls.push(uploadResult.Location);
+  }
+  // console.log(uploadedUrls);
+
+  return res.status(200).json({
+    message: "Images uploaded successfully",
+    data: uploadedUrls,
   });
 });

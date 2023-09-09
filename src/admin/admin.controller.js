@@ -190,6 +190,8 @@ exports.inventoryImagesUpload = errorMiddleWare(async (req, res) => {
   const user = req.user;
   const business = await Business.findOne({ businessId: businessId });
   const files = req.files;
+  const folder = "inventory";
+  const uploadedUrls = [];
   if (!business) {
     return res.status(404).json({ message: "Invalid business ID provided" });
   }
@@ -215,21 +217,26 @@ exports.inventoryImagesUpload = errorMiddleWare(async (req, res) => {
   }
 
   // upload images to s3 bucket
-  const promises = req.files.map(async (file) => {
+  for (const file of files) {
     const params = {
       Bucket: process.env.S3_BUCKET,
-      Key: file.originalname,
+      Key: `${folder}/${file.originalname}-${user.userId}`,
       Body: file.buffer,
     };
 
-    await s3.putObject(params).promise();
+    // const uploadResult = await s3.putObject(params).promise();
+    const uploadResult = await s3.upload(params).promise();
+
+    uploadedUrls.push(uploadResult.Location);
+  }
+  // console.log(uploadedUrls);
+
+  // const s3Response = await Promise.all(promises);
+
+  return res.status(200).json({
+    message: "Inventory images uploaded successfully",
+    data: uploadedUrls,
   });
-
-  await Promise.all(promises);
-
-  return res
-    .status(200)
-    .json({ message: "Inventory images uploaded successfully" });
 });
 
 exports.resolveTicket = errorMiddleWare(async (req, res) => {

@@ -15,4 +15,4 @@ exports.inventoryImagesUpload = multer({
       cb(error, false);
     }
   },
-}).array("inventoryImages", 6);
+}).array("images", 6);

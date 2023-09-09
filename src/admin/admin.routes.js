@@ -23,14 +23,14 @@ module.exports = function (app) {
   );
 
   router.post(
-    "/image-upload/:businessId/business",
+    "/inventory-image-upload/:businessId/business",
     [inventoryImagesUpload],
     controller.inventoryImagesUpload
   );
 
   router.put(
     "/resolve-ticket/business/:businessId/chat/:chatId",
-    controller.resolveTicket 
+    controller.resolveTicket
   );
 
   app.use("/ai/admin", [auth], router);

@@ -4,6 +4,7 @@ const express = require("express");
 const router = express.Router();
 const { isAdmin } = require("../middlewares/isAdmin");
 const { body } = require("express-validator");
+const { inventoryImagesUpload } = require("../middlewares/multer");
 
 router.post("/signup", user.signup);
 
@@ -29,6 +30,8 @@ router.put(
   ],
   user.changePassword
 );
+
+router.post("/image-upload", [auth, inventoryImagesUpload], user.imagesUpload);
 
 // delete business administrators
 // router.delete(
