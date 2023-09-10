@@ -22,7 +22,13 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
 
   let chat = await Chat.findOne({ chatId: id });
 
-  eventEmitter.emit("notifyNewChat",{team:business.teams,});
+  eventEmitter.emit("notifyNewChat", {
+    businessId,
+    customer,
+    email,
+    channel,
+    phoneNo,
+  });
 
   return res.send(chat);
 });
@@ -37,6 +43,15 @@ module.exports.sendChat = errorMiddleware(async (req, res) => {
     customer,
     promptMsg
   );
+
+  eventEmitter.emit("notifyNewChatMessage", {
+    businessId,
+    customer,
+    promptMsg,
+    email,
+    channel,
+    chatId
+  });
 
   return res.send(data);
 });
