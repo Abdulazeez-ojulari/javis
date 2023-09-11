@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate-v2");
 
 const gmailSchema = new mongoose.Schema({
   emailId: {
@@ -72,6 +73,7 @@ const gmailSchema = new mongoose.Schema({
     default: false,
   },
   enifResponseDate: { type: Date, required: false },
+  mailSentDate: { type: Date, required: false },
   created_date: {
     type: Date,
     required: true,
@@ -90,6 +92,8 @@ gmailSchema.method("toJSON", function () {
   return object;
 });
 
+gmailSchema.plugin(mongoosePaginate);
+
 const Gmail = mongoose.model("Gmail", gmailSchema);
 
-exports.Gmail = Gmail;
+module.exports = Gmail;
