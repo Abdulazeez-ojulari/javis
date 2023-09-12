@@ -52,3 +52,10 @@ exports.getPagination = (page, size) => {
 
   return { limit, offset };
 };
+
+exports.stringToLowerCase = (string) => {
+  if (typeof string === "string") {
+    return string.toLowerCase();
+  }
+  return "";
+};

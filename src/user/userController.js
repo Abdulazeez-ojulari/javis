@@ -8,6 +8,7 @@ const { Business } = require("../business/businessModel");
 const { validationResult } = require("express-validator");
 const eventEmitter = require("../event/events");
 const s3 = require("../utils/aws");
+const { stringToLowerCase } = require("../utils/helper");
 
 // eventEmitter.on("acknowledgeInvitation", async (user) => {
 //   const { _id, email } = user;
@@ -26,11 +27,12 @@ exports.signup = errorMiddleWare(async (req, res) => {
   const { firstName, lastName, email, phoneNo, password, confirm_password } =
     req.body;
   let id = uuid.v4() + uuid.v4();
+  const lowerCaseEmail = stringToLowerCase(email);
 
   if (password !== confirm_password)
     return res.status(400).send({ message: "Confirm password" });
 
-  let user = await User.findOne({ email: email });
+  let user = await User.findOne({ email: lowerCaseEmail });
   if (user)
     return res
       .status(400)
@@ -40,7 +42,7 @@ exports.signup = errorMiddleWare(async (req, res) => {
     userId: id,
     firstName: firstName,
     lastName: lastName,
-    email: email,
+    email: lowerCaseEmail,
     phoneNo: phoneNo,
     password: password,
   });
@@ -68,8 +70,10 @@ exports.signup = errorMiddleWare(async (req, res) => {
 exports.login = errorMiddleWare(async (req, res) => {
   // const { error } = validateLogin(req.body);
   // if(error) return res.status(400).send({message: error.details[0].message});
+  const { email } = req.body;
+  const lowerCaseEmail = stringToLowerCase(email);
 
-  let user = await User.findOne({ email: req.body.email });
+  let user = await User.findOne({ email: lowerCaseEmail });
   if (!user)
     return res.status(400).send({ message: "Invalid Email or Password" });
 
@@ -91,6 +95,8 @@ exports.login = errorMiddleWare(async (req, res) => {
 });
 
 exports.confirmEmail = errorMiddleWare(async (req, res) => {
+  const { email } = req.params;
+  const lowerCaseEmail = stringToLowerCase(email);
   let token = await Token.findOne({ token: req.params.token });
   console.log(token);
   if (!token)
@@ -98,7 +104,7 @@ exports.confirmEmail = errorMiddleWare(async (req, res) => {
       .status(400)
       .send({ message: "Your token might have expired resend token" });
 
-  const user = await User.findOne({ email: req.params.email });
+  const user = await User.findOne({ email: lowerCaseEmail });
   console.log(user);
   if (!user)
     return res.status(400).send({
@@ -120,7 +126,9 @@ exports.confirmEmail = errorMiddleWare(async (req, res) => {
 });
 
 exports.resendEmail = errorMiddleWare(async (req, res) => {
-  let user = await User.findOne({ email: req.body.email });
+  const { email } = req.body;
+  const lowerCaseEmail = stringToLowerCase(email);
+  let user = await User.findOne({ email: lowerCaseEmail });
   if (!user) return res.status(400).send({ message: "Email not found" });
 
   if (user.isVerified)
@@ -208,7 +216,9 @@ module.exports.findAll = errorMiddleWare(async (req, res) => {
 });
 
 exports.forgotPassword = errorMiddleWare(async (req, res) => {
-  let user = await User.findOne({ email: req.body.email });
+  const { email } = req.body;
+  const lowerCaseEmail = stringToLowerCase(email);
+  let user = await User.findOne({ email: lowerCaseEmail });
   if (!user) return res.status(400).send({ message: "Email not found" });
 
   if (!user.isVerified)
@@ -333,7 +343,9 @@ exports.forgotPassword = errorMiddleWare(async (req, res) => {
 // });
 
 exports.resetPassword = errorMiddleWare(async (req, res) => {
-  let user = await User.findOne({ email: req.body.email });
+  const { email } = req.body;
+  const lowerCaseEmail = stringToLowerCase(email);
+  let user = await User.findOne({ email: lowerCaseEmail });
   if (!user)
     return res
       .status(400)
