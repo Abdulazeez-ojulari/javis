@@ -155,7 +155,7 @@ module.exports.getUserChatMessages = errorMiddleware(async (req, res) => {
     return res.status(404).send({ message: "Email not provided" });
   }
 
-  if (businessId) {
+  if (!businessId) {
     messages = await Chat.find({ email: email }).select("messages");
   } else {
     messages = await Chat.find({ email, businessId }).select("messages");
