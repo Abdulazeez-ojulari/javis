@@ -50,7 +50,7 @@ module.exports.sendChat = errorMiddleware(async (req, res) => {
     promptMsg,
     email,
     channel,
-    chatId
+    chatId,
   });
 
   return res.send(data);
@@ -91,14 +91,32 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
   }
 });
 
+// module.exports.getUserChat = errorMiddleware(async (req, res) => {
+//   let { email } = req.params;
+//   // let { businessId } = req.query;
+
+//   if (!email) {
+//     return res.status(404).send({ message: "Email not provided" });
+//   }
+
+//   let chats = await Chat.find({ email: email });
+//   return res.send(chats);
+// });
+
 module.exports.getUserChat = errorMiddleware(async (req, res) => {
   let { email } = req.params;
+  let { businessId } = req.query;
+  let chats;
 
   if (!email) {
     return res.status(404).send({ message: "Email not provided" });
   }
 
-  let chats = await Chat.find({ email: email });
+  if (businessId) {
+    chats = await Chat.find({ email: email }).select("-messages");
+  } else {
+    chats = await Chat.find({ email, businessId }).select("-messages");
+  }
   return res.send(chats);
 });
 

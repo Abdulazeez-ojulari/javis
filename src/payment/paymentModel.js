@@ -41,10 +41,12 @@ const planSchema = new mongoose.Schema({
   paystackReference: {
     type: String,
     required: true,
+    unique: true,
   },
   transactionDate: {
     type: Date,
     required: false,
+    unique: true,
   },
   metaData: {
     type: String,
