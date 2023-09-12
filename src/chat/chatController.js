@@ -103,6 +103,23 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
 //   return res.send(chats);
 // });
 
+// module.exports.getUserChat = errorMiddleware(async (req, res) => {
+//   let { email } = req.params;
+//   let { businessId } = req.query;
+//   let chats;
+
+//   if (!email) {
+//     return res.status(404).send({ message: "Email not provided" });
+//   }
+
+//   if (!businessId) {
+//     chats = await Chat.find({ email: email }).select("-messages");
+//   } else {
+//     chats = await Chat.find({ email, businessId }).select("-messages");
+//   }
+//   return res.send(chats);
+// });
+
 module.exports.getUserChat = errorMiddleware(async (req, res) => {
   let { email } = req.params;
   let { businessId } = req.query;
@@ -113,9 +130,38 @@ module.exports.getUserChat = errorMiddleware(async (req, res) => {
   }
 
   if (!businessId) {
-    chats = await Chat.find({ email: email }).select("-messages");
+    // chats = await Chat.find({ email: email }).select("-messages");
+    chats = await Chat.aggregate([
+      {
+        $match: {
+          email,
+        },
+      },
+      {
+        $project: {
+          businessId: 1,
+          email: 1,
+          messages: { $slice: ["$messages", -2] },
+        },
+      },
+    ]);
   } else {
-    chats = await Chat.find({ email, businessId }).select("-messages");
+    // chats = await Chat.find({ email, businessId }).select("-messages");
+    chats = await Chat.aggregate([
+      {
+        $match: {
+          businessId,
+          email,
+        },
+      },
+      {
+        $project: {
+          businessId: 1,
+          email: 1,
+          messages: { $slice: ["$messages", -2] },
+        },
+      },
+    ]);
   }
   return res.send(chats);
 });
