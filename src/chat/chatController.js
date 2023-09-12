@@ -112,7 +112,7 @@ module.exports.getUserChat = errorMiddleware(async (req, res) => {
     return res.status(404).send({ message: "Email not provided" });
   }
 
-  if (businessId) {
+  if (!businessId) {
     chats = await Chat.find({ email: email }).select("-messages");
   } else {
     chats = await Chat.find({ email, businessId }).select("-messages");
@@ -144,6 +144,26 @@ module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
   });
 
   return res.send(chats);
+});
+
+module.exports.getUserChatMessages = errorMiddleware(async (req, res) => {
+  let { email } = req.params;
+  let { businessId } = req.query;
+  let messages;
+
+  if (!email) {
+    return res.status(404).send({ message: "Email not provided" });
+  }
+
+  if (businessId) {
+    messages = await Chat.find({ email: email }).select("messages");
+  } else {
+    messages = await Chat.find({ email, businessId }).select("messages");
+  }
+  return res.send({
+    message: "Conversation messages fetched successfully",
+    data: messages,
+  });
 });
 
 // module.exports.acknowledgeChat = errorMiddleware(async (req, res) => {});

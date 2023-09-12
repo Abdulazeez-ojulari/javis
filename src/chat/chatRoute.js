@@ -10,6 +10,8 @@ router.post("/reply", chatController.replyChat);
 
 router.get("/user/:email", chatController.getUserChat);
 
+router.get("/user/:email/messages", chatController.getUserChatMessages);
+
 router.get("/conversation/:chatId", chatController.getConversation);
 
 router.get("/all-chat/:businessId", chatController.getBusinessChats);
