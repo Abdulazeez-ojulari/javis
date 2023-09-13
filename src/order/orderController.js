@@ -1,6 +1,7 @@
 const { validationResult } = require("express-validator");
 const errorMiddleware = require("../middlewares/error");
 const { Order } = require("./orderModel");
+const { Business } = require("../business/businessModel");
 
 module.exports.getOrders = errorMiddleware(async (req, res) => {
   let { businessId } = req.params;
@@ -16,6 +17,7 @@ module.exports.getOrders = errorMiddleware(async (req, res) => {
 module.exports.cancelOrder = errorMiddleware(async (req, res) => {
   let { businessId, chatId } = req.params;
   const { email } = req.body;
+  const user = req.user;
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -27,6 +29,25 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
     return res
       .status(400)
       .json({ message: "Bad Request", data: validationErrors });
+  }
+
+  const business = await Business.findOne({ businessId });
+
+  if (!business) {
+    return res.status(404).send({ message: "Business doesn't exists" });
+  }
+
+  const isThisAdminMemberOfBusiness = business.teams.filter((team) => {
+    return (
+      team.userId._id.toString() === user.id &&
+      (team.role === "admin" || team.role === "owner")
+    );
+  });
+
+  if (isThisAdminMemberOfBusiness.length <= 0) {
+    return res.status(403).json({
+      message: "You do not possess the permission to access this route",
+    });
   }
 
   const order = await Order.findOne({ businessId, email, chatId });
@@ -43,6 +64,7 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
 module.exports.confirmOrder = errorMiddleware(async (req, res) => {
   let { businessId, chatId } = req.params;
   const { email } = req.body;
+  const user = req.user;
   const errors = validationResult(req);
 
   if (!errors.isEmpty()) {
@@ -54,6 +76,25 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
     return res
       .status(400)
       .json({ message: "Bad Request", data: validationErrors });
+  }
+
+  const business = await Business.findOne({ businessId });
+
+  if (!business) {
+    return res.status(404).send({ message: "Business doesn't exists" });
+  }
+
+  const isThisAdminMemberOfBusiness = business.teams.filter((team) => {
+    return (
+      team.userId._id.toString() === user.id &&
+      (team.role === "admin" || team.role === "owner")
+    );
+  });
+
+  if (isThisAdminMemberOfBusiness.length <= 0) {
+    return res.status(403).json({
+      message: "You do not possess the permission to access this route",
+    });
   }
 
   const order = await Order.findOne({ businessId, email, chatId });
