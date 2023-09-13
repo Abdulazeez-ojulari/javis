@@ -2,6 +2,7 @@ const { body } = require("express-validator");
 const orderController = require("./orderController");
 const express = require("express");
 const router = express.Router();
+const auth = require("../middlewares/auth")
 
 router.get("/get-all/:businessId", orderController.getOrders);
 
