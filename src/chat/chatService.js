@@ -1,5 +1,6 @@
 const { OpenAIApi, Configuration } = require("openai");
 const { Chat } = require("./chatModel");
+const { Ticket } = require("../models/ticket.model");
 const uuid = require("uuid");
 const { Business } = require("../business/businessModel");
 const { KnowledgeBase } = require("../knowledgeBase/knowledgeBaseModel");
