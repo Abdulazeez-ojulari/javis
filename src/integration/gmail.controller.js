@@ -3,27 +3,38 @@ const Gmail = require("./gmailModel");
 const { v4: uuidV4 } = require("uuid");
 const { LIMIT } = require("../utils/const");
 const { getPagination } = require("../utils/helper");
+const fs = require("node:fs");
+const path = require("node:path");
 
 exports.persistGoogleMails = errorMiddleware(async (req, res) => {
   const { emails } = req.body;
   const uuid = uuidV4();
   console.log(emails);
-  for (const mail of emails) {
-    new Gmail({
-      emailId: uuid,
-      gmailMailId: mail.emailId,
-      to: mail.to,
-      from: mail.from,
-      subject: mail.subject,
-      mailContent: mail.body,
-      businessId: mail.businessId,
-      mailSnippet: mail.snippet,
-      enifResponseDate: mail.mailSentDate,
-      mailThreadId: mail.threadId,
-      mailSentDate: mail.mailSentDate,
-      channel: "gmail",
-    });
-  }
+  fs.writeFile(
+    path.join(__dirname, "", "", "gmails.json"),
+    JSON.stringify(emails),
+    (err) => {
+      if (err) {
+        console.log(err);
+      } else console.log("Complete");
+    }
+  );
+  // for (const mail of emails) {
+  //   new Gmail({
+  //     emailId: uuid,
+  //     gmailMailId: mail.emailId,
+  //     to: mail.to,
+  //     from: mail.from,
+  //     subject: mail.subject,
+  //     mailContent: mail.body,
+  //     businessId: mail.businessId,
+  //     mailSnippet: mail.snippet,
+  //     enifResponseDate: mail.mailSentDate,
+  //     mailThreadId: mail.threadId,
+  //     mailSentDate: mail.mailSentDate,
+  //     channel: "gmail",
+  //   });
+  // }
 });
 
 exports.getBusinessGmails = errorMiddleware(async (req, res) => {
