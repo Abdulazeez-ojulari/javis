@@ -22,7 +22,9 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
     phoneNo
   );
 
-  let chat = await Chat.findOne({ chatId: id });
+  const ticket = await Ticket.findOne({ ticketId: id });
+  // const messages = await ChatMessage.findOne({ ticketId: id });
+  // let data = { ticket, messages };
 
   eventEmitter.emit("notifyNewChat", {
     businessId,
@@ -32,7 +34,7 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
     phoneNo,
   });
 
-  return res.send(chat);
+  return res.send(ticket);
 });
 
 module.exports.sendChat = errorMiddleware(async (req, res) => {
@@ -59,18 +61,23 @@ module.exports.sendChat = errorMiddleware(async (req, res) => {
 });
 
 module.exports.replyChat = errorMiddleware(async (req, res) => {
-  let { chatId, businessId, channel, customer, reply, messageId } = req.body;
+  let { ticketId, businessId, channel, customer, reply, messageId } = req.body;
 
   const business = await Business.findOne({ businessId: businessId });
   if (!business) {
     return res.status(400).send({ message: "Business doesn't exists" });
   }
 
-  let chat = await Chat.findOne({ chatId: chatId });
+  // let chat = await Chat.findOne({ chatId: chatId });
   // console.log(chat)
+  // let ticket = await Ticket.findOne({ ticketId });
 
   if (messageId) {
-    let messages = chat.messages;
+    // let messages = chat.messages;
+    const messages = await ChatMessage.find({
+      ticketId,
+      // role: "assistance",
+    });
     let msg;
     for (let i = 0; i < messages.length; i++) {
       const message = messages[i];
@@ -79,14 +86,15 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
         if (message.status === "draft") {
           message.content = reply;
           message.status = "sent";
+          await message.save();
         }
       }
     }
-    chat.messages = messages;
-    await chat.save();
+    // chat.messages = messages;
+    // await chat.save();
     let data = {
       // replyMode: "auto",
-      chatId: chatId,
+      ticketId,
       reply: msg,
     };
     return res.send(data);
@@ -125,7 +133,7 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
 module.exports.getUserChat = errorMiddleware(async (req, res) => {
   let { email } = req.params;
   let { businessId } = req.query;
-  let chats;
+  let chats, ticket;
 
   if (!email) {
     return res.status(404).send({ message: "Email not provided" });
@@ -133,6 +141,8 @@ module.exports.getUserChat = errorMiddleware(async (req, res) => {
 
   if (!businessId) {
     // chats = await Chat.find({ email: email }).select("-messages");
+    ticket = await Ticket.find({ email: email, channel: "chat" });
+
     chats = await Chat.aggregate([
       {
         $match: {
@@ -202,6 +212,7 @@ module.exports.getConversation = errorMiddleware(async (req, res) => {
   let { chatId } = req.params;
 
   let chat = await Chat.findOne({ chatId: chatId });
+  // const ticket = await Ticket.
   if (!chat) {
     return res.status(404).send({ message: "Chat dosen't exists" });
   }
