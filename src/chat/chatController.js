@@ -133,89 +133,106 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
 module.exports.getUserChat = errorMiddleware(async (req, res) => {
   let { email } = req.params;
   let { businessId } = req.query;
-  let chats, ticket;
+  let chats = {};
 
   if (!email) {
     return res.status(404).send({ message: "Email not provided" });
   }
 
+  userTickets = await Ticket.find({ email });
+
+  if (!userTickets) {
+    return res.status(404).send({ message: "Chat record not found" });
+  }
+
   if (!businessId) {
     // chats = await Chat.find({ email: email }).select("-messages");
-    ticket = await Ticket.find({ email: email, channel: "chat" });
+    chats["ticket"] = await Ticket.find({ email, channel: "chat" });
+    // chats["chats"] = await ChatMessage.find({ email }).limit(2);
 
-    chats = await Chat.aggregate([
-      {
-        $match: {
-          email,
-        },
-      },
-      {
-        $project: {
-          businessId: 1,
-          email: 1,
-          messages: { $slice: ["$messages", -2] },
-          customer: 1,
-          phoneNo: 1,
-          messages: 1,
-          escalated: 1,
-          sentiment: 1,
-          channel: 1,
-          category: 1,
-          type: 1,
-          department: 1,
-          escalation_department: 1,
-          titles: 1,
-          title: 1,
-          isCompleted: 1,
-          created_date: 1,
-          update_date: 1,
-        },
-      },
-    ]);
+    // chats = await Chat.aggregate([
+    //   {
+    //     $match: {
+    //       email,
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       businessId: 1,
+    //       email: 1,
+    //       messages: { $slice: ["$messages", -2] },
+    //       customer: 1,
+    //       phoneNo: 1,
+    //       messages: 1,
+    //       escalated: 1,
+    //       sentiment: 1,
+    //       channel: 1,
+    //       category: 1,
+    //       type: 1,
+    //       department: 1,
+    //       escalation_department: 1,
+    //       titles: 1,
+    //       title: 1,
+    //       isCompleted: 1,
+    //       created_date: 1,
+    //       update_date: 1,
+    //     },
+    //   },
+    // ]);
   } else {
-    // chats = await Chat.find({ email, businessId }).select("-messages");
-    chats = await Chat.aggregate([
-      {
-        $match: {
-          businessId,
-          email,
-        },
-      },
-      {
-        $project: {
-          businessId: 1,
-          email: 1,
-          messages: { $slice: ["$messages", -2] },
-          customer: 1,
-          phoneNo: 1,
-          messages: 1,
-          escalated: 1,
-          sentiment: 1,
-          channel: 1,
-          category: 1,
-          type: 1,
-          department: 1,
-          escalation_department: 1,
-          titles: 1,
-          title: 1,
-          isCompleted: 1,
-          created_date: 1,
-          update_date: 1,
-        },
-      },
-    ]);
+    // chats = await Chat.aggregate([
+    //   {
+    //     $match: {
+    //       businessId,
+    //       email,
+    //     },
+    //   },
+    //   {
+    //     $project: {
+    //       businessId: 1,
+    //       email: 1,
+    //       messages: { $slice: ["$messages", -2] },
+    //       customer: 1,
+    //       phoneNo: 1,
+    //       messages: 1,
+    //       escalated: 1,
+    //       sentiment: 1,
+    //       channel: 1,
+    //       category: 1,
+    //       type: 1,
+    //       department: 1,
+    //       escalation_department: 1,
+    //       titles: 1,
+    //       title: 1,
+    //       isCompleted: 1,
+    //       created_date: 1,
+    //       update_date: 1,
+    //     },
+    //   },
+    // ]);
+
+    chats["ticket"] = await Ticket.find({
+      email,
+      businessId,
+      channel: "chat",
+    });
+    // chats["chats"] = await ChatMessage.find({ email }).limit(2);
   }
   return res.send(chats);
 });
 
 module.exports.getConversation = errorMiddleware(async (req, res) => {
-  let { chatId } = req.params;
+  let { ticketId } = req.params;
 
-  let chat = await Chat.findOne({ chatId: chatId });
-  // const ticket = await Ticket.
-  if (!chat) {
-    return res.status(404).send({ message: "Chat dosen't exists" });
+  const ticket = await Ticket.findOne({ ticketId });
+
+  if (!ticket) {
+    return res.status(404).send({ message: "Chat doesn't exists" });
   }
+
+  const chatMessages = await ChatMessage.findOne({ ticketId });
+
+  const chat = { ticket, chatMessages };
 
   return res.send(chat);
 });
@@ -228,29 +245,18 @@ module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
     return res.status(400).send({ message: "Business dosen't exists" });
   }
 
-  let chats = await Chat.find({ businessId: businessId }).sort({
-    created_date: -1,
-  });
+  const tickets = await Ticket.find({ businessId }).sort({ created_date: -1 });
 
-  return res.send(chats);
+  return res.send(tickets);
 });
 
 module.exports.getUserChatMessages = errorMiddleware(async (req, res) => {
-  let { chatId } = req.params;
-  // let { businessId } = req.query;
+  let { ticketId } = req.params;
+
   let message;
 
-  // if (!email) {
-  //   return res.status(404).send({ message: "Email not provided" });
-  // }
-
-  // if (!businessId) {
-  //   messages = await Chat.find({ email: email }).select("messages");
-  // } else {
-  //   messages = await Chat.find({ email, businessId }).select("messages");
-  // }
-
-  message = await Chat.findOne({ chatId }).select("messages");
+  // message = await Chat.findOne({ chatId }).select("messages");
+  message = await ChatMessage.find({ ticketId });
 
   if (!message) {
     return res.send({ message: "Chat not found", data: message });
