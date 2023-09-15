@@ -6,7 +6,7 @@ let schema = new mongoose.Schema({
         required: true,
         minlength: 1,
     },
-    chatId: {
+    ticketId: {
         type: String,
         required: true,
         minlength: 1,

@@ -1,6 +1,7 @@
 const { OpenAIApi, Configuration } = require("openai");
 const { Chat } = require("./chatModel");
 const { Ticket } = require("../models/ticket.model");
+const { ChatMessage } = require("../models/chat-message.model");
 const uuid = require("uuid");
 const { Business } = require("../business/businessModel");
 const { KnowledgeBase } = require("../knowledgeBase/knowledgeBaseModel");
@@ -14,23 +15,23 @@ const configuration = new Configuration({
 const openai = new OpenAIApi(configuration);
 
 module.exports.processChatService = async (
-  chatId,
+  ticketId,
   email,
   businessId,
   channel,
   customer,
   promptMsg
 ) => {
-  let chat = await Chat.findOne({ chatId: chatId });
-  if (!chat) {
+  let ticket = await Ticket.findOne({ ticketId });
+  if (!ticket) {
     let id = await createChatService(businessId, email, channel, customer);
-    chatId = id;
+    ticketId = id;
   }
   let delimiter = "#####";
   let delimiter2 = "####";
   let delimiter3 = "*****";
 
-  chat = await Chat.findOne({ chatId: chatId });
+  ticket = await Ticket.findOne({ ticketId });
 
   let business = await Business.findOne({ businessId: businessId });
 
@@ -106,8 +107,8 @@ module.exports.processChatService = async (
     let reply = await autoReply(
       promptMsg,
       systemKnowledge,
-      chatId,
-      chat,
+      ticketId,
+      ticket,
       businessId,
       email,
       customer
@@ -118,8 +119,8 @@ module.exports.processChatService = async (
     let reply = await supervisedReply(
       promptMsg,
       systemKnowledge,
-      chatId,
-      chat,
+      ticketId,
+      ticket,
       businessId,
       email,
       customer
@@ -132,13 +133,18 @@ module.exports.processChatService = async (
 const autoReply = async (
   promptMsg,
   systemKnowledge,
-  chatId,
-  chat,
+  ticketId,
+  ticket,
   businessId,
   email,
   customer
 ) => {
-  let reply = await replyChatService(promptMsg, systemKnowledge, chatId, chat);
+  let reply = await replyChatService(
+    promptMsg,
+    systemKnowledge,
+    ticketId,
+    ticket
+  );
   console.log(reply.data.choices[0].message);
 
   let content = reply.data.choices[0].message.content;
@@ -167,25 +173,25 @@ const autoReply = async (
       msg = "Created your order";
     }
 
-    if (category && category.length > 0) chat.category = category;
-    if (type && type.length > 0) chat.type = type;
-    if (department && department.length > 0) chat.department = department;
-    if (sentiment && sentiment.length > 0) chat.sentiment = sentiment;
+    if (category && category.length > 0) ticket.category = category;
+    if (type && type.length > 0) ticket.type = type;
+    if (department && department.length > 0) ticket.department = department;
+    if (sentiment && sentiment.length > 0) ticket.sentiment = sentiment;
     if (escalation_department && escalation_department.length > 0)
-      chat.escalation_department = escalation_department;
+      ticket.escalation_department = escalation_department;
     if (title && title.length > 0) {
-      let newTitles = chat.titles;
+      let newTitles = ticket.titles;
       newTitles.push(title);
-      chat.titles = newTitles;
+      ticket.titles = newTitles;
     }
-    if (jsonResponse.escalated !== undefined) chat.escalated = escalated;
+    if (jsonResponse.escalated !== undefined) ticket.escalated = escalated;
 
-    if (jsonResponse.isCompleted) chat.isCompleted = isCompleted;
+    if (jsonResponse.isCompleted) ticket.isCompleted = isCompleted;
 
     if (jsonResponse.placingOrder && jsonResponse.items) {
-      chat.escalated = escalated;
+      ticket.escalated = escalated;
       let newOrder = new Order({
-        chatId: chatId,
+        ticketId: ticketId,
         email: email,
         businessId: businessId,
         customer: customer,
@@ -196,13 +202,29 @@ const autoReply = async (
     }
   }
 
-  let newMessages = chat.messages;
-  newMessages.push({ role: "user", content: promptMsg });
-  newMessages.push({ role: "assistance", content: msg });
-  chat.messages = newMessages;
+  // let newMessages = chat.messages;
+  // newMessages.push({ role: "user", content: promptMsg });
+  // newMessages.push({ role: "assistance", content: msg });
+  // chat.messages = newMessages;
 
-  if (chat.titles.length > 0) {
-    let overall = await metricsService(chat.titles);
+  const customerReqMsg = new ChatMessage({
+    ticketId,
+    content: promptMsg,
+    role: "user",
+  });
+
+  await customerReqMsg.save();
+
+  const assistantResMsg = new ChatMessage({
+    ticketId,
+    content: msg,
+    role: "assistance",
+  });
+
+  await assistantResMsg.save();
+
+  if (ticket.titles.length > 0) {
+    let overall = await metricsService(ticket.titles);
     console.log(overall.data.choices[0].message);
 
     let overallMetrics = overall.data.choices[0].message.content;
@@ -216,18 +238,18 @@ const autoReply = async (
       title = jsonResponse.title;
       common_title = jsonResponse.common_title;
 
-      if (title && title.length > 0) chat.title = title;
+      if (title && title.length > 0) ticket.title = title;
 
-      if (common_title && common_title.length > 0) chat.title = common_title;
+      if (common_title && common_title.length > 0) ticket.title = common_title;
     }
   }
 
-  await chat.save();
+  await ticket.save();
   let data = {
     replyMode: "auto",
-    message: newMessages[newMessages.length - 2],
-    chatId: chatId,
-    reply: newMessages[newMessages.length - 1],
+    message: [customerReqMsg, assistantResMsg],
+    ticketId,
+    reply: assistantResMsg,
   };
 
   return data;
@@ -236,13 +258,18 @@ const autoReply = async (
 const supervisedReply = async (
   promptMsg,
   systemKnowledge,
-  chatId,
-  chat,
+  ticketId,
+  ticket,
   businessId,
   email,
   customer
 ) => {
-  let reply = await replyChatService(promptMsg, systemKnowledge, chatId, chat);
+  let reply = await replyChatService(
+    promptMsg,
+    systemKnowledge,
+    ticketId,
+    ticket
+  );
   console.log(reply.data.choices[0].message);
 
   let content = reply.data.choices[0].message.content;
@@ -271,25 +298,25 @@ const supervisedReply = async (
       msg = "Created your order";
     }
 
-    if (category && category.length > 0) chat.category = category;
-    if (type && type.length > 0) chat.type = type;
-    if (department && department.length > 0) chat.department = department;
-    if (sentiment && sentiment.length > 0) chat.sentiment = sentiment;
+    if (category && category.length > 0) ticket.category = category;
+    if (type && type.length > 0) ticket.type = type;
+    if (department && department.length > 0) ticket.department = department;
+    if (sentiment && sentiment.length > 0) ticket.sentiment = sentiment;
     if (escalation_department && escalation_department.length > 0)
-      chat.escalation_department = escalation_department;
+      ticket.escalation_department = escalation_department;
     if (title && title.length > 0) {
-      let newTitles = chat.titles;
+      let newTitles = ticket.titles;
       newTitles.push(title);
-      chat.titles = newTitles;
+      ticket.titles = newTitles;
     }
-    if (jsonResponse.escalated !== undefined) chat.escalated = escalated;
+    if (jsonResponse.escalated !== undefined) ticket.escalated = escalated;
 
-    if (jsonResponse.isCompleted) chat.isCompleted = isCompleted;
+    if (jsonResponse.isCompleted) ticket.isCompleted = isCompleted;
 
     if (jsonResponse.placingOrder && jsonResponse.items) {
-      chat.escalated = escalated;
+      ticket.escalated = escalated;
       let newOrder = new Order({
-        chatId: chatId,
+        ticketId: ticketId,
         email: email,
         businessId: businessId,
         customer: customer,
@@ -300,13 +327,30 @@ const supervisedReply = async (
     }
   }
 
-  let newMessages = chat.messages;
-  newMessages.push({ role: "user", content: promptMsg });
-  newMessages.push({ role: "assistance", content: msg, status: "draft" });
-  chat.messages = newMessages;
+  // let newMessages = chat.messages;
+  // newMessages.push({ role: "user", content: promptMsg });
+  // newMessages.push({ role: "assistance", content: msg, status: "draft" });
+  // chat.messages = newMessages;
 
-  if (chat.titles.length > 0) {
-    let overall = await metricsService(chat.titles);
+  const customerReqMsg = new ChatMessage({
+    ticketId,
+    content: promptMsg,
+    role: "user",
+  });
+
+  await customerReqMsg.save();
+
+  const assistantResMsg = new ChatMessage({
+    ticketId,
+    content: msg,
+    role: "assistance",
+    status: "draft",
+  });
+
+  await assistantResMsg.save();
+
+  if (ticket.titles.length > 0) {
+    let overall = await metricsService(ticket.titles);
     console.log(overall.data.choices[0].message);
 
     let overallMetrics = overall.data.choices[0].message.content;
@@ -320,24 +364,25 @@ const supervisedReply = async (
       title = jsonResponse.title;
       common_title = jsonResponse.common_title;
 
-      if (title && title.length > 0) chat.title = title;
+      if (title && title.length > 0) ticket.title = title;
 
-      if (common_title && common_title.length > 0) chat.title = common_title;
+      if (common_title && common_title.length > 0) ticket.title = common_title;
     }
   }
 
-  await chat.save();
+  await ticket.save();
   let data = {
     replyMode: "supervised",
-    message: newMessages[newMessages.length - 2],
-    chatId: chatId,
+    // message: newMessages[newMessages.length - 2],
+    message: [customerReqMsg, assistantResMsg],
+    ticketId: ticketId,
   };
 
   return data;
 };
 
-const replyChatService = async (promptMsg, messages, chatId, chat) => {
-  let previousMsg = chat.messages.map((msg) => {
+const replyChatService = async (promptMsg, messages, ticketId, ticket) => {
+  let previousMsg = ticket.messages.map((msg) => {
     return { role: msg.role, content: msg.content };
   });
   // console.log(previousMsg)
@@ -358,7 +403,7 @@ const replyChatService = async (promptMsg, messages, chatId, chat) => {
   messages.push(newMsg);
 
   try {
-    let completion = await javis(messages, chatId);
+    let completion = await javis(messages, ticketId);
     return completion;
   } catch (e) {
     console.log(e);
@@ -366,7 +411,7 @@ const replyChatService = async (promptMsg, messages, chatId, chat) => {
   }
 };
 
-const javis = async (messages, chatId = null) => {
+const javis = async (messages, ticketId = null) => {
   let data = {
     model: "gpt-3.5-turbo",
     messages: messages,
@@ -375,7 +420,7 @@ const javis = async (messages, chatId = null) => {
     presence_penalty: 0.7,
   };
 
-  if (chatId) data["user"] = chatId;
+  if (ticketId) data["user"] = ticketId;
 
   const completion = await openai.createChatCompletion(data);
   // console.log(completion)
@@ -392,17 +437,16 @@ const createChatService = async (
   // let knowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
   let id = uuid.v4() + uuid.v4();
   // console.log(channel, businessId, customer);
-  let newChat = new Chat({
-    chatId: id,
+  let newTicket = new Ticket({
+    ticketId: id,
     email: email,
     businessId: businessId,
     customer: customer,
     phoneNo: phoneNo,
-    messages: [],
     channel: channel,
   });
   try {
-    await newChat.save();
+    await newTicket.save();
   } catch (e) {
     console.log(e);
     return e;

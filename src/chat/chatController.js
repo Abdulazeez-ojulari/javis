@@ -3,6 +3,8 @@ const errorMiddleware = require("../middlewares/error");
 const { Chat } = require("./chatModel");
 const { createChatService, processChatService } = require("./chatService");
 const eventEmitter = require("../event/events");
+const { Ticket } = require("../models/ticket.model");
+const { ChatMessage } = require("../models/chat-message.model");
 
 module.exports.newChat = errorMiddleware(async (req, res) => {
   let { email, businessId, channel, customer, phoneNo } = req.body;
@@ -34,9 +36,9 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
 });
 
 module.exports.sendChat = errorMiddleware(async (req, res) => {
-  let { chatId, email, businessId, channel, customer, promptMsg } = req.body;
+  let { ticketId, email, businessId, channel, customer, promptMsg } = req.body;
   let data = await processChatService(
-    chatId,
+    ticketId,
     email,
     businessId,
     channel,
@@ -50,7 +52,7 @@ module.exports.sendChat = errorMiddleware(async (req, res) => {
     promptMsg,
     email,
     channel,
-    chatId,
+    ticketId,
   });
 
   return res.send(data);
