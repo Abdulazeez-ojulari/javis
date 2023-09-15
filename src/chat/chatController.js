@@ -242,7 +242,7 @@ module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
 
   const business = await Business.findOne({ businessId: businessId });
   if (!business) {
-    return res.status(400).send({ message: "Business dosen't exists" });
+    return res.status(400).send({ message: "Business doesn't exists" });
   }
 
   const tickets = await Ticket.find({ businessId }).sort({ created_date: -1 });
