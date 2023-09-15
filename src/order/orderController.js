@@ -20,6 +20,8 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
   const user = req.user;
   const errors = validationResult(req);
 
+  console.log("hello");
+
   if (!errors.isEmpty()) {
     const validationErrors = [];
     for (let error of errors.array()) {

@@ -5,6 +5,9 @@ const schema = new mongoose.Schema({
   email: {
     type: String,
   },
+  emailThread: {
+    type: String,
+  },
   businessId: {
     type: String,
     required: true,
