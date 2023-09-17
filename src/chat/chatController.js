@@ -74,28 +74,18 @@ module.exports.replyChat = errorMiddleware(async (req, res) => {
 
   if (messageId) {
     // let messages = chat.messages;
-    const messages = await ChatMessage.find({
+    const message = await ChatMessage.findOne({
+      id: messageId,
       ticketId,
       // role: "assistance",
     });
-    let msg;
-    for (let i = 0; i < messages.length; i++) {
-      const message = messages[i];
-      if (message.id == messageId) {
-        msg = message;
-        if (message.status === "draft") {
-          message.content = reply;
-          message.status = "sent";
-          await message.save();
-        }
-      }
-    }
-    // chat.messages = messages;
-    // await chat.save();
+    message.content = reply;
+    message.status = "sent";
+    await message.save();
     let data = {
       // replyMode: "auto",
       ticketId,
-      reply: msg,
+      reply: message,
     };
     return res.send(data);
   }

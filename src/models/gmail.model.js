@@ -19,6 +19,7 @@ const schema = new mongoose.Schema({
     required: true,
     minlength: 1,
   },
+  customerName: { type: String },
   mailSnippet: { type: String, required: true },
   threadId: {
     type: String,
@@ -28,12 +29,21 @@ const schema = new mongoose.Schema({
   subject: { type: String, required: true },
   content: { type: String, required: false },
   assistantResponse: { type: String, required: false },
+  assistantResponseDate: {
+    type: Date,
+    required: false,
+  },
   status: {
     type: String,
     required: true,
     default: "sent",
   },
   role: { type: String, default: "user" },
+  businessId: { type: String, required: true },
+  originalMailDate: {
+    type: Date,
+    required: true,
+  },
   created_date: {
     type: Date,
     required: true,

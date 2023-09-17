@@ -382,10 +382,15 @@ const supervisedReply = async (
 };
 
 const replyChatService = async (promptMsg, messages, ticketId, ticket) => {
-  let previousMsg = ticket.messages.map((msg) => {
-    return { role: msg.role, content: msg.content };
-  });
+  // let previousMsg = ticket.messages.map((msg) => {
+  //   return { role: msg.role, content: msg.content };
+  // });
   // console.log(previousMsg)
+  let previousMsg = await ChatMessage.find({ ticketId });
+  previousMsg = previousMsg.map((msg) => ({
+    role: msg.role,
+    content: msg.content,
+  }));
   let delimiter = "#####";
   let delimiter2 = "####";
   previousMsg = {
