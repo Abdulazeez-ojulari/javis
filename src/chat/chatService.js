@@ -23,6 +23,7 @@ module.exports.processChatService = async (
   promptMsg
 ) => {
   let ticket = await Ticket.findOne({ ticketId });
+  console.log(ticketId, ticket);
   if (!ticket) {
     let id = await createChatService(businessId, email, channel, customer);
     ticketId = id;

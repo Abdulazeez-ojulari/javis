@@ -23,9 +23,7 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
   );
 
   const ticket = await Ticket.findOne({ ticketId: id });
-  // const messages = await ChatMessage.findOne({ ticketId: id });
-  // let data = { ticket, messages };
-
+  
   eventEmitter.emit("notifyNewChat", {
     businessId,
     customer,
@@ -251,7 +249,7 @@ module.exports.getUserChatMessages = errorMiddleware(async (req, res) => {
   if (!message) {
     return res.send({ message: "Chat not found", data: message });
   }
-  
+
   return res.send({
     message: "Chat messages fetched successfully",
     data: message,

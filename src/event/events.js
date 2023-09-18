@@ -2,6 +2,7 @@ const event = require("events");
 const Invitation = require("../user/invitationModel");
 const { Business } = require("../business/businessModel");
 const Notification = require("../notification/notification.model");
+const { v4 } = require("uuid");
 
 const eventEmitter = new event.EventEmitter();
 
@@ -23,7 +24,9 @@ eventEmitter.on(
   async ({ businessId, customer, email, channel, phoneNo }) => {
     const business = await Business.findOne({ businessId: businessId });
     const recipients = business.teams.map((team) => team.userId);
-    const notification = Notification({
+    const id = v4() + "-" + v4();
+    const notification = new Notification({
+      notificationId: id,
       message: "A new chat has just been initiated",
       metaData: JSON.stringify({
         businessId,
@@ -43,7 +46,9 @@ eventEmitter.on(
   async ({ ticketId, email, businessId, channel, customer, promptMsg }) => {
     const business = await Business.findOne({ businessId: businessId });
     const recipients = business.teams.map((team) => team.userId);
-    const notification = Notification({
+    const id = v4() + "-" + v4();
+    const notification = new Notification({
+      notificationId: id,
       message: "A new chat has just been initiated",
       metaData: JSON.stringify({
         ticketId,
