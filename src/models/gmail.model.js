@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const schema = new mongoose.Schema({
   // ticketId: { type: mongoose.Types.ObjectId, ref: "Ticket" },
-  ticketId: { type: String, required: true, unique: true, minlength: 1 },
+  ticketId: { type: String, required: true, minlength: 1 },
   mailId: { type: String, required: true, unique: true },
   gmailId: {
     type: String,
