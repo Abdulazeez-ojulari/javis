@@ -11,7 +11,7 @@ module.exports = (app) => {
   //     controller.persistGoogleMails
   //   );
 
-  router.get("/:businessId", [auth], controller.getBusinessGmails);
+  // router.get("/:businessId", [auth], controller.getBusinessGmails);
 
   router.get("/ticket/:businessId", [auth], controller.getBusinessTickets);
 
