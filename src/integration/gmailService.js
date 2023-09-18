@@ -67,19 +67,19 @@ module.exports.processEmailService = async (ticketId, channel, mail) => {
             Do not mention or act like an AI to the customer.
             You will be provided with customer service queries.
             The customer service query will be delimited with ${delimiter} characters.
-            Your previous messages with customer will be delimited with ${delimiter2} characters.
+            Your previous mails with customer will be delimited with ${delimiter2} characters.
             Always use only the information delimited with ${delimiter3} to respond to user query. 
             If request is not in the inventory, faqs and company information that was sent with the query you are to return a json format with escalated set to true and escalation_department to the appropriate department.
             Always classify each query into a category.
-            Always classify each query and your previous chat with customer into a sentiment.
+            Always classify each query and your previous mail with customer into a sentiment.
             Always classify each query into a type.
-            Generate a title based on customer previous chat with you and customer new query.
-            Always classify each query and your previous chat with customer into a escalated.
-            Always classify each query and your previous chat with customer into a department.
+            Generate a title based on customer previous mail with you and customer new query.
+            Always classify each query and your previous mail with customer into a escalated.
+            Always classify each query and your previous mail with customer into a department.
             If customer is about to place order set placingOrder to true.
             Determine if user has completed their chat using their current query and set isCompleted to true.
             Set escalated to true if customer query is not related to your inventory else set escalated to false.
-            Always classify each query and your previous chat with customer into an escalation_department if escalated is set to true else set escalation_department to null
+            Always classify each query and your previous mail with customer into an escalation_department if escalated is set to true else set escalation_department to null
             Make sure you don't add any other key aside this keys response, category, sentiment, type, department, escalated, escalation_department, placingOrder, isCompleted and title in your json response.
             Always return product details in the response key when you want to display a product to the user from the inventory in text format.
 
