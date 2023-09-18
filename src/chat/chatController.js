@@ -251,6 +251,7 @@ module.exports.getUserChatMessages = errorMiddleware(async (req, res) => {
   if (!message) {
     return res.send({ message: "Chat not found", data: message });
   }
+  
   return res.send({
     message: "Chat messages fetched successfully",
     data: message,
