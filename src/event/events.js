@@ -40,13 +40,13 @@ eventEmitter.on(
 
 eventEmitter.on(
   "notifyNewChatMessage",
-  async ({ chatId, email, businessId, channel, customer, promptMsg }) => {
+  async ({ ticketId, email, businessId, channel, customer, promptMsg }) => {
     const business = await Business.findOne({ businessId: businessId });
     const recipients = business.teams.map((team) => team.userId);
     const notification = Notification({
       message: "A new chat has just been initiated",
       metaData: JSON.stringify({
-        chatId,
+        ticketId,
         email,
         businessId,
         channel,

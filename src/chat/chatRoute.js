@@ -12,9 +12,9 @@ router.get("/user/:email", chatController.getUserChat);
 
 // router.get("/user/:email/messages", chatController.getUserChatMessages);
 
-router.get("/user/:chatId/messages", chatController.getUserChatMessages);
+router.get("/user/:ticketId/messages", chatController.getUserChatMessages);
 
-router.get("/conversation/:chatId", chatController.getConversation);
+router.get("/conversation/:ticketId", chatController.getConversation);
 
 router.get("/all-chat/:businessId", chatController.getBusinessChats);
 

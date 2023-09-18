@@ -59,3 +59,14 @@ exports.stringToLowerCase = (string) => {
   }
   return "";
 };
+
+exports.extractNameAndEmail = (str) => {
+  if (!str || str === "") {
+    return ["", ""];
+  }
+  let split = str.split("<");
+  let name = split[0];
+  let email = split[1].slice(0, -1);
+
+  return [name, email];
+};

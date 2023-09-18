@@ -11,7 +11,17 @@ module.exports = (app) => {
   //     controller.persistGoogleMails
   //   );
 
-  router.get("/:businessId", [auth], controller.getBusinessGmails);
+  // router.get("/:businessId", [auth], controller.getBusinessGmails);
+
+  router.get("/ticket/:businessId", [auth], controller.getBusinessTickets);
+
+  router.get("/:ticketId", [auth], controller.getBusinessMailByTicketId);
+
+  router.post(
+    "/reply/:mailId",
+    [auth, body("reply").trim().notEmpty().withMessage("Enter valid reply")],
+    controller.replyMail
+  );
 
   router.post("/", controller.persistGoogleMails);
 
