@@ -272,10 +272,18 @@ const autoReply = async (
 
   await customerReqMail.save();
 
+  // customerReqMail.assistantResponse =
+  //   escalated == true
+  //     ? "Your ticket has been escalated to the proper department"
+  //     : msg;
+
   customerReqMail.assistantResponse =
-    escalated == true
-      ? "Your ticket has been escalated to the proper department"
+    escalated == true && department
+      ? `Your ticket has been escalated to the proper ${department}`
+      : escalated == true && !department
+      ? `Your ticket has been escalated to the proper department`
       : msg;
+
   customerReqMail.assistantResponseDate = new Date();
 
   await customerReqMail.save();
@@ -412,8 +420,10 @@ const supervisedReply = async (
   await customerReqMail.save();
 
   customerReqMail.assistantResponse =
-    escalated == true
-      ? "Your ticket has been escalated to the proper department"
+    escalated == true && department
+      ? `Your ticket has been escalated to the proper ${department}`
+      : escalated == true && !department
+      ? `Your ticket has been escalated to the proper department`
       : msg;
 
   await customerReqMail.save();

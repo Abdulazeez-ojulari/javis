@@ -8,13 +8,17 @@ router.post("/send", chatController.sendChat);
 
 router.post("/reply", chatController.replyChat);
 
-router.get("/user/:email", chatController.getUserChat);
+router.get("/user/:email", [auth], chatController.getUserChat);
 
 // router.get("/user/:email/messages", chatController.getUserChatMessages);
 
-router.get("/user/:ticketId/messages", chatController.getUserChatMessages);
+router.get(
+  "/user/:ticketId/messages",
+  [auth],
+  chatController.getUserChatMessages
+);
 
-router.get("/conversation/:ticketId", chatController.getConversation);
+router.get("/conversation/:ticketId",[auth], chatController.getConversation);
 
 router.get("/all-chat/:businessId", chatController.getBusinessChats);
 
