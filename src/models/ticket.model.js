@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const schema = new mongoose.Schema({
-  ticketId: { type: String, required: true, unique: true, minlength: 1 },
+  // ticketId: { type: String, required: true, unique: true, minlength: 1 },
   email: {
     type: String,
   },
@@ -76,6 +76,14 @@ schema.method("toJSON", function () {
   return object;
 });
 
+schema.virtual("message", {
+  ref: "ChatMessage",
+  localField: "_id",
+  justOne: true,
+  foreignField: "ticketId",
+});
+
 const Ticket = mongoose.model("Ticket", schema);
+ 
 
 exports.Ticket = Ticket;

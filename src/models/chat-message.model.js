@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 
 const schema = new mongoose.Schema({
   // ticketId: { type: mongoose.Types.ObjectId, ref: "Ticket" },
-  ticketId: { type: String, required: true, minlength: 1 },
+  ticketId: { type:  mongoose.Types.ObjectId, required: true, minlength: 1, ref: 'Ticket', index: 1 },
   role: String,
   content: String,
   status: {
@@ -24,5 +24,6 @@ schema.method("toJSON", function () {
 });
 
 const ChatMessage = mongoose.model("ChatMessage", schema);
+ChatMessage.syncIndexes()
 
 exports.ChatMessage = ChatMessage;

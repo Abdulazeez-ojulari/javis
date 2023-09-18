@@ -23,7 +23,7 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
   );
 
   const ticket = await Ticket.findOne({ ticketId: id });
-  
+
   eventEmitter.emit("notifyNewChat", {
     businessId,
     customer,
@@ -212,7 +212,8 @@ module.exports.getUserChat = errorMiddleware(async (req, res) => {
 module.exports.getConversation = errorMiddleware(async (req, res) => {
   let { ticketId } = req.params;
 
-  const ticket = await Ticket.findOne({ ticketId });
+  const ticket = await Ticket.findById(ticketId).populate('message').exec();
+  console.log(ticket);
 
   if (!ticket) {
     return res.status(404).send({ message: "Chat doesn't exists" });
