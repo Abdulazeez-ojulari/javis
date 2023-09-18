@@ -215,9 +215,18 @@ const autoReply = async (
 
   await customerReqMsg.save();
 
+  // const assistantResMsg = new ChatMessage({
+  //   ticketId,
+  //   content: msg,
+  //   role: "assistance",
+  // });
+
   const assistantResMsg = new ChatMessage({
     ticketId,
-    content: msg,
+    content:
+      escalated == true
+        ? "Your ticket has been escalated to the proper department"
+        : msg,
     role: "assistance",
   });
 
@@ -342,7 +351,10 @@ const supervisedReply = async (
 
   const assistantResMsg = new ChatMessage({
     ticketId,
-    content: msg,
+    content:
+      escalated == true
+        ? "Your ticket has been escalated to the proper department"
+        : msg,
     role: "assistance",
     status: "draft",
   });
