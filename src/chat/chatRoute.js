@@ -8,7 +8,7 @@ router.post("/send", chatController.sendChat);
 
 router.post("/reply", chatController.replyChat);
 
-router.get("/user/:email", [auth], chatController.getUserChat);
+router.get("/user/:email", chatController.getUserChat);
 
 // router.get("/user/:email/messages", chatController.getUserChatMessages);
 
