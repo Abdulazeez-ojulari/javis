@@ -22,8 +22,8 @@ module.exports.processChatService = async (
   customer,
   promptMsg
 ) => {
-  let ticket = await Ticket.findOne({ ticketId });
-  console.log(ticketId, ticket);
+  let ticket = await Ticket.findById(ticketId);
+  // console.log(ticketId, ticket);
   if (!ticket) {
     let id = await createChatService(businessId, email, channel, customer);
     ticketId = id;
@@ -32,15 +32,15 @@ module.exports.processChatService = async (
   let delimiter2 = "####";
   let delimiter3 = "*****";
 
-  ticket = await Ticket.findOne({ ticketId });
+  ticket = await Ticket.findById(ticketId ).exec();
 
-  let business = await Business.findOne({ businessId: businessId });
+  let business = await Business.findOne({ businessId: businessId }).exec();
 
   if (!business) {
     return { message: "Business doesn't exists" };
   }
 
-  let knowledgeBase = await KnowledgeBase.findOne({ businessId: businessId });
+  let knowledgeBase = await KnowledgeBase.findOne({ businessId: businessId }).exec();
 
   let knowledge_base = [];
   let faqs = [];

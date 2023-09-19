@@ -39,7 +39,7 @@ module.exports.processEmailService = async (ticketId, channel, mail) => {
   let delimiter2 = "####";
   let delimiter3 = "*****";
 
-  ticket = await Ticket.findOne({ ticketId });
+  ticket = await Ticket.findById(ticketId).exec();
 
   let business = await Business.findOne({ businessId: refinedMail.businessId });
 
