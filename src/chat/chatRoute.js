@@ -18,7 +18,7 @@ router.get(
   chatController.getUserChatMessages
 );
 
-router.get("/conversation/:ticketId",[auth], chatController.getConversation);
+router.get("/conversation/:ticketId",[], chatController.getConversation);
 
 router.get("/all-chat/:businessId", chatController.getBusinessChats);
 
