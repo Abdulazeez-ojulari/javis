@@ -84,7 +84,7 @@ const gmailSchema = new mongoose.Schema({
     required: true,
     default: Date.now(),
   },
-});
+}, { timestamps: true});
 
 gmailSchema.method("toJSON", function () {
   const { __v, _id, ...object } = this.toObject();

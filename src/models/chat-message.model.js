@@ -15,7 +15,7 @@ const schema = new mongoose.Schema({
     required: true,
     default: Date.now(),
   },
-});
+}, { timestamps: true});
 
 schema.method("toJSON", function () {
   const { __v, _id, ...object } = this.toObject();

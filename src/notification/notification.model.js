@@ -36,7 +36,7 @@ const notificationSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+}, { timestamps: true});
 
 notificationSchema.method("toJSON", function () {
   const { __v, _id, ...object } = this.toObject();

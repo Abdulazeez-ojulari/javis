@@ -203,7 +203,7 @@ module.exports.getUserChat = errorMiddleware(async (req, res) => {
       email,
       businessId,
       channel: "chat",
-    });
+    }).exec();
     // chats["chats"] = await ChatMessage.find({ email }).limit(2);
   }
   return res.send(chats);
@@ -219,9 +219,9 @@ module.exports.getConversation = errorMiddleware(async (req, res) => {
     return res.status(404).send({ message: "Chat doesn't exists" });
   }
 
-  const chatMessages = await ChatMessage.findOne({ ticketId });
+  // const chatMessages = await ChatMessage.findOne({ ticketId });
 
-  const chat = { ticket, chatMessages };
+  const chat = { ticket };
 
   return res.send(chat);
 });
@@ -229,12 +229,12 @@ module.exports.getConversation = errorMiddleware(async (req, res) => {
 module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
   let { businessId } = req.params;
 
-  const business = await Business.findOne({ businessId: businessId });
+  const business = await Business.findOne({ businessId: businessId }).exec();
   if (!business) {
     return res.status(400).send({ message: "Business doesn't exists" });
   }
 
-  const tickets = await Ticket.find({ businessId }).sort({ created_date: -1 });
+  const tickets = await Ticket.find({ businessId }).sort({ created_date: -1 }).exec();
 
   return res.send(tickets);
 });
@@ -245,7 +245,7 @@ module.exports.getUserChatMessages = errorMiddleware(async (req, res) => {
   let message;
 
   // message = await Chat.findOne({ chatId }).select("messages");
-  message = await ChatMessage.find({ ticketId });
+  message = await ChatMessage.find({ ticketId }).exec();
 
   if (!message) {
     return res.send({ message: "Chat not found", data: message });

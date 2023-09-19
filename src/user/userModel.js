@@ -98,7 +98,7 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
-});
+}, { timestamps: true});
 
 userSchema.method("toJson", function () {
   const { __v, _id, ...object } = this.toObject();

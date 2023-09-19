@@ -12,11 +12,11 @@ const cors = require("cors");
 //     "fine-tune"
 // );
 
-var business = require("./src/business/businessRoute");
-var chat = require("./src/chat/chatRoute");
-var knowledgeBase = require("./src/knowledgeBase/knowledgeBaseRoute");
-var user = require("./src/user/userRoute");
-var order = require("./src/order/orderRoute");
+const business = require("./src/business/businessRoute");
+const chat = require("./src/chat/chatRoute");
+const knowledgeBase = require("./src/knowledgeBase/knowledgeBaseRoute");
+const user = require("./src/user/userRoute");
+const order = require("./src/order/orderRoute");
 
 let data = [
   {

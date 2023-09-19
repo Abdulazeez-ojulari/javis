@@ -13,7 +13,7 @@ const teamSchema = new mongoose.Schema({
     type: String,
     default: "member",
   },
-});
+}, { timestamps: true});
 
 const gmailSchema = new mongoose.Schema({
   isConfigured: {
@@ -145,7 +145,7 @@ let schema = new mongoose.Schema({
     required: true,
     default: Date.now(),
   },
-});
+}, { timestamps: true});
 
 schema.method("toJSON", function () {
   const { __v, _id, ...object } = this.toObject();
