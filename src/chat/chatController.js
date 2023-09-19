@@ -219,9 +219,9 @@ module.exports.getConversation = errorMiddleware(async (req, res) => {
     return res.status(404).send({ message: "Chat doesn't exists" });
   }
 
-  const chatMessages = await ChatMessage.findOne({ ticketId });
+  // const chatMessages = await ChatMessage.findOne({ ticketId });
 
-  const chat = { ticket, chatMessages };
+  const chat = { ticket };
 
   return res.send(chat);
 });

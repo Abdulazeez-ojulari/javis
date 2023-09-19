@@ -68,6 +68,10 @@ const schema = new mongoose.Schema({
     required: true,
     default: Date.now(),
   },
+}, {
+  toJSON: {  virtuals: true  },
+  toObject: { virtuals: true },
+  timestamps: true,
 });
 
 schema.method("toJSON", function () {
@@ -79,11 +83,12 @@ schema.method("toJSON", function () {
 schema.virtual("message", {
   ref: "ChatMessage",
   localField: "_id",
+  options: { sort: { createdAt: -1 } },
   justOne: true,
   foreignField: "ticketId",
 });
 
 const Ticket = mongoose.model("Ticket", schema);
- 
+
 
 exports.Ticket = Ticket;

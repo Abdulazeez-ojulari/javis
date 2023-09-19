@@ -1,0 +1,12 @@
+POST  http://localhost:5001/ai/chat/new-chat
+
+{
+     "businessId": "e3593b5d-8784-414c-a345-c77c65f48345e74350a8-d08e-4acc-a86b-11916d505305",
+    "email": "a@bcom",
+    "channel": "chat",
+    "customer": "Wisdom",
+    "phoneNo": "090300498994"
+}
+ 
+###
+GET   http://localhost:5001/ai/chat/conversation/6509090e810195b9551a124b
