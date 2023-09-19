@@ -14,7 +14,7 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
     return res.status(400).send({ message: "Business doesn't exists" });
   }
 
-  let id = await createChatService(
+  let ticket = await createChatService(
     businessId,
     email,
     channel,
@@ -22,7 +22,6 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
     phoneNo
   );
 
-  const ticket = await Ticket.findById(id).exec();
 
   eventEmitter.emit("notifyNewChat", {
     businessId,

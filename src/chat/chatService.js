@@ -25,14 +25,14 @@ module.exports.processChatService = async (
   let ticket = await Ticket.findById(ticketId);
   // console.log(ticketId, ticket);
   if (!ticket) {
-    let id = await createChatService(businessId, email, channel, customer);
+    ticket = await createChatService(businessId, email, channel, customer);
     ticketId = id;
   }
   let delimiter = "#####";
   let delimiter2 = "####";
   let delimiter3 = "*****";
 
-  ticket = await Ticket.findById(ticketId ).exec();
+  // ticket = await Ticket.findById(ticketId ).exec();
 
   let business = await Business.findOne({ businessId: businessId }).exec();
 
@@ -467,10 +467,9 @@ const createChatService = async (
   phoneNo
 ) => {
   // let knowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
-  let id = uuid.v4() + uuid.v4();
-  // console.log(channel, businessId, customer);
+  // let id = uuid.v4() + uuid.v4();
   let newTicket = new Ticket({
-    ticketId: id,
+    // ticketId: id,
     email: email,
     businessId: businessId,
     customer: customer,
@@ -483,7 +482,7 @@ const createChatService = async (
     console.log(e);
     return e;
   }
-  return id;
+  return newTicket;
 };
 
 module.exports.createChatService = createChatService;
