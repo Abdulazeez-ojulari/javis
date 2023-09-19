@@ -14,9 +14,10 @@ router.get("/user/:email", chatController.getUserChat);
 
 router.get(
   "/user/:ticketId/messages",
-  [auth],
+  // [auth],
   chatController.getUserChatMessages
 );
+
 
 router.get("/conversation/:ticketId",[auth], chatController.getConversation);
 
