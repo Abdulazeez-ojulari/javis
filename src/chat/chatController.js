@@ -9,12 +9,12 @@ const { ChatMessage } = require("../models/chat-message.model");
 module.exports.newChat = errorMiddleware(async (req, res) => {
   let { email, businessId, channel, customer, phoneNo } = req.body;
 
-  const business = await Business.findOne({ businessId: businessId });
+  const business = await Business.findOne({ businessId: businessId }).exec();
   if (!business) {
     return res.status(400).send({ message: "Business doesn't exists" });
   }
 
-  let id = await createChatService(
+  let ticket = await createChatService(
     businessId,
     email,
     channel,
@@ -22,7 +22,6 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
     phoneNo
   );
 
-  const ticket = await Ticket.findOne({ ticketId: id });
 
   eventEmitter.emit("notifyNewChat", {
     businessId,
