@@ -26,7 +26,7 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-module.exports.processEmailService = async (ticketId, channel, mail) => {
+const processEmailService = async (ticketId, channel, mail) => {
   let [customer, email] = extractNameAndEmail(mail.from);
   const refinedMail = {
     businessId: mail.businessId,
@@ -767,7 +767,14 @@ cron.schedule("*/20 * * * * *", async () => {
 
     // console.log(messagesLv2);
     // await http.post("/gmail", { emails: messagesLv2 });
+
+    for (let mail of messagesLv2) {
+      const ticket = await Ticket.findOne({ emailThread: mail.threadId });
+      await processEmailService(ticket?.ticketId, "gmail", mail);
+    }
   } catch (error) {
     console.log("Email fetching cron error: " + error);
   }
 });
+
+module.exports.processEmailService = processEmailService;
