@@ -8,7 +8,6 @@ const { extractNameAndEmail } = require("../utils/helper");
 const { processEmailService, sendEmail } = require("./gmailService");
 const fs = require("node:fs");
 const path = require("node:path");
-const { Business } = require("../business/businessModel");
 
 exports.persistGoogleMails = errorMiddleware(async (req, res) => {
   const { emails } = req.body;

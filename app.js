@@ -251,6 +251,7 @@ require("./src/admin/admin.routes")(app);
 require("./src/payment/payment.routes")(app);
 require("./src/notification/notification.routes")(app);
 require("./src/integration/gmail.routes")(app);
+require("./src/detectedFAQ/detectedFAQ.routes")(app);
 
 const PORT = process.env.PORT || 3000;
 

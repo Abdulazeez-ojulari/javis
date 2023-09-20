@@ -70,3 +70,12 @@ exports.extractNameAndEmail = (str) => {
 
   return [name, email];
 };
+
+exports.isMemberOfBusiness = (business, id) => {
+  const team = business.team;
+  let response = team.find((member) => member.userId.toString() === id);
+  if (response === undefined) {
+    return false;
+  }
+  return response;
+};

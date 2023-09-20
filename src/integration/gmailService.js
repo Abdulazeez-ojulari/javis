@@ -8,6 +8,16 @@ const { KnowledgeBase } = require("../knowledgeBase/knowledgeBaseModel");
 const { Order } = require("../order/orderModel");
 const nodemailer = require("nodemailer");
 const { extractNameAndEmail } = require("../utils/helper");
+const base64 = require("base64url");
+const cron = require("node-cron");
+const { google } = require("googleapis");
+const OAuth2Client = google.auth.OAuth2;
+
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLEINT_SECRET = process.env.CLEINT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
+
+const oAuth2Client = new OAuth2Client(CLIENT_ID, CLEINT_SECRET, REDIRECT_URI);
 
 const configuration = new Configuration({
   organization: "org-oRjT38IDR8URxu112r663l81",
@@ -274,14 +284,14 @@ const autoReply = async (
 
   // customerReqMail.assistantResponse =
   //   escalated == true
-  //     ? "Your ticket has been escalated to the proper department"
+  //     ? "Your request has been escalated to the proper department"
   //     : msg;
 
   customerReqMail.assistantResponse =
     escalated == true && department
-      ? `Your ticket has been escalated to the proper ${department}`
+      ? `Your request has been escalated to the proper ${department}`
       : escalated == true && !department
-      ? `Your ticket has been escalated to the proper department`
+      ? `Your request has been escalated to the proper department`
       : msg;
 
   customerReqMail.assistantResponseDate = new Date();
@@ -421,9 +431,9 @@ const supervisedReply = async (
 
   customerReqMail.assistantResponse =
     escalated == true && department
-      ? `Your ticket has been escalated to the proper ${department}`
+      ? `Your request has been escalated to the proper ${department}`
       : escalated == true && !department
-      ? `Your ticket has been escalated to the proper department`
+      ? `Your request has been escalated to the proper department`
       : msg;
 
   await customerReqMail.save();
@@ -572,3 +582,192 @@ const metricsService = async (titles) => {
     return e;
   }
 };
+const spreadGmailInitialArrayAddBusinessId = (
+  dataArray,
+  businessId,
+  refreshToken
+) => {
+  let newDataArray = [];
+  for (const data of dataArray) {
+    newDataArray = [
+      ...newDataArray,
+      { emailId: data.id, threadId: data.threadId, businessId, refreshToken },
+    ];
+  }
+  return newDataArray;
+};
+
+const getObjectFromDataArray = (name, objectArray) => {
+  let choice = objectArray.find(
+    (object) => object.name.toLocaleLowerCase() === name.toLowerCase()
+  );
+  return choice?.value;
+};
+
+const getGmailTo = (emailData) => {
+  const headers = emailData.payload.headers;
+  const toHeader = headers.find((header) => header.name.toLowerCase() === "to");
+  return toHeader ? toHeader.value : "";
+};
+
+const getGmailFrom = (emailData) => {
+  const headers = emailData.payload.headers;
+  const fromHeader = headers.find(
+    (header) => header.name.toLowerCase() === "from"
+  );
+  return fromHeader ? fromHeader.value : "";
+};
+
+const getGmailSubject = (emailData) => {
+  const headers = emailData.payload.headers;
+  const fromHeader = headers.find(
+    (header) => header.name.toLowerCase() === "subject"
+  );
+  return fromHeader ? fromHeader.value : "";
+};
+
+const getGmailDate = (emailData) => {
+  const headers = emailData.payload.headers;
+  const fromHeader = headers.find(
+    (header) => header.name.toLowerCase() === "date"
+  );
+  return fromHeader.value;
+};
+
+// const getGmailBody(emailData)=> {
+//   const message = emailData.payload;
+//   if (message) {
+//     if (message.body) {
+//       if (message.body.size && message.body.size > 0) {
+//         // If the email has a body with a size greater than 0, it's not empty
+//         return Buffer.from(message.body.data, "base64").toString();
+//       } else if (message.body.attachmentId) {
+//         // If the email has an attachmentId, you can fetch the body separately
+//         const attachment = emailData.payload.attachments.find(
+//           (attachment) =>
+//             attachment.body.attachmentId === message.body.attachmentId
+//         );
+//         if (attachment) {
+//           return Buffer.from(attachment.body.data, "base64").toString();
+//         }
+//       }
+//     }
+//   }
+
+//   return ""; // No valid body found
+// }
+
+// export function getPlainTextFromBody(message: any): string {
+//   const parts = message.payload.parts;
+//   if (!parts) {
+//     // If there are no parts, return an empty string
+//     return "";
+//   }
+
+//   for (const part of parts) {
+//     if (part.mimeType === "text/plain") {
+//       const base64Data = part.body.data;
+//       const decodedData = Buffer.from(base64Data, "base64").toString("utf-8");
+//       return decodedData;
+//     }
+//   }
+
+//   // If no plain text part is found, return an empty string
+//   return "";
+// }
+
+const getMailBody = (emailData) => {
+  const decodedBody = emailData.data.payload?.parts?.find(
+    (part) => part.mimeType === "text/plain" || part.mimeType === "text/html"
+  );
+
+  if (decodedBody && decodedBody.body && decodedBody.body.data) {
+    return base64.default.decode(decodedBody?.body?.data);
+    // console.log(base64.default.decode(decodedBody?.body?.data));
+  } else {
+    return "";
+  }
+};
+
+// every 1s - */1 * * * * *
+// run 8am, 1pm and 6pm daily, - * * 8,13,18 * * * ✔️
+// every 50s - */50 * * * * *
+cron.schedule("*/20 * * * * *", async () => {
+  let currentDate;
+  let messages = [];
+  let messagesLv2 = [];
+  try {
+    // console.log("Cron running...");
+    const businesses = await Business.find({ gmail: { $exists: true } });
+
+    for (const business of businesses) {
+      currentDate = new Date(business.created_date);
+
+      // format => MM/DD/YYYY || YYYY/MM/DD
+      let formattedDate = `${currentDate.getFullYear()}/${String(
+        currentDate.getMonth() + 1
+      ).padStart(2, "0")}/${String(currentDate.getDate()).padStart(2, "0")}`;
+
+      oAuth2Client.setCredentials({
+        refresh_token: business.gmail.refresh_token,
+      });
+      const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
+      const res = await gmailClient.users.messages.list({
+        userId: "me",
+        q: `after:${formattedDate} is:inbox`,
+      });
+      // console.log(res.data.messages);
+      messages = [
+        ...messages,
+        ...spreadGmailInitialArrayAddBusinessId(
+          res.data.messages,
+          business.businessId,
+          business.gmail.refresh_token
+        ),
+      ];
+    }
+
+    // console.log(`looped ${loop + 1}`);
+
+    for (const message of messages) {
+      oAuth2Client.setCredentials({
+        refresh_token: message.refreshToken,
+      });
+      const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
+      const messageDetail = await gmailClient.users.messages.get({
+        userId: "me",
+        id: message.emailId,
+        format: "full",
+      });
+
+      if (messageDetail.status === 200) {
+        const from = getGmailFrom(messageDetail.data);
+        const date = getGmailDate(messageDetail.data);
+        const subject = getGmailSubject(messageDetail.data);
+        const to = getGmailTo(messageDetail.data);
+        const body = getMailBody(messageDetail);
+        messagesLv2.push({
+          emailId: message.emailId,
+          businessId: message.businessId,
+          threadId: message.threadId,
+          refreshToken: message.refreshToken,
+          snippet: messageDetail.data.snippet,
+          from: from,
+          to: to,
+          mailSentDate: new Date(date),
+          subject: subject,
+          body: body,
+        });
+        // console.log(to, from);
+      }
+      // console.log(messagesLv2);
+    }
+
+    // console.log("Got here");
+
+    // console.log(messagesLv2);
+    // await http.post("/gmail", { emails: messagesLv2 });
+  } catch (error) {
+    console.log("Email fetching cron error: " + error);
+  }
+});

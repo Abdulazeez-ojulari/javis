@@ -226,9 +226,9 @@ const autoReply = async (
     ticketId,
     content:
       escalated == true && department
-        ? `Your ticket has been escalated to the proper ${department}`
+        ? `Your request has been escalated to the proper ${department}`
         : escalated == true && !department
-        ? `Your ticket has been escalated to the proper department`
+        ? `Your request has been escalated to the proper department`
         : msg,
     role: "assistance",
   });
@@ -356,7 +356,7 @@ const supervisedReply = async (
   //   ticketId,
   //   content:
   //     escalated == true
-  //       ? "Your ticket has been escalated to the proper department"
+  //       ? "Your request has been escalated to the proper department"
   //       : msg,
   //   role: "assistance",
   //   status: "draft",
@@ -366,9 +366,9 @@ const supervisedReply = async (
     ticketId,
     content:
       escalated == (true && department)
-        ? `Your ticket has been escalated to the proper ${department}`
+        ? `Your request has been escalated to the proper ${department}`
         : escalated == true && !department
-        ? `Your ticket has been escalated to the proper department`
+        ? `Your request has been escalated to the proper department`
         : msg,
     role: "assistance",
     status: "draft",
