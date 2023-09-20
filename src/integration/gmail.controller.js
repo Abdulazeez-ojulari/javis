@@ -13,16 +13,7 @@ exports.persistGoogleMails = errorMiddleware(async (req, res) => {
   const { emails } = req.body;
   const uuid = uuidV4();
   let ticket, mail;
-  console.log(emails);
-  // fs.writeFile(
-  //   path.join(__dirname, "", "", "gmails.json"),
-  //   JSON.stringify(emails),
-  //   (err) => {
-  //     if (err) {
-  //       console.log(err);
-  //     } else console.log("Complete");
-  //   }
-  // );
+  // console.log(emails);
   for (const mail of emails) {
     const ticket = await Ticket.findOne({ emailThread: mail.threadId });
     await processEmailService(ticket?.ticketId, "gmail", mail);

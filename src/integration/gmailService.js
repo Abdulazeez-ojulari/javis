@@ -7,7 +7,10 @@ const { Business } = require("../business/businessModel");
 const { KnowledgeBase } = require("../knowledgeBase/knowledgeBaseModel");
 const { Order } = require("../order/orderModel");
 const nodemailer = require("nodemailer");
-const { extractNameAndEmail } = require("../utils/helper");
+const {
+  extractNameAndEmail,
+  stripSpecialCharacters,
+} = require("../utils/helper");
 const base64 = require("base64url");
 const cron = require("node-cron");
 const { google } = require("googleapis");
@@ -40,10 +43,12 @@ const processEmailService = async (ticketId, channel, mail) => {
     to: mail.to,
   };
 
-  let ticket = await Ticket.findOne({ ticketId });
+  let ticket = await Ticket.findOne({ _id: ticketId });
+  // console.log("adeshina", ticket, ticketId, channel, mail);
   if (!ticket) {
     let id = await createEmailService(refinedMail, email, channel, customer);
     ticketId = id;
+    console.log("this id", id);
   }
   let delimiter = "#####";
   let delimiter2 = "####";
@@ -203,8 +208,17 @@ const autoReply = async (
   email,
   customer
 ) => {
+  const mailExists = await GoogleMail.findOne({ gmailId: mail["gmailId"] });
+  console.log("mailExists", mailExists);
+
+  if (mailExists) {
+    return;
+  }
   let reply = await replyEmailService(mail, systemKnowledge, ticketId, ticket);
-  console.log(reply.data.choices[0].message);
+  // console.log("udom2", JSON.stringify(reply));
+  // console.log("udom", JSON.stringify(reply.data));
+  // console.log(reply.data.choices[0].message);
+  // console.log("ihunna");
 
   let content = reply.data.choices[0].message.content;
   let msg = reply.data.choices[0].message.content;
@@ -263,11 +277,14 @@ const autoReply = async (
   }
 
   let mailId = uuid.v4() + uuid.v4();
+  // console.log("abdulazeez", mail["gmailId"], ticketId);
+  // console.log("googlemails", { ticketId, mailId, mail });
+
   const customerReqMail = new GoogleMail({
     ticketId,
     mailId,
-    gmailId: mailId["gmailId"],
-    content: promptMsg,
+    gmailId: mail["gmailId"],
+    content: mail["body"],
     from: mail["email"],
     to: mail["to"],
     mailSnippet: mail["snippet"],
@@ -343,6 +360,11 @@ const supervisedReply = async (
   email,
   customer
 ) => {
+  const mailExists = await GoogleMail.findOne({ gmailId: mail["gmailId"] });
+
+  if (mailExists) {
+    return;
+  }
   let reply = await replyEmailService(mail, systemKnowledge, ticketId, ticket);
   console.log(reply.data.choices[0].message);
 
@@ -413,7 +435,7 @@ const supervisedReply = async (
     ticketId,
     mailId,
     gmailId: mailId["gmailId"],
-    content: promptMsg,
+    content: mail["body"],
     from: mail["email"],
     to: mail["to"],
     mailSnippet: mail["snippet"],
@@ -505,14 +527,15 @@ const replyEmailService = async (mail, messages, ticketId, ticket) => {
       previousMailsArray
     )}${delimiter2}`,
   };
-  let newMsg = {
+  let newMail = {
     role: "user",
     content: `${delimiter}${promptMsg}${delimiter}`,
   };
-  messages.push(previousMsg);
-  messages.push(newMsg);
+  messages.push(previousMails);
+  messages.push(newMail);
 
   try {
+    // console.log({ previousMails, messages, ticketId });
     let completion = await javis(messages, ticketId);
     return completion;
   } catch (e) {
@@ -538,10 +561,10 @@ const javis = async (messages, ticketId = null) => {
 };
 
 const createEmailService = async (mail, email, channel, customer) => {
-  let id = uuid.v4() + uuid.v4();
+  // let id = uuid.v4() + uuid.v4();
 
   let newTicket = new Ticket({
-    ticketId: id,
+    // ticketId: id,
     email: email,
     businessId: mail["businessId"],
     emailThread: mail["threadId"],
@@ -554,7 +577,8 @@ const createEmailService = async (mail, email, channel, customer) => {
     console.log(e);
     return e;
   }
-  return id;
+  // return id;
+  return ticket["_id"];
 };
 
 const metricsService = async (titles) => {
@@ -692,89 +716,92 @@ const getMailBody = (emailData) => {
 // every 1s - */1 * * * * *
 // run 8am, 1pm and 6pm daily, - * * 8,13,18 * * * ✔️
 // every 50s - */50 * * * * *
-// cron.schedule("*/20 * * * * *", async () => {
-//   let currentDate;
-//   let messages = [];
-//   let messagesLv2 = [];
-//   try {
-//     // console.log("Cron running...");
-//     const businesses = await Business.find({ gmail: { $exists: true } });
+cron.schedule("* * 9,5 * * *", async () => {
+  let currentDate;
+  let messages = [];
+  let messagesLv2 = [];
+  try {
+    // console.log("Cron running...");
+    const businesses = await Business.find({ gmail: { $exists: true } });
 
-//     for (const business of businesses) {
-//       currentDate = new Date(business.created_date);
+    for (const business of businesses) {
+      currentDate = new Date(business.created_date);
 
-//       // format => MM/DD/YYYY || YYYY/MM/DD
-//       let formattedDate = `${currentDate.getFullYear()}/${String(
-//         currentDate.getMonth() + 1
-//       ).padStart(2, "0")}/${String(currentDate.getDate()).padStart(2, "0")}`;
+      // format => MM/DD/YYYY || YYYY/MM/DD
+      let formattedDate = `${currentDate.getFullYear()}/${String(
+        currentDate.getMonth() + 1
+      ).padStart(2, "0")}/${String(currentDate.getDate()).padStart(2, "0")}`;
 
-//       oAuth2Client.setCredentials({
-//         refresh_token: business.gmail.refresh_token,
-//       });
-//       const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
-//       const res = await gmailClient.users.messages.list({
-//         userId: "me",
-//         q: `after:${formattedDate} is:inbox`,
-//       });
-//       // console.log(res.data.messages);
-//       messages = [
-//         ...messages,
-//         ...spreadGmailInitialArrayAddBusinessId(
-//           res.data.messages,
-//           business.businessId,
-//           business.gmail.refresh_token
-//         ),
-//       ];
-//     }
+      oAuth2Client.setCredentials({
+        refresh_token: business.gmail.refresh_token,
+      });
+      const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
+      const res = await gmailClient.users.messages.list({
+        userId: "me",
+        q: `after:${formattedDate} is:inbox`,
+      });
+      // console.log(res.data.messages);
+      messages = [
+        ...messages,
+        ...spreadGmailInitialArrayAddBusinessId(
+          res.data.messages,
+          business.businessId,
+          business.gmail.refresh_token
+        ),
+      ];
+    }
 
-//     // console.log(`looped ${loop + 1}`);
+    // console.log(`looped ${loop + 1}`);
 
-//     for (const message of messages) {
-//       oAuth2Client.setCredentials({
-//         refresh_token: message.refreshToken,
-//       });
-//       const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
-//       const messageDetail = await gmailClient.users.messages.get({
-//         userId: "me",
-//         id: message.emailId,
-//         format: "full",
-//       });
+    for (const message of messages) {
+      oAuth2Client.setCredentials({
+        refresh_token: message.refreshToken,
+      });
+      const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
+      const messageDetail = await gmailClient.users.messages.get({
+        userId: "me",
+        id: message.emailId,
+        format: "full",
+      });
 
-//       if (messageDetail.status === 200) {
-//         const from = getGmailFrom(messageDetail.data);
-//         const date = getGmailDate(messageDetail.data);
-//         const subject = getGmailSubject(messageDetail.data);
-//         const to = getGmailTo(messageDetail.data);
-//         const body = getMailBody(messageDetail);
-//         messagesLv2.push({
-//           emailId: message.emailId,
-//           businessId: message.businessId,
-//           threadId: message.threadId,
-//           refreshToken: message.refreshToken,
-//           snippet: messageDetail.data.snippet,
-//           from: from,
-//           to: to,
-//           mailSentDate: new Date(date),
-//           subject: subject,
-//           body: body,
-//         });
-//         // console.log(to, from);
-//       }
-//       // console.log(messagesLv2);
-//     }
+      if (messageDetail.status === 200) {
+        const from = getGmailFrom(messageDetail.data);
+        const date = getGmailDate(messageDetail.data);
+        const subject = getGmailSubject(messageDetail.data);
+        const to = getGmailTo(messageDetail.data);
+        const body = stripSpecialCharacters(getMailBody(messageDetail));
+        messagesLv2.push({
+          emailId: message.emailId,
+          businessId: message.businessId,
+          threadId: message.threadId,
+          refreshToken: message.refreshToken,
+          snippet: messageDetail.data.snippet,
+          from: from,
+          to: to,
+          mailSentDate: new Date(date),
+          subject: subject,
+          body: body,
+        });
+        // console.log(to, from);
+      }
+      // console.log(messagesLv2);
+    }
 
-//     // console.log("Got here");
+    // console.log("Got here");
 
-//     // console.log(messagesLv2);
-//     // await http.post("/gmail", { emails: messagesLv2 });
+    // console.log(messagesLv2);
+    // await http.post("/gmail", { emails: messagesLv2 });
 
-//     for (let mail of messagesLv2) {
-//       const ticket = await Ticket.findOne({ emailThread: mail.threadId });
-//       await processEmailService(ticket?.ticketId, "gmail", mail);
-//     }
-//   } catch (error) {
-//     console.log("Email fetching cron error: " + error);
-//   }
-// });
+    console.log("got here");
+
+    for (let mail of messagesLv2) {
+      const ticket = await Ticket.findOne({ emailThread: mail.threadId });
+      console.log("Phase 1", ticket);
+      await processEmailService(ticket?.id, "gmail", mail);
+    }
+  } catch (error) {
+    console.log("Email fetching cron error: " + error);
+  }
+});
 
 module.exports.processEmailService = processEmailService;

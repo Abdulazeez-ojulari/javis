@@ -66,7 +66,8 @@ exports.extractNameAndEmail = (str) => {
   }
   let split = str.split("<");
   let name = split[0];
-  let email = split[1].slice(0, -1);
+  let email = split[1] ? split[1].slice(0, -1) : "";
+  // console.log("slice-issue", str, split);
 
   return [name, email];
 };
@@ -78,4 +79,17 @@ exports.isMemberOfBusiness = (business, id) => {
     return false;
   }
   return response;
+};
+
+exports.stripSpecialCharacters = (str) => {
+  if (typeof str != "string") {
+    return "";
+  }
+  // Replace newline characters with spaces.
+  str = str.replace(/\n/g, " ");
+
+  // Remove characters that are not letters, numbers, spaces, or in the set [.,-:']
+  str = str.replace(/[^a-zA-Z0-9 .,-:'"]/g, "");
+
+  return str.trim();
 };
