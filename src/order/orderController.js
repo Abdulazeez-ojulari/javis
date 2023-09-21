@@ -65,7 +65,7 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
 
   order = await Order.findByIdAndUpdate(
     orderId,
-    { status: "completed" },
+    { status: "cancelled" },
     { new: true }
   );
 
