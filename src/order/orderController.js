@@ -52,7 +52,7 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
     });
   }
 
-  const order = await Order.findOne({
+  let order = await Order.findOne({
     businessId,
     email: email.toLowerCase(),
     chatId,
@@ -61,7 +61,9 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
     return res.status(404).send({ message: "Order doesn't exists" });
   }
 
-  return res.send(order);
+  // return res.send(order);
+
+
   order.status = "cancelled";
 
   await order.save();
@@ -113,8 +115,11 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
   if (!order) {
     return res.status(404).send({ message: "Order doesn't exists" });
   }
-  return res.send(order);
+  
+  // return res.send(order);
+
   order.status = "completed";
+
   await order.save();
 
   return res.send({ message: "Order confirmed successfully", data: order });
