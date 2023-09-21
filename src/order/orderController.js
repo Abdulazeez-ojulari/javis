@@ -56,7 +56,7 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
     _id: orderId,
     businessId,
     chatId,
-  }).exists();
+  });
   if (!order) {
     return res.status(404).send({ message: "Order doesn't exists" });
   }
