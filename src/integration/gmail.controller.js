@@ -8,6 +8,13 @@ const { extractNameAndEmail } = require("../utils/helper");
 const { processEmailService, sendEmail } = require("./gmailService");
 const fs = require("node:fs");
 const path = require("node:path");
+const { google } = require("googleapis");
+const OAuth2Client = google.auth.OAuth2;
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLEINT_SECRET = process.env.CLEINT_SECRET;
+const REDIRECT_URI = process.env.REDIRECT_URI;
+
+const oAuth2Client = new OAuth2Client(CLIENT_ID, CLEINT_SECRET, REDIRECT_URI);
 
 exports.persistGoogleMails = errorMiddleware(async (req, res) => {
   const { emails } = req.body;
@@ -173,4 +180,19 @@ exports.replyMail = errorMiddleware(async (req, res) => {
   await sendEmail(mail);
 
   return res.status(200).json({ message: "Mail ", data: result });
+});
+
+exports.pushNotification = errorMiddleware(async (req, res) => {
+  const pubsubMessage = req.body.message;
+  const emailData = Buffer.from(pubsubMessage.data, "base64").toString("utf-8");
+  console.log(emailData, pubsubMessage);
+  // const { emails } = req.body;
+  // console.log(req.body);
+  // const uuid = uuidV4();
+  // let ticket, mail;
+  // console.log(emails);
+  // for (const mail of emails) {
+  //   const ticket = await Ticket.findOne({ emailThread: mail.threadId });
+  //   await processEmailService(ticket?.ticketId, "gmail", mail);
+  // }
 });

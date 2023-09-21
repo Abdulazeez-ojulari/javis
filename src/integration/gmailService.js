@@ -716,7 +716,7 @@ const getMailBody = (emailData) => {
 // every 1s - */1 * * * * *
 // run 8am, 1pm and 6pm daily, - * * 8,13,18 * * * ✔️
 // every 50s - */50 * * * * *
-// cron.schedule("* * 12,17 * * *", async () => {
+// cron.schedule("*/50 * * * * *", async () => {
 //   let currentDate;
 //   let messages = [];
 //   let messagesLv2 = [];
@@ -803,5 +803,39 @@ const getMailBody = (emailData) => {
 //     console.log("Email fetching cron error: " + error);
 //   }
 // });
+
+// it is required that all accounts are watched every 7 days, this is put up to tackle that
+async function setWatchForAccounts() {
+  // Fetch all accounts from the database
+  const businesses = await Business.find({ gmail: { $exists: true } });
+
+  // For each account, set up the watch
+  for (let business of businesses) {
+    try {
+      oAuth2Client.setCredentials({
+        access_token: business.gmail.access_token,
+        refresh_token: business.gmail.refresh_token,
+      });
+
+      const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+
+      await gmail.users.watch({
+        userId: "me",
+        requestBody: {
+          topicName: `projects/${process.env.PROJECT_ID}/topics/${TOPIC}`,
+        },
+      });
+
+      console.log(`Watch set up successfully for account ID: ${business}`);
+    } catch (error) {
+      console.error(
+        `Failed to set up watch for account ID: ${business}. Error: ${error.message}`
+      );
+    }
+  }
+}
+cron.schedule(" 0 0 */5 * *", async () => {
+  await setWatchForAccounts();
+});
 
 module.exports.processEmailService = processEmailService;
