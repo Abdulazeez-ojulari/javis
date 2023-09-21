@@ -45,7 +45,10 @@ eventEmitter.on(
   "notifyNewChatMessage",
   async ({ ticketId, email, businessId, channel, customer, promptMsg }) => {
     const business = await Business.findOne({ businessId: businessId });
-    const recipients = business.teams.map((team) => team.userId);
+    const recipients = business.teams.map((team) => {
+      // console.log(team);
+      return team.userId;
+    });
     const id = v4() + "-" + v4();
     const notification = new Notification({
       notificationId: id,

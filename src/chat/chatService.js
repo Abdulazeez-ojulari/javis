@@ -237,16 +237,17 @@ const autoReply = async (
   });
 
   await assistantResMsg.save();
+  if (escalated) {
+    const detectedFaqId = uuid.v4();
+    const detectedFaq = new DetectedFAQ({
+      faqId: detectedFaqId,
+      question: promptMsg,
+      response: "",
+      businessId,
+    });
 
-  const detectedFaqId = uuid.v4();
-  const detectedFaq = new DetectedFAQ({
-    faqId: detectedFaqId,
-    question: promptMsg,
-    response:"",
-    businessId,
-  });
-
-  await detectedFaq.save();
+    await detectedFaq.save();
+  }
 
   if (ticket.titles.length > 0) {
     let overall = await metricsService(ticket.titles);
@@ -389,15 +390,17 @@ const supervisedReply = async (
 
   await assistantResMsg.save();
 
-  const detectedFaqId = uuid.v4();
-  const detectedFaq = new DetectedFAQ({
-    faqId: detectedFaqId,
-    question: promptMsg,
-    response:"",
-    businessId,
-  });
+  if (escalated) {
+    const detectedFaqId = uuid.v4();
+    const detectedFaq = new DetectedFAQ({
+      faqId: detectedFaqId,
+      question: promptMsg,
+      response: "",
+      businessId,
+    });
 
-  await detectedFaq.save();
+    await detectedFaq.save();
+  }
 
   if (ticket.titles.length > 0) {
     let overall = await metricsService(ticket.titles);
