@@ -63,10 +63,11 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
 
   // return res.send(order);
 
+  // order.status = "cancelled";
 
-  order.status = "cancelled";
+  // await order.save();
 
-  await order.save();
+  order = await Order.updateOne({ _id: order._id }, { status: "completed" });
 
   return res.send({ message: "Order cancelled successfully", data: order });
 });
@@ -107,7 +108,7 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
     });
   }
 
-  const order = await Order.findOne({
+  let order = await Order.findOne({
     businessId,
     email: email.toLowerCase(),
     chatId,
@@ -115,12 +116,14 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
   if (!order) {
     return res.status(404).send({ message: "Order doesn't exists" });
   }
-  
+
   // return res.send(order);
 
-  order.status = "completed";
+  // order.status = "completed";
 
-  await order.save();
+  // await order.save();
+
+  order = await Order.updateOne({ _id: order._id }, { status: "completed" });
 
   return res.send({ message: "Order confirmed successfully", data: order });
 });
