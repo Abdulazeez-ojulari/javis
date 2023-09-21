@@ -716,7 +716,7 @@ const getMailBody = (emailData) => {
 // every 1s - */1 * * * * *
 // run 8am, 1pm and 6pm daily, - * * 8,13,18 * * * ✔️
 // every 50s - */50 * * * * *
-cron.schedule("* * 9,5 * * *", async () => {
+cron.schedule("* * 12,17 * * *", async () => {
   let currentDate;
   let messages = [];
   let messagesLv2 = [];
