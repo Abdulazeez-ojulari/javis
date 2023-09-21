@@ -52,9 +52,7 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
     });
   }
 
-  let order = await Order.findOne({
-    _id: orderId,
-  });
+  let order = await Order.findById(orderId);
   if (!order) {
     return res.status(404).send({ message: "Order doesn't exists" });
   }
@@ -65,7 +63,11 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
 
   // await order.save();
 
-  order = await Order.updateOne({ _id: orderId }, { status: "completed" });
+  order = await Order.findByIdAndUpdate(
+    orderId,
+    { status: "completed" },
+    { new: true }
+  );
 
   return res.send({ message: "Order cancelled successfully" });
 });
@@ -108,7 +110,7 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
     });
   }
 
-  let order = await Order.findOne({ _id: orderId });
+  let order = await Order.findById(orderId);
   if (!order) {
     return res.status(404).send({ message: "Order doesn't exists" });
   }
@@ -119,7 +121,11 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
 
   // await order.save();
 
-  order = await Order.updateOne({ _id: orderId }, { status: "completed" });
+  order = await Order.findByIdAndUpdate(
+    orderId,
+    { status: "completed" },
+    { new: true }
+  );
 
   return res.send({ message: "Order confirmed successfully" });
 });
