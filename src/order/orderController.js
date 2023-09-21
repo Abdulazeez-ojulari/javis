@@ -69,7 +69,7 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
     { new: true }
   );
 
-  return res.send({ message: "Order cancelled successfully" });
+  return res.send({ message: "Order cancelled successfully", data: order });
 });
 
 module.exports.confirmOrder = errorMiddleware(async (req, res) => {
@@ -127,5 +127,5 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
     { new: true }
   );
 
-  return res.send({ message: "Order confirmed successfully" });
+  return res.send({ message: "Order confirmed successfully", data: order });
 });
