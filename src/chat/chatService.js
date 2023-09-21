@@ -6,6 +6,7 @@ const uuid = require("uuid");
 const { Business } = require("../business/businessModel");
 const { KnowledgeBase } = require("../knowledgeBase/knowledgeBaseModel");
 const { Order } = require("../order/orderModel");
+const { DetectedFAQ } = require("../models/detected-faq.model");
 
 const configuration = new Configuration({
   organization: "org-oRjT38IDR8URxu112r663l81",
@@ -40,7 +41,9 @@ module.exports.processChatService = async (
     return { message: "Business doesn't exists" };
   }
 
-  let knowledgeBase = await KnowledgeBase.findOne({ businessId: businessId }).exec();
+  let knowledgeBase = await KnowledgeBase.findOne({
+    businessId: businessId,
+  }).exec();
 
   let knowledge_base = [];
   let faqs = [];
@@ -235,6 +238,16 @@ const autoReply = async (
 
   await assistantResMsg.save();
 
+  const detectedFaqId = uuid.v4();
+  const detectedFaq = new DetectedFAQ({
+    faqId: detectedFaqId,
+    question: promptMsg,
+    response:"",
+    businessId,
+  });
+
+  await detectedFaq.save();
+
   if (ticket.titles.length > 0) {
     let overall = await metricsService(ticket.titles);
     console.log(overall.data.choices[0].message);
@@ -375,6 +388,16 @@ const supervisedReply = async (
   });
 
   await assistantResMsg.save();
+
+  const detectedFaqId = uuid.v4();
+  const detectedFaq = new DetectedFAQ({
+    faqId: detectedFaqId,
+    question: promptMsg,
+    response:"",
+    businessId,
+  });
+
+  await detectedFaq.save();
 
   if (ticket.titles.length > 0) {
     let overall = await metricsService(ticket.titles);

@@ -495,12 +495,13 @@ exports.imagesUpload = errorMiddleWare(async (req, res) => {
   for (const file of files) {
     const params = {
       Bucket: process.env.S3_BUCKET,
-      Key: `${folder}/${file.originalname}-${user.userId}`,
+      Key: `${folder}/${user.userId}-${file.originalname}`,
       Body: file.buffer,
     };
 
     // const uploadResult = await s3.putObject(params).promise();
     const uploadResult = await s3.upload(params).promise();
+    console.log(uploadResult);
     uploadedUrls.push(uploadResult.Location);
   }
   // console.log(uploadedUrls);
