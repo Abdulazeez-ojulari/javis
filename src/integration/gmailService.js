@@ -716,92 +716,92 @@ const getMailBody = (emailData) => {
 // every 1s - */1 * * * * *
 // run 8am, 1pm and 6pm daily, - * * 8,13,18 * * * ✔️
 // every 50s - */50 * * * * *
-cron.schedule("* * 12,17 * * *", async () => {
-  let currentDate;
-  let messages = [];
-  let messagesLv2 = [];
-  try {
-    // console.log("Cron running...");
-    const businesses = await Business.find({ gmail: { $exists: true } });
+// cron.schedule("* * 12,17 * * *", async () => {
+//   let currentDate;
+//   let messages = [];
+//   let messagesLv2 = [];
+//   try {
+//     // console.log("Cron running...");
+//     const businesses = await Business.find({ gmail: { $exists: true } });
 
-    for (const business of businesses) {
-      currentDate = new Date(business.created_date);
+//     for (const business of businesses) {
+//       currentDate = new Date(business.created_date);
 
-      // format => MM/DD/YYYY || YYYY/MM/DD
-      let formattedDate = `${currentDate.getFullYear()}/${String(
-        currentDate.getMonth() + 1
-      ).padStart(2, "0")}/${String(currentDate.getDate()).padStart(2, "0")}`;
+//       // format => MM/DD/YYYY || YYYY/MM/DD
+//       let formattedDate = `${currentDate.getFullYear()}/${String(
+//         currentDate.getMonth() + 1
+//       ).padStart(2, "0")}/${String(currentDate.getDate()).padStart(2, "0")}`;
 
-      oAuth2Client.setCredentials({
-        refresh_token: business.gmail.refresh_token,
-      });
-      const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
-      const res = await gmailClient.users.messages.list({
-        userId: "me",
-        q: `after:${formattedDate} is:inbox`,
-      });
-      // console.log(res.data.messages);
-      messages = [
-        ...messages,
-        ...spreadGmailInitialArrayAddBusinessId(
-          res.data.messages,
-          business.businessId,
-          business.gmail.refresh_token
-        ),
-      ];
-    }
+//       oAuth2Client.setCredentials({
+//         refresh_token: business.gmail.refresh_token,
+//       });
+//       const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
+//       const res = await gmailClient.users.messages.list({
+//         userId: "me",
+//         q: `after:${formattedDate} is:inbox`,
+//       });
+//       // console.log(res.data.messages);
+//       messages = [
+//         ...messages,
+//         ...spreadGmailInitialArrayAddBusinessId(
+//           res.data.messages,
+//           business.businessId,
+//           business.gmail.refresh_token
+//         ),
+//       ];
+//     }
 
-    // console.log(`looped ${loop + 1}`);
+//     // console.log(`looped ${loop + 1}`);
 
-    for (const message of messages) {
-      oAuth2Client.setCredentials({
-        refresh_token: message.refreshToken,
-      });
-      const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
-      const messageDetail = await gmailClient.users.messages.get({
-        userId: "me",
-        id: message.emailId,
-        format: "full",
-      });
+//     for (const message of messages) {
+//       oAuth2Client.setCredentials({
+//         refresh_token: message.refreshToken,
+//       });
+//       const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
+//       const messageDetail = await gmailClient.users.messages.get({
+//         userId: "me",
+//         id: message.emailId,
+//         format: "full",
+//       });
 
-      if (messageDetail.status === 200) {
-        const from = getGmailFrom(messageDetail.data);
-        const date = getGmailDate(messageDetail.data);
-        const subject = getGmailSubject(messageDetail.data);
-        const to = getGmailTo(messageDetail.data);
-        const body = stripSpecialCharacters(getMailBody(messageDetail));
-        messagesLv2.push({
-          emailId: message.emailId,
-          businessId: message.businessId,
-          threadId: message.threadId,
-          refreshToken: message.refreshToken,
-          snippet: messageDetail.data.snippet,
-          from: from,
-          to: to,
-          mailSentDate: new Date(date),
-          subject: subject,
-          body: body,
-        });
-        // console.log(to, from);
-      }
-      // console.log(messagesLv2);
-    }
+//       if (messageDetail.status === 200) {
+//         const from = getGmailFrom(messageDetail.data);
+//         const date = getGmailDate(messageDetail.data);
+//         const subject = getGmailSubject(messageDetail.data);
+//         const to = getGmailTo(messageDetail.data);
+//         const body = stripSpecialCharacters(getMailBody(messageDetail));
+//         messagesLv2.push({
+//           emailId: message.emailId,
+//           businessId: message.businessId,
+//           threadId: message.threadId,
+//           refreshToken: message.refreshToken,
+//           snippet: messageDetail.data.snippet,
+//           from: from,
+//           to: to,
+//           mailSentDate: new Date(date),
+//           subject: subject,
+//           body: body,
+//         });
+//         // console.log(to, from);
+//       }
+//       // console.log(messagesLv2);
+//     }
 
-    // console.log("Got here");
+//     // console.log("Got here");
 
-    // console.log(messagesLv2);
-    // await http.post("/gmail", { emails: messagesLv2 });
+//     // console.log(messagesLv2);
+//     // await http.post("/gmail", { emails: messagesLv2 });
 
-    console.log("got here");
+//     console.log("got here");
 
-    for (let mail of messagesLv2) {
-      const ticket = await Ticket.findOne({ emailThread: mail.threadId });
-      console.log("Phase 1", ticket);
-      await processEmailService(ticket?.id, "gmail", mail);
-    }
-  } catch (error) {
-    console.log("Email fetching cron error: " + error);
-  }
-});
+//     for (let mail of messagesLv2) {
+//       const ticket = await Ticket.findOne({ emailThread: mail.threadId });
+//       console.log("Phase 1", ticket);
+//       await processEmailService(ticket?.id, "gmail", mail);
+//     }
+//   } catch (error) {
+//     console.log("Email fetching cron error: " + error);
+//   }
+// });
 
 module.exports.processEmailService = processEmailService;
