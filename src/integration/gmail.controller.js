@@ -186,6 +186,7 @@ exports.pushNotification = errorMiddleware(async (req, res) => {
   const pubsubMessage = req.body.message;
   const emailData = Buffer.from(pubsubMessage.data, "base64").toString("utf-8");
   console.log(emailData, pubsubMessage);
+  return res.sendStatus(200);
   // const { emails } = req.body;
   // console.log(req.body);
   // const uuid = uuidV4();
