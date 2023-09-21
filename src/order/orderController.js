@@ -16,7 +16,7 @@ module.exports.getOrders = errorMiddleware(async (req, res) => {
 
 module.exports.cancelOrder = errorMiddleware(async (req, res) => {
   let { businessId, chatId } = req.params;
-  const { email } = req.body;
+  const { orderId } = req.body;
   const user = req.user;
   const errors = validationResult(req);
 
@@ -53,10 +53,10 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
   }
 
   let order = await Order.findOne({
+    _id: orderId,
     businessId,
-    email: email.toLowerCase(),
     chatId,
-  });
+  }).exists();
   if (!order) {
     return res.status(404).send({ message: "Order doesn't exists" });
   }
@@ -67,14 +67,14 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
 
   // await order.save();
 
-  order = await Order.updateOne({ _id: order._id }, { status: "completed" });
+  order = await Order.updateOne({ _id: orderId }, { status: "completed" });
 
-  return res.send({ message: "Order cancelled successfully", data: order });
+  return res.send({ message: "Order cancelled successfully" });
 });
 
 module.exports.confirmOrder = errorMiddleware(async (req, res) => {
   let { businessId, chatId } = req.params;
-  const { email } = req.body;
+  const { orderId } = req.body;
   const user = req.user;
   const errors = validationResult(req);
 
@@ -108,11 +108,7 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
     });
   }
 
-  let order = await Order.findOne({
-    businessId,
-    email: email.toLowerCase(),
-    chatId,
-  });
+  let order = await Order.findOne({ _id: orderId, businessId, chatId });
   if (!order) {
     return res.status(404).send({ message: "Order doesn't exists" });
   }
@@ -123,7 +119,7 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
 
   // await order.save();
 
-  order = await Order.updateOne({ _id: order._id }, { status: "completed" });
+  order = await Order.updateOne({ _id: orderId }, { status: "completed" });
 
-  return res.send({ message: "Order confirmed successfully", data: order });
+  return res.send({ message: "Order confirmed successfully" });
 });
