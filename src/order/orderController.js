@@ -20,7 +20,7 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
   const user = req.user;
   const errors = validationResult(req);
 
-  console.log("hello");
+  console.log(orderId);
 
   if (!errors.isEmpty()) {
     const validationErrors = [];
@@ -54,8 +54,6 @@ module.exports.cancelOrder = errorMiddleware(async (req, res) => {
 
   let order = await Order.findOne({
     _id: orderId,
-    businessId,
-    chatId,
   });
   if (!order) {
     return res.status(404).send({ message: "Order doesn't exists" });
@@ -77,6 +75,8 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
   const { orderId } = req.body;
   const user = req.user;
   const errors = validationResult(req);
+
+  console.log(orderId);
 
   if (!errors.isEmpty()) {
     const validationErrors = [];
@@ -108,7 +108,7 @@ module.exports.confirmOrder = errorMiddleware(async (req, res) => {
     });
   }
 
-  let order = await Order.findOne({ _id: orderId, businessId, chatId });
+  let order = await Order.findOne({ _id: orderId });
   if (!order) {
     return res.status(404).send({ message: "Order doesn't exists" });
   }
