@@ -807,7 +807,9 @@ const getMailBody = (emailData) => {
 // it is required that all accounts are watched every 7 days, this is put up to tackle that
 async function setWatchForAccounts() {
   // Fetch all accounts from the database
-  const businesses = await Business.find({ gmail: { $exists: true } });
+  const businesses = await Business.find({ gmail: { $exists: true } }).select(
+    "gmail"
+  );
 
   // For each account, set up the watch
   for (let business of businesses) {
@@ -822,7 +824,9 @@ async function setWatchForAccounts() {
       await gmail.users.watch({
         userId: "me",
         requestBody: {
-          topicName: `projects/${process.env.PROJECT_ID}/topics/${TOPIC}`,
+          topicName: `projects/${process.env.PROJECT_ID}/topics/${process.env.TOPIC}`,
+          labelIds: ["INBOX"],
+          labelFilterBehavior: "INCLUDE",
         },
       });
 
