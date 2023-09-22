@@ -821,7 +821,7 @@ async function setWatchForAccounts() {
 
       const gmail = google.gmail({ version: "v1", auth: oAuth2Client });
 
-      await gmail.users.watch({
+      const { data, status } = await gmail.users.watch({
         userId: "me",
         requestBody: {
           topicName: `projects/${process.env.PROJECT_ID}/topics/${process.env.TOPIC}`,
@@ -829,6 +829,11 @@ async function setWatchForAccounts() {
           labelFilterBehavior: "INCLUDE",
         },
       });
+
+      if (status === 200) {
+        business.gmail.historyId = data.historyId;
+        await business.save();
+      }
 
       console.log(`Watch set up successfully for account ID: ${business}`);
     } catch (error) {
