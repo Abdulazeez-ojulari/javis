@@ -25,6 +25,7 @@ module.exports.createBusiness = errorMiddleware(async (req, res) => {
     twitterHandle,
     companyInformation,
     departments,
+    supportEmail,
   } = req.body;
 
   const user = await User.findOne({ userId: userId });
@@ -53,7 +54,8 @@ module.exports.createBusiness = errorMiddleware(async (req, res) => {
     twitterHandle,
     companyInformation,
     departments,
-    user
+    user,
+    supportEmail
   );
   return res.send(newBusiness);
 });
@@ -79,6 +81,7 @@ module.exports.updateBusiness = errorMiddleware(async (req, res) => {
     aiMode,
     plan,
     gmail,
+    supportEmail,
   } = req.body;
 
   let data = {};
@@ -138,6 +141,8 @@ module.exports.updateBusiness = errorMiddleware(async (req, res) => {
   if (plan) data["plan"] = plan;
 
   if (gmail) data["gmail"] = gmail;
+
+  if (supportEmail) data["supportEmail"] = supportEmail;
 
   let updatedBusiness = await updateBusinessService(data);
   return res.send(updatedBusiness);

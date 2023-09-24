@@ -1,13 +1,41 @@
 const { Business } = require("./businessModel");
-const uuid = require('uuid');
+const uuid = require("uuid");
 
 module.exports.createBusinessService = async (
-    businessName, 
-    industry, 
-    phoneNo, 
-    address, 
-    bankName, 
-    accountNo, 
+  businessName,
+  industry,
+  phoneNo,
+  address,
+  bankName,
+  accountNo,
+  description,
+  ownerName,
+  ownerPhoneNo,
+  ownwerEmail,
+  instagramHandle,
+  facebookHandle,
+  twitterHandle,
+  companyInformation,
+  departments,
+  user,
+  supportEmail
+) => {
+  let id = uuid.v4() + uuid.v4();
+  let teams = [
+    {
+      userId: user.id,
+      role: "owner",
+    },
+  ];
+  let newBusiness = new Business({
+    userId: user.id,
+    businessId: id,
+    businessName: businessName,
+    industry,
+    phoneNo,
+    address,
+    bankName,
+    accountNo,
     description,
     ownerName,
     ownerPhoneNo,
@@ -15,111 +43,86 @@ module.exports.createBusinessService = async (
     instagramHandle,
     facebookHandle,
     twitterHandle,
-    companyInformation, 
-    departments, 
-    user
-) => {
-    let id = uuid.v4() + uuid.v4()
-    let teams = [
-        {
-            userId: user.id,
-            role: "owner"
-        }
-    ]
-    let newBusiness = new Business({
-        userId: user.id,
-        businessId: id,
-        businessName: businessName,
-        industry, 
-        phoneNo, 
-        address, 
-        bankName, 
-        accountNo, 
-        description,
-        ownerName,
-        ownerPhoneNo,
-        ownwerEmail,
-        instagramHandle,
-        facebookHandle,
-        twitterHandle,
-        departments: departments,
-        companyInformation: companyInformation,
-        teams: teams
-
-    });
-    try{
-        await newBusiness.save();
-    }catch(e){
-        console.log(e);
-        return e;
-    }
-    return newBusiness;
-}
+    departments: departments,
+    companyInformation: companyInformation,
+    teams: teams,
+    supportEmail,
+  });
+  try {
+    await newBusiness.save();
+  } catch (e) {
+    console.log(e);
+    return e;
+  }
+  return newBusiness;
+};
 
 module.exports.updateBusinessService = async (data) => {
-    const { 
-        businessId, 
-        industry, 
-        phoneNo, 
-        address, 
-        bankName, 
-        accountNo, 
-        description,
-        ownerName,
-        ownerPhoneNo,
-        ownwerEmail,
-        instagramHandle,
-        facebookHandle,
-        twitterHandle,
-        departments, 
-        companyInformation, 
-        aiMode ,
-        plan,
-        gmail
-    } = data;
+  const {
+    businessId,
+    industry,
+    phoneNo,
+    address,
+    bankName,
+    accountNo,
+    description,
+    ownerName,
+    ownerPhoneNo,
+    ownwerEmail,
+    instagramHandle,
+    facebookHandle,
+    twitterHandle,
+    departments,
+    companyInformation,
+    aiMode,
+    plan,
+    gmail,
+    supportEmail,
+  } = data;
 
-    const business = await Business.findOne({businessId: businessId})
-    
-    if(departments && departments.length > 0)
-    business.departments = departments;
+  const business = await Business.findOne({ businessId: businessId });
 
-    if(companyInformation) business.companyInformation = companyInformation;
+  if (departments && departments.length > 0) business.departments = departments;
 
-    if(industry) business.industry = industry;
+  if (companyInformation) business.companyInformation = companyInformation;
 
-    if(phoneNo) business.phoneNo = phoneNo;
+  if (industry) business.industry = industry;
 
-    if(address) business.address = address;
+  if (phoneNo) business.phoneNo = phoneNo;
 
-    if(bankName) business.bankName = bankName;
+  if (address) business.address = address;
 
-    if(accountNo) business.accountNo = accountNo;
+  if (bankName) business.bankName = bankName;
 
-    if(description) business.description = description;
+  if (accountNo) business.accountNo = accountNo;
 
-    if(ownerName) business.ownerName = ownerName;
+  if (description) business.description = description;
 
-    if(ownerPhoneNo) business.ownerPhoneNo = ownerPhoneNo;
+  if (ownerName) business.ownerName = ownerName;
 
-    if(ownwerEmail) business.ownwerEmail = ownwerEmail;
+  if (ownerPhoneNo) business.ownerPhoneNo = ownerPhoneNo;
 
-    if(instagramHandle) business.instagramHandle = instagramHandle;
+  if (ownwerEmail) business.ownwerEmail = ownwerEmail;
 
-    if(facebookHandle) business.facebookHandle = facebookHandle;
+  if (instagramHandle) business.instagramHandle = instagramHandle;
 
-    if(twitterHandle) business.twitterHandle = twitterHandle;
+  if (facebookHandle) business.facebookHandle = facebookHandle;
 
-    if(aiMode) business.aiMode = aiMode;
+  if (twitterHandle) business.twitterHandle = twitterHandle;
 
-    if(plan) business.plan = plan;
-    
-    if(gmail) business.gmail = gmail;
+  if (aiMode) business.aiMode = aiMode;
 
-    try{
-        await business.save();
-    }catch(e){
-        // console.log(e);
-        return e;
-    }
-    return business;
-}
+  if (plan) business.plan = plan;
+
+  if (gmail) business.gmail = gmail;
+
+  if (supportEmail) business.supportEmail = supportEmail;
+
+  try {
+    await business.save();
+  } catch (e) {
+    // console.log(e);
+    return e;
+  }
+  return business;
+};
