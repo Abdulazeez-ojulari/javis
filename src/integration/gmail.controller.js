@@ -4,11 +4,27 @@ const { GoogleMail } = require("../models/gmail.model");
 const { Ticket } = require("../models/ticket.model");
 const { v4: uuidV4 } = require("uuid");
 const { LIMIT } = require("../utils/const");
-const { extractNameAndEmail } = require("../utils/helper");
-const { processEmailService, sendEmail } = require("./gmailService");
+const {
+  extractNameAndEmail,
+  stripSpecialCharacters,
+} = require("../utils/helper");
+const {
+  processEmailService,
+  sendEmail,
+  spreadGmailInitialArrayAddBusinessId,
+  getObjectFromDataArray,
+  getGmailTo,
+  getGmailFrom,
+  getGmailSubject,
+  getGmailDate,
+  getMailBody,
+  fetchEmailDetails,
+} = require("./gmailService");
 const fs = require("node:fs");
 const path = require("node:path");
 const { google } = require("googleapis");
+const { Business } = require("../business/businessModel");
+const { MongooseError } = require("mongoose");
 const OAuth2Client = google.auth.OAuth2;
 const CLIENT_ID = process.env.CLIENT_ID;
 const CLEINT_SECRET = process.env.CLEINT_SECRET;
@@ -177,6 +193,9 @@ exports.replyMail = errorMiddleware(async (req, res) => {
     });
   }
 
+  mail.assistantResponseDate = new Date();
+  await mail.save();
+
   await sendEmail(mail);
 
   return res.status(200).json({ message: "Mail ", data: result });
@@ -184,16 +203,40 @@ exports.replyMail = errorMiddleware(async (req, res) => {
 
 exports.pushNotification = errorMiddleware(async (req, res) => {
   const pubsubMessage = req.body.message;
-  const emailData = Buffer.from(pubsubMessage.data, "base64").toString("utf-8");
-  console.log(emailData, pubsubMessage);
+  let emailData = Buffer.from(pubsubMessage.data, "base64").toString("utf-8");
+  emailData = JSON.parse(emailData);
+  console.log("got here", emailData, emailData.historyId);
+  const business = await Business.findOne({
+    supportEmail: emailData.emailAddress,
+  });
+  if (!business) {
+    // return res.status(200).json({ message: "Record hit" });
+    console.log(
+      `Support email not found: ${emailData.emailAddress}, ${emailData.historyId}`
+    );
+    return res.status(404).json({ message: "Support email not found" });
+  }
+  oAuth2Client.setCredentials({ refresh_token: business.gmail.refresh_token });
+  const gmailClient = google.gmail({ version: "v1", auth: oAuth2Client });
+  const historyList = await gmailClient.users.history.list({
+    userId: "me",
+    startHistoryId: business.gmail.historyId,
+    // labelId: ["INBOX"],
+  });
+  historyList.data.history.forEach((change) => {
+    if (change.messagesAdded) {
+      change.messagesAdded.forEach((messageInfo) => {
+        fetchEmailDetails(messageInfo.message.id, gmailClient, business);
+      });
+    }
+  });
+  // console.log(business);
+  business.gmail.historyId = emailData.historyId;
+  await business.save();
+  return res.status(200).json({ message: "Notification acted upon" });
+});
+
+exports.sendMail = errorMiddleware(async (req, res) => {
+  await sendEmail(req.body);
   return res.sendStatus(200);
-  // const { emails } = req.body;
-  // console.log(req.body);
-  // const uuid = uuidV4();
-  // let ticket, mail;
-  // console.log(emails);
-  // for (const mail of emails) {
-  //   const ticket = await Ticket.findOne({ emailThread: mail.threadId });
-  //   await processEmailService(ticket?.ticketId, "gmail", mail);
-  // }
 });

@@ -25,7 +25,9 @@ module.exports = (app) => {
 
   router.post("/", controller.persistGoogleMails);
 
-  router.post("/push",controller.pushNotification)
+  router.post("/push", controller.pushNotification);
+
+  router.post("/mail", controller.sendMail);
 
   app.use("/ai/gmail", router);
 };

@@ -103,6 +103,12 @@ let schema = new mongoose.Schema(
       minlength: 3,
       maxlength: 255,
     },
+    supportEmail: {
+      type: String,
+      minlength: 3,
+      maxlength: 255,
+      unique: true,
+    },
     instagramHandle: {
       type: String,
       minlength: 3,

@@ -33,8 +33,8 @@ const processEmailService = async (ticketId, channel, mail) => {
   let [customer, email] = extractNameAndEmail(mail.from);
   const refinedMail = {
     businessId: mail.businessId,
-    threadId: mail.threadId,
     gmailId: mail.emailId,
+    threadId: mail.threadId,
     snippet: mail.snippet,
     originalMailDate: mail.mailSentDate,
     subject: mail.subject,
@@ -44,11 +44,10 @@ const processEmailService = async (ticketId, channel, mail) => {
   };
 
   let ticket = await Ticket.findOne({ _id: ticketId });
-  // console.log("adeshina", ticket, ticketId, channel, mail);
+
   if (!ticket) {
     let id = await createEmailService(refinedMail, email, channel, customer);
     ticketId = id;
-    console.log("this id", id);
   }
   let delimiter = "#####";
   let delimiter2 = "####";
@@ -127,7 +126,11 @@ const processEmailService = async (ticketId, channel, mail) => {
             `,
     },
   ];
-
+  const mailExists = await GoogleMail.findOne({ gmailId: mail.emailId });
+  if (mailExists) {
+    console.log("Mail record exists, returning");
+    return;
+  }
   if (!business.aiMode || business.aiMode == "auto") {
     let reply = await autoReply(
       refinedMail,
@@ -154,23 +157,57 @@ const processEmailService = async (ticketId, channel, mail) => {
 };
 
 const sendEmail = async (mailData) => {
+  // console.log("got to send mail");
   const [name, mail] = extractNameAndEmail(mailData["to"]);
-  let business = await Business.findOne({ businessId: mail.businessId });
+  // console.log(name, mail, mailData);
+  let business = await Business.findOne({ businessId: mailData.businessId });
+  // console.log(business);
+  const isAccessTokenValid = await validateToken(business.gmail.access_token);
+  let newAccessToken;
+  if (isAccessTokenValid === false) {
+    newAccessToken = await getNewAccessToken(business.gmail.refresh_token);
+  }
+  // console.log("isAccessTokenValid: ", isAccessTokenValid, newAccessToken);
+  // return;
+  const oauth2Client = {
+    user: mail,
+    clientId: CLIENT_ID,
+    clientSecret: CLEINT_SECRET,
+    refreshToken: business.gmail.refresh_token,
+    accessToken: isAccessTokenValid
+      ? business.gmail.access_token
+      : newAccessToken,
+  };
+  // let transporter = nodemailer.createTransport({
+  //   host: "smtp.gmail.com",
+  //   port: 465,
+  //   secure: true,
+  //   auth: {
+  //     type: "OAuth2",
+  //     user: oauth2Client.user,
+  //     accessToken: oauth2Client.accessToken,
+  //     refreshToken: oauth2Client.refreshToken,
+  //     clientId: oauth2Client.clientId,
+  //     clientSecret: oauth2Client.clientSecret,
+  //   },
+  // });
+
   let transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 465,
-    secure: true,
+    service: "gmail",
     auth: {
       type: "OAuth2",
-      user: mail,
-      accessToken: business.gmail.access_token,
+      user: oauth2Client.user,
+      accessToken: oauth2Client.accessToken,
+      refreshToken: oauth2Client.refreshToken,
+      clientId: oauth2Client.clientId,
+      clientSecret: oauth2Client.clientSecret,
     },
   });
 
   const sender = mailData["from"];
   const subject = "Re: " + mailData["subject"];
   //   const message = `Thank you for your email. Your message was: \n\n${mailData.assistantResponse}`;
-  const message = `Hi ${mailData["customerName"]} 
+  const message = `Hi ${name ? name : "there"} 
   \n\n 
   Thank you for reaching out to ${business.businessName} 
   \n\n 
@@ -197,7 +234,7 @@ const sendEmail = async (mailData) => {
   });
 };
 
-module.exports.sendEmail = sendEmail;
+// module.exports.sendEmail = sendEmail;
 
 const autoReply = async (
   mail,
@@ -208,17 +245,13 @@ const autoReply = async (
   email,
   customer
 ) => {
-  const mailExists = await GoogleMail.findOne({ gmailId: mail["gmailId"] });
-  console.log("mailExists", mailExists);
+  // const mailExists = await GoogleMail.findOne({ gmailId: mail["gmailId"] });
 
-  if (mailExists) {
-    return;
-  }
+  // if (mailExists) {
+  //   return;
+  // }
+
   let reply = await replyEmailService(mail, systemKnowledge, ticketId, ticket);
-  // console.log("udom2", JSON.stringify(reply));
-  // console.log("udom", JSON.stringify(reply.data));
-  // console.log(reply.data.choices[0].message);
-  // console.log("ihunna");
 
   let content = reply.data.choices[0].message.content;
   let msg = reply.data.choices[0].message.content;
@@ -277,10 +310,8 @@ const autoReply = async (
   }
 
   let mailId = uuid.v4() + uuid.v4();
-  // console.log("abdulazeez", mail["gmailId"], ticketId);
-  // console.log("googlemails", { ticketId, mailId, mail });
 
-  const customerReqMail = new GoogleMail({
+  let customerReqMail = new GoogleMail({
     ticketId,
     mailId,
     gmailId: mail["gmailId"],
@@ -304,19 +335,31 @@ const autoReply = async (
   //     ? "Your request has been escalated to the proper department"
   //     : msg;
 
-  customerReqMail.assistantResponse =
-    escalated == true && department
-      ? `Your request has been escalated to the proper ${department}`
-      : escalated == true && !department
-      ? `Your request has been escalated to the proper department`
-      : msg;
+  // customerReqMail.assistantResponse =
+  // escalated == true && department
+  //   ? `Your request has been escalated to the proper ${department}`
+  //   : escalated == true && !department
+  //   ? `Your request has been escalated to the proper department`
+  //   : msg;
 
-  customerReqMail.assistantResponseDate = new Date();
+  // customerReqMail.assistantResponseDate = new Date();
 
-  await customerReqMail.save();
+  // await customerReqMail.save();
 
-  // send mail
-
+  customerReqMail = await GoogleMail.findByIdAndUpdate(
+    customerReqMail._id,
+    {
+      assistantResponse:
+        escalated == true && department
+          ? `Your request has been escalated to the proper ${department}`
+          : escalated == true && !department
+          ? `Your request has been escalated to the proper department`
+          : msg,
+      assistantResponseDate: new Date(),
+    },
+    { new: true }
+  );
+  console.log("mail saved");
   await sendEmail(customerReqMail);
 
   if (ticket.titles.length > 0) {
@@ -345,7 +388,7 @@ const autoReply = async (
     replyMode: "auto",
     message: customerReqMail,
     ticketId,
-    reply: assistantResMsg,
+    // reply: assistantResponse,
   };
 
   return data;
@@ -360,11 +403,11 @@ const supervisedReply = async (
   email,
   customer
 ) => {
-  const mailExists = await GoogleMail.findOne({ gmailId: mail["gmailId"] });
+  // const mailExists = await GoogleMail.findOne({ gmailId: mail["gmailId"] });
 
-  if (mailExists) {
-    return;
-  }
+  // if (mailExists) {
+  //   return;
+  // }
   let reply = await replyEmailService(mail, systemKnowledge, ticketId, ticket);
   console.log(reply.data.choices[0].message);
 
@@ -424,11 +467,6 @@ const supervisedReply = async (
     }
   }
 
-  // let newMessages = chat.messages;
-  // newMessages.push({ role: "user", content: promptMsg });
-  // newMessages.push({ role: "assistance", content: msg, status: "draft" });
-  // chat.messages = newMessages;
-
   let mailId = uuid.v4() + uuid.v4();
 
   const customerReqMail = new GoogleMail({
@@ -451,31 +489,28 @@ const supervisedReply = async (
 
   await customerReqMail.save();
 
-  customerReqMail.assistantResponse =
-    escalated == true && department
-      ? `Your request has been escalated to the proper ${department}`
-      : escalated == true && !department
-      ? `Your request has been escalated to the proper department`
-      : msg;
+  // customerReqMail.assistantResponse =
+  //   escalated == true && department
+  //     ? `Your request has been escalated to the proper ${department}`
+  //     : escalated == true && !department
+  //     ? `Your request has been escalated to the proper department`
+  //     : msg;
 
-  await customerReqMail.save();
+  // await customerReqMail.save();
 
-  //   const customerReqMsg = new ChatMessage({
-  //     ticketId,
-  //     content: promptMsg,
-  //     role: "user",
-  //   });
-
-  //   await customerReqMsg.save();
-
-  //   const assistantResMsg = new ChatMessage({
-  //     ticketId,
-  //     content: msg,
-  //     role: "assistance",
-  //     status: "draft",
-  //   });
-
-  //   await assistantResMsg.save();
+  customerReqMail = await GoogleMail.findByIdAndUpdate(
+    customerReqMail._id,
+    {
+      assistantResponse:
+        escalated == true && department
+          ? `Your request has been escalated to the proper ${department}`
+          : escalated == true && !department
+          ? `Your request has been escalated to the proper department`
+          : msg,
+      assistantResponseDate: new Date(),
+    },
+    { new: true }
+  );
 
   if (ticket.titles.length > 0) {
     let overall = await metricsService(ticket.titles);
@@ -578,7 +613,7 @@ const createEmailService = async (mail, email, channel, customer) => {
     return e;
   }
   // return id;
-  return ticket["_id"];
+  return newTicket["_id"];
 };
 
 const metricsService = async (titles) => {
@@ -847,4 +882,73 @@ cron.schedule(" 0 0 */5 * *", async () => {
   await setWatchForAccounts();
 });
 
-module.exports.processEmailService = processEmailService;
+const validateToken = async (accessToken) => {
+  const tokenInfoUrl = `https://www.googleapis.com/oauth2/v3/tokeninfo?access_token=${accessToken}`;
+  const response = await fetch(tokenInfoUrl);
+  const data = await response.json();
+
+  if (data.error_description) {
+    // console.error("Invalid Token:", data.error_description);
+    return false;
+  }
+
+  // console.log("Token is valid for user:", data.email);
+  return true;
+};
+
+const fetchEmailDetails = async (messageId, gmail, business) => {
+  try {
+    const mail = {};
+    const res = await gmail.users.messages.get({
+      userId: "me",
+      id: messageId,
+      format: "full",
+    });
+    if (res.status != 200) {
+      console.log("An error occurred ", messageId);
+      return;
+    }
+    mail["emailId"] = res.data.id;
+    mail["businessId"] = business.businessId;
+    mail["threadId"] = res.data.threadId;
+    mail["refreshToken"] = business.gmail.refresh_token;
+    mail["snippet"] = res.data.snippet;
+    mail["from"] = getGmailFrom(res.data);
+    mail["to"] = getGmailTo(res.data);
+    mail["mailSentDate"] = new Date(getGmailDate(res.data));
+    mail["subject"] = getGmailSubject(res.data);
+    mail["body"] = stripSpecialCharacters(getMailBody(res));
+    // console.log(mail);
+    // return;
+    const ticket = await Ticket.findOne({ emailThread: mail.threadId });
+    await processEmailService(ticket?.id, "gmail", mail);
+  } catch (error) {
+    if (error instanceof MongooseError) {
+      console.log(`Mongoose error occurred udom ${error?.code}`, error);
+    } else {
+      console.log("Error occured", error);
+    }
+  }
+};
+
+async function getNewAccessToken(refreshToken) {
+  oAuth2Client.setCredentials({
+    refresh_token: refreshToken,
+  });
+
+  const response = await oAuth2Client.refreshAccessToken();
+  return response.res.data.access_token;
+}
+
+module.exports = {
+  sendEmail,
+  processEmailService,
+  spreadGmailInitialArrayAddBusinessId,
+  getObjectFromDataArray,
+  getGmailTo,
+  getGmailFrom,
+  getGmailSubject,
+  getGmailDate,
+  getMailBody,
+  fetchEmailDetails,
+};
