@@ -86,9 +86,11 @@ module.exports.processChatService = async (
     },
     {
       role: "system",
-      content: `Company Informations: ${delimiter3}${JSON.stringify(
-        business.companyInformation
-      )}${delimiter3}.`,
+      content: `The company or business name: ${delimiter3}${JSON.stringify(
+        business.businessName
+      )}${delimiter3}.
+      Should the user message include the business or company name, know that they are referring to you.
+      `,
     },
     {
       role: "system",
@@ -229,7 +231,7 @@ const autoReply = async (
     ticketId,
     content:
       escalated == true && department
-        ? `Your request has been escalated to the proper ${department}`
+        ? `Your request has been escalated to the ${department} department`
         : escalated == true && !department
         ? `Your request has been escalated to the proper department`
         : msg,
@@ -380,7 +382,7 @@ const supervisedReply = async (
     ticketId,
     content:
       escalated == (true && department)
-        ? `Your request has been escalated to the proper ${department}`
+        ? `Your request has been escalated to the ${department} department`
         : escalated == true && !department
         ? `Your request has been escalated to the proper department`
         : msg,

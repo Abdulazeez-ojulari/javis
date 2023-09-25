@@ -106,9 +106,11 @@ const processEmailService = async (ticketId, channel, mail) => {
     },
     {
       role: "system",
-      content: `Company Information: ${delimiter3}${JSON.stringify(
-        business.companyInformation
-      )}${delimiter3}.`,
+      content: `The company or business name: ${delimiter3}${JSON.stringify(
+        business.businessName
+      )}${delimiter3}.
+      Should the user message include the business or company name, know that they are referring to you.
+      `,
     },
     {
       role: "system",
@@ -351,7 +353,7 @@ const autoReply = async (
     {
       assistantResponse:
         escalated == true && department
-          ? `Your request has been escalated to the proper ${department}`
+          ? `Your request has been escalated to the ${department} department`
           : escalated == true && !department
           ? `Your request has been escalated to the proper department`
           : msg,
@@ -503,7 +505,7 @@ const supervisedReply = async (
     {
       assistantResponse:
         escalated == true && department
-          ? `Your request has been escalated to the proper ${department}`
+          ? `Your request has been escalated to the ${department} department`
           : escalated == true && !department
           ? `Your request has been escalated to the proper department`
           : msg,
@@ -878,6 +880,7 @@ async function setWatchForAccounts() {
     }
   }
 }
+
 cron.schedule(" 0 0 */5 * *", async () => {
   await setWatchForAccounts();
 });
