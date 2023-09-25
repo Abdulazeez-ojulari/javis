@@ -96,12 +96,15 @@ module.exports.processChatService = async (
       role: "system",
       content: `Company faqs to answer related questions: ${delimiter3}${JSON.stringify(
         faqs
-      )}${delimiter3}.`,
+      )}${delimiter3}.
+      Loop through the company faqs, determine which faq question best aligns with the customer service query, if faq question matches query, rephrase the response and return as answer else move on
+      `,
     },
     {
       role: "system",
       content: `
             Inventory to answer from: ${JSON.stringify(knowledge_base)}.
+            Loop through inventory and determin if customer service query concerns an item on the inventory.
             If customer service query is regarding a product in your inventory you must include the image of that product from your inventory in your response key in text format.
             If customer service query is not related to your inventory then inform the customer that you will escalate their query then set escalated key to true and classify the escalation_department key in your json response.
             Use the response key to return all the content of your response of the customer query including content from your inventory.
