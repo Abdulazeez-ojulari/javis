@@ -22,7 +22,6 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
     phoneNo
   );
 
-
   eventEmitter.emit("notifyNewChat", {
     businessId,
     customer,
@@ -126,7 +125,7 @@ module.exports.getUserChat = errorMiddleware(async (req, res) => {
     return res.status(404).send({ message: "Email not provided" });
   }
 
-  const userTickets = await Ticket.find({ email }).populate('message').exec();
+  const userTickets = await Ticket.find({ email }).populate("message").exec();
 
   if (!userTickets) {
     return res.status(404).send({ message: "Chat record not found" });
@@ -134,7 +133,9 @@ module.exports.getUserChat = errorMiddleware(async (req, res) => {
 
   if (!businessId) {
     // chats = await Chat.find({ email: email }).select("-messages");
-    chats["ticket"] = await Ticket.find({ email, channel: "chat" }).populate('message').exec();
+    chats["ticket"] = await Ticket.find({ email, channel: "chat" })
+      .populate("message")
+      .exec();
     // chats["chats"] = await ChatMessage.find({ email }).limit(2);
 
     // chats = await Chat.aggregate([
@@ -202,7 +203,9 @@ module.exports.getUserChat = errorMiddleware(async (req, res) => {
       email,
       businessId,
       channel: "chat",
-    }).populate('message').exec();
+    })
+      .populate("message")
+      .exec();
     // chats["chats"] = await ChatMessage.find({ email }).limit(2);
   }
   return res.send(chats);
@@ -211,7 +214,7 @@ module.exports.getUserChat = errorMiddleware(async (req, res) => {
 module.exports.getConversation = errorMiddleware(async (req, res) => {
   let { ticketId } = req.params;
 
-  const ticket = await Ticket.findById(ticketId).populate('message').exec();
+  const ticket = await Ticket.findById(ticketId).populate("message").exec();
   console.log(ticket);
 
   if (!ticket) {
@@ -233,7 +236,11 @@ module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
     return res.status(400).send({ message: "Business doesn't exists" });
   }
 
-  const tickets = await Ticket.find({ businessId }).sort({ created_date: -1 }).populate('message').exec();
+  const tickets = await Ticket.find({ businessId })
+    .sort({ created_date: -1 })
+    .populate("message")
+    .populate({ path: "messages", match: { role: "user" } })
+    .exec();
 
   return res.send(tickets);
 });

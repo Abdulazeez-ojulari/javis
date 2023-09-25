@@ -92,6 +92,15 @@ schema.virtual("message", {
   foreignField: "ticketId",
 });
 
+schema.virtual("messages", {
+  ref: "ChatMessage",
+  localField: "_id",
+  options: { sort: { createdAt: -1 } },
+  limit: 10,
+  // justOne: true,
+  foreignField: "ticketId",
+});
+
 const Ticket = mongoose.model("Ticket", schema);
 
 exports.Ticket = Ticket;

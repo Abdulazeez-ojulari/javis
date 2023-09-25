@@ -516,6 +516,16 @@ const createChatService = async (
   return newTicket;
 };
 
+// Accepts an array of texts
+const constructSummarizationPrompt = (texts) => {
+  let prompt = "Please summarize the following texts:\n\n";
+  texts.forEach((text, index) => {
+      prompt += `${index + 1}. ${text}\n\n`;
+  });
+  prompt += "Summary:";
+  return prompt;
+};
+
 module.exports.createChatService = createChatService;
 
 const metricsService = async (titles) => {
