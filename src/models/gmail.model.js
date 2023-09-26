@@ -68,5 +68,6 @@ schema.method("toJSON", function () {
 });
 
 const GoogleMail = mongoose.model("GoogleMail", schema);
+GoogleMail.syncIndexes()
 
 exports.GoogleMail = GoogleMail;

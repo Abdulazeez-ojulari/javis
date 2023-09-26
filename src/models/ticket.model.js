@@ -9,6 +9,8 @@ const schema = new mongoose.Schema(
     emailThread: {
       type: String,
       unique: true,
+      required: false,
+      sparse: true,
     },
     businessId: {
       type: String,
@@ -60,6 +62,9 @@ const schema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    agentName: {
+      type: String,
+    },
     created_date: {
       type: Date,
       required: true,
@@ -101,6 +106,15 @@ schema.virtual("messages", {
   foreignField: "ticketId",
 });
 
+schema.virtual("gmail", {
+  ref: "GoogleMail",
+  localField: "_id",
+  options: { sort: { createdAt: -1 } },
+  justOne: true,
+  foreignField: "ticketId",
+});
 const Ticket = mongoose.model("Ticket", schema);
+
+Ticket.syncIndexes();
 
 exports.Ticket = Ticket;

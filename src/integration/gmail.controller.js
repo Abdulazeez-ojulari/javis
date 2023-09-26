@@ -121,7 +121,8 @@ exports.getBusinessTickets = errorMiddleware(async (req, res) => {
   result.tickets = await Ticket.find({ businessId, channel: "gmail" })
     .sort(" created_date ")
     .skip(pageNumber)
-    .limit(limit);
+    .limit(limit)
+    .populate("gmail");
 
   result.rowsPerPage = limit;
 
@@ -137,6 +138,7 @@ exports.getBusinessMailByTicketId = errorMiddleware(async (req, res) => {
   const limit = LIMIT || 10;
   const result = {};
   const totalMails = await GoogleMail.find({ ticketId }).count();
+  console.log(totalMails);
   let startIndex = pageNumber * limit;
   const endIndex = (pageNumber + 1) * limit;
   result.totalMails = totalMails;

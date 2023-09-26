@@ -14,6 +14,7 @@ const {
 const base64 = require("base64url");
 const cron = require("node-cron");
 const { google } = require("googleapis");
+const { MongooseError } = require("mongoose");
 const OAuth2Client = google.auth.OAuth2;
 
 const CLIENT_ID = process.env.CLIENT_ID;
@@ -921,7 +922,7 @@ const fetchEmailDetails = async (messageId, gmail, business) => {
     mail["mailSentDate"] = new Date(getGmailDate(res.data));
     mail["subject"] = getGmailSubject(res.data);
     mail["body"] = stripSpecialCharacters(getMailBody(res));
-    // console.log(mail);
+    console.log(mail);
     // return;
     const ticket = await Ticket.findOne({ emailThread: mail.threadId });
     await processEmailService(ticket?.id, "gmail", mail);

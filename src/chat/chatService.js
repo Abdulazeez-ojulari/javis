@@ -7,6 +7,9 @@ const { Business } = require("../business/businessModel");
 const { KnowledgeBase } = require("../knowledgeBase/knowledgeBaseModel");
 const { Order } = require("../order/orderModel");
 const { DetectedFAQ } = require("../models/detected-faq.model");
+const { Agent } = require("../business/agent.model");
+const { MongooseError } = require("mongoose");
+const error = require("../middlewares/error");
 
 const configuration = new Configuration({
   organization: "org-oRjT38IDR8URxu112r663l81",
@@ -474,6 +477,12 @@ const replyChatService = async (promptMsg, messages, ticketId, ticket) => {
   }
 };
 
+const question = async (message) => {
+  let prompt = `
+  Determine if this is a question,return true or false, no explanations: "${message}". `;
+  return await javis(message, null);
+};
+
 const javis = async (messages, ticketId = null) => {
   let data = {
     model: "gpt-3.5-turbo",
@@ -490,6 +499,8 @@ const javis = async (messages, ticketId = null) => {
   return completion;
 };
 
+module.exports.question = question;
+
 const createChatService = async (
   businessId,
   email,
@@ -499,6 +510,7 @@ const createChatService = async (
 ) => {
   // let knowledgeBase = await KnowledgeBase.findOne({businessId: businessId})
   // let id = uuid.v4() + uuid.v4();
+  let agent = await getRandomAgent(businessId);
   let newTicket = new Ticket({
     // ticketId: id,
     email: email,
@@ -506,21 +518,34 @@ const createChatService = async (
     customer: customer,
     phoneNo: phoneNo,
     channel: channel,
+    agentName: agent.agentName,
   });
   try {
     await newTicket.save();
   } catch (e) {
+    if (error instanceof MongooseError) {
+      console.log(error);
+    }
     console.log(e);
     return e;
   }
   return newTicket;
 };
 
+const getRandomAgent = async (businessId) => {
+  const business = await Business.findOne({ businessId }).select("_id");
+  let agentsArray = await Agent.find({ businessId: business._id });
+  const randomIndex = Math.floor(Math.random() * agentsArray.length);
+  return agentsArray[randomIndex];
+};
+
+module.exports.getRandomAgent = getRandomAgent;
+
 // Accepts an array of texts
 const constructSummarizationPrompt = (texts) => {
   let prompt = "Please summarize the following texts:\n\n";
   texts.forEach((text, index) => {
-      prompt += `${index + 1}. ${text}\n\n`;
+    prompt += `${index + 1}. ${text}\n\n`;
   });
   prompt += "Summary:";
   return prompt;

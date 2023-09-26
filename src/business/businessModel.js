@@ -174,4 +174,13 @@ const Business = mongoose.model("Business", schema);
 
 // exports.Team = Team;
 
+schema.virtual("agents", {
+  ref: "Agent",
+  localField: "_id",
+  options: { sort: { createdAt: -1 } },
+  // justOne: true,
+  limit: 5,
+  foreignField: "businessId",
+});
+
 exports.Business = Business;

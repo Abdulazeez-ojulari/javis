@@ -25,6 +25,8 @@ router.get("/all-chat/:businessId", chatController.getBusinessChats);
 
 router.post("/new-chat", chatController.newChat);
 
+router.get("/question",chatController.question)
+
 // router.post(
 //   "/acknowledge-chat-messages/business/:businessId",
 //   [auth],

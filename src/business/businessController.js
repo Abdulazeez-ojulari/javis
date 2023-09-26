@@ -2,10 +2,13 @@ const { KnowledgeBase } = require("../knowledgeBase/knowledgeBaseModel");
 const errorMiddleware = require("../middlewares/error");
 const { User } = require("../user/userModel");
 const { Business } = require("./businessModel");
+const { Agent } = require("./agent.model");
 const {
   createBusinessService,
   updateBusinessService,
 } = require("./businessService");
+const { isMemberOfBusiness } = require("../utils/helper");
+const { validationResult } = require("express-validator");
 
 module.exports.createBusiness = errorMiddleware(async (req, res) => {
   const {
@@ -205,5 +208,75 @@ module.exports.getAllBusiness = errorMiddleware(async (req, res) => {
   return res.send({
     message: "All businesses fetched successfully ",
     data: businesses,
+  });
+});
+
+module.exports.createAgent = errorMiddleware(async (req, res) => {
+  const { id } = req.user;
+  let { businessId } = req.params;
+  const { agentName } = req.body;
+  const errors = validationResult(req);
+
+  if (!errors.isEmpty()) {
+    const validationErrors = [];
+    for (const error of errors.array()) {
+      validationErrors.push({ field: error.path, message: error.msg });
+    }
+    return res
+      .status(400)
+      .json({ message: "Bad request", data: validationErrors });
+  }
+  console.log(businessId);
+
+  const business = await Business.findOne({ businessId });
+
+  if (!business) {
+    return res
+      .status(404)
+      .json({ message: "Business not found", data: business });
+  }
+
+  const isMember = isMemberOfBusiness(business, id);
+
+  if (!isMember) {
+    return res.status(403).json({
+      message: "You do not possess the permission to access this resource",
+    });
+  }
+
+  const agent = new Agent({ businessId: business._id, agentName });
+
+  await agent.save();
+
+  return res.send({
+    message: "Agent created successfully",
+    data: agent,
+  });
+});
+
+module.exports.getAgents = errorMiddleware(async (req, res) => {
+  const { id } = req.user;
+  let { businessId } = req.params;
+  // const business = await Business.findOne({ businessId }).populate("agents");
+  const business = await Business.findOne({ businessId }).select("teams _id");
+
+  if (!business) {
+    return res
+      .status(404)
+      .json({ message: "Business not found", data: business });
+  }
+  const isMember = isMemberOfBusiness(business, id);
+
+  if (!isMember) {
+    return res.status(403).json({
+      message: "You do not possess the permission to access this resource",
+    });
+  }
+
+  const agents = await Agent.find({ businessId: business._id });
+
+  return res.send({
+    message: "All businesses fetched successfully ",
+    data: agents,
   });
 });

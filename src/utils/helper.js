@@ -73,8 +73,8 @@ exports.extractNameAndEmail = (str) => {
 };
 
 exports.isMemberOfBusiness = (business, id) => {
-  const team = business.team;
-  let response = team.find((member) => member.userId.toString() === id);
+  const teams = business.teams;
+  let response = teams.find((member) => member.userId.toString() === id);
   if (response === undefined) {
     return false;
   }

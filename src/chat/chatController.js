@@ -1,10 +1,16 @@
 const { Business } = require("../business/businessModel");
 const errorMiddleware = require("../middlewares/error");
 const { Chat } = require("./chatModel");
-const { createChatService, processChatService } = require("./chatService");
+const {
+  createChatService,
+  processChatService,
+  question,
+  getRandomAgent,
+} = require("./chatService");
 const eventEmitter = require("../event/events");
 const { Ticket } = require("../models/ticket.model");
 const { ChatMessage } = require("../models/chat-message.model");
+const { Agent } = require("../business/agent.model");
 
 module.exports.newChat = errorMiddleware(async (req, res) => {
   let { email, businessId, channel, customer, phoneNo } = req.body;
@@ -21,6 +27,13 @@ module.exports.newChat = errorMiddleware(async (req, res) => {
     customer,
     phoneNo
   );
+
+  // let agent = await getRandomAgent(businessId);
+  // console.log(ticket, agent);
+
+  // ticket = await Ticket.findOne({ _id: ticket._id });
+
+  // await ticket.save();
 
   eventEmitter.emit("notifyNewChat", {
     businessId,
@@ -242,6 +255,8 @@ module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
     .populate({ path: "messages", match: { role: "user" } })
     .exec();
 
+  // tickets[0]
+
   return res.send(tickets);
 });
 
@@ -261,6 +276,22 @@ module.exports.getUserChatMessages = errorMiddleware(async (req, res) => {
     message: "Chat messages fetched successfully",
     data: message,
   });
+});
+
+module.exports.question = errorMiddleware(async (req, res) => {
+  const prompt = `
+  Determine if this is a question,return true or false, no explanations: "${req.body.question}". `;
+  console.log(req.body.question, prompt);
+  try {
+    let message = await question([{ role: "user", content: prompt }]);
+    console.log(JSON.stringify(message.data));
+    return res.send({
+      message: "Chat messages fetched successfully",
+      // data: message.data,
+    });
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 // module.exports.acknowledgeChat = errorMiddleware(async (req, res) => {});
