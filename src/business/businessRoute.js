@@ -22,4 +22,10 @@ router.post(
 
 router.get("/:businessId/get-agents", auth, businessController.getAgents);
 
+router.delete(
+  "/:businessId/delete-agents/:agentId",
+  auth,
+  businessController.deleteAgent
+);
+
 module.exports = router;

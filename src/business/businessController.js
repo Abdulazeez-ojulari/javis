@@ -276,7 +276,40 @@ module.exports.getAgents = errorMiddleware(async (req, res) => {
   const agents = await Agent.find({ businessId: business._id });
 
   return res.send({
-    message: "All businesses fetched successfully ",
+    message: "Agents fetched successfully",
+    data: agents,
+  });
+});
+
+module.exports.deleteAgent = errorMiddleware(async (req, res) => {
+  const { id } = req.user;
+  let { businessId, agentId } = req.params;
+  // const business = await Business.findOne({ businessId }).populate("agents");
+  const business = await Business.findOne({ businessId }).select("teams _id");
+
+  if (!business) {
+    return res
+      .status(404)
+      .json({ message: "Business not found", data: business });
+  }
+  const isMember = isMemberOfBusiness(business, id);
+
+  if (!isMember) {
+    return res.status(403).json({
+      message: "You do not possess the permission to access this resource",
+    });
+  }
+
+  const agent = await Agent.findOne({ _id: agentId }).select("_id");
+
+  if (!agent) {
+    return res.status(404).json({ message: "Agent not found", data: agent });
+  }
+
+  await Agent.findByIdAndDelete(agentId);
+
+  return res.send({
+    message: "Agent deleted successfully",
     data: agents,
   });
 });
