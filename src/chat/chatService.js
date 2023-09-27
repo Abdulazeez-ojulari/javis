@@ -239,8 +239,8 @@ const autoReply = async (
       escalated == true && department
         ? `Your request has been escalated to the ${department} department`
         : escalated == true && !department
-          ? `Your request has been escalated to the proper department`
-          : msg,
+        ? `Your request has been escalated to the proper department`
+        : msg,
     role: "assistance",
   });
 
@@ -390,8 +390,8 @@ const supervisedReply = async (
       escalated == (true && department)
         ? `Your request has been escalated to the ${department} department`
         : escalated == true && !department
-          ? `Your request has been escalated to the proper department`
-          : msg,
+        ? `Your request has been escalated to the proper department`
+        : msg,
     role: "assistance",
     status: "draft",
   });
@@ -535,18 +535,8 @@ const createChatService = async (
 const getRandomAgent = async (businessId) => {
   const business = await Business.findOne({ businessId }).select("_id");
   let agentsArray = await Agent.find({ businessId: business._id });
-
-  let agent
-  if (agentsArray.length == 1) agent = agentsArray[0]
-  else {
-    while (!agent) {
-      const randomIndex = Math.floor(Math.random() * agentsArray.length);
-      agent = agentsArray[randomIndex];
-    }
-  }
-
-
-  return agent
+  const randomIndex = Math.floor(Math.random() * agentsArray.length);
+  return agentsArray[randomIndex];
 };
 
 module.exports.getRandomAgent = getRandomAgent;
