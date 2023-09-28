@@ -1,4 +1,4 @@
-const { body } = require("express-validator");
+const { body, oneOf, check } = require("express-validator");
 const auth = require("../middlewares/auth");
 const businessController = require("./businessController");
 const express = require("express");
@@ -26,6 +26,28 @@ router.delete(
   "/:businessId/delete-agents/:agentId",
   auth,
   businessController.deleteAgent
+);
+
+router.delete(
+  "/:businessId/team/:memberId",
+  auth,
+  businessController.deleteTeamMember
+);
+
+router.patch(
+  "/:businessId/team/:memberId",
+  [
+    body("role", "Enter valid role, admin or member")
+      .optional()
+      .isIn(["admin", "member"]),
+    body("department", "Enter valid department").optional().trim(),
+    oneOf(
+      [check("role").exists(), check("department").exists()],
+      "Either role or department must be provided."
+    ),
+    auth,
+  ],
+  businessController.updateTeamMember
 );
 
 module.exports = router;

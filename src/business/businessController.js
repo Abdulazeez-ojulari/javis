@@ -226,7 +226,7 @@ module.exports.createAgent = errorMiddleware(async (req, res) => {
       .status(400)
       .json({ message: "Bad request", data: validationErrors });
   }
-  console.log(businessId);
+  // console.log(businessId);
 
   const business = await Business.findOne({ businessId });
 
@@ -300,16 +300,133 @@ module.exports.deleteAgent = errorMiddleware(async (req, res) => {
     });
   }
 
-  const agent = await Agent.findOne({ _id: agentId }).select("_id");
+  let agent = await Agent.findOne({ _id: agentId }).select("_id");
 
   if (!agent) {
     return res.status(404).json({ message: "Agent not found", data: agent });
   }
 
-  await Agent.findByIdAndDelete(agentId);
+  agent = await Agent.findByIdAndDelete(agentId);
 
   return res.send({
     message: "Agent deleted successfully",
-    data: agents,
+    data: agent,
+  });
+});
+
+module.exports.deleteTeamMember = errorMiddleware(async (req, res) => {
+  const { id } = req.user;
+  let { businessId, memberId } = req.params;
+  const business = await Business.findOne({ businessId }).select("teams _id");
+  let updatedTeam;
+
+  if (!business) {
+    return res
+      .status(404)
+      .json({ message: "Business not found", data: business });
+  }
+  const isMember = isMemberOfBusiness(business, id);
+
+  if (!isMember || isMember.role === "member") {
+    return res.status(403).json({
+      message: "You do not possess the permission to access this resource",
+    });
+  }
+
+  let member = await User.findById(memberId);
+
+  if (!member) {
+    return res
+      .status(404)
+      .json({ message: "Team member not found", data: member });
+  }
+
+  updatedTeam = business.teams.filter(
+    (team) => team.userId.toString() !== memberId
+  );
+
+  // return res.send(updatedTeam);
+
+  business.teams = updatedTeam;
+
+  await business.save();
+
+  return res.status(200).send({
+    message: "Team member deleted successfully",
+    data: member,
+  });
+});
+
+module.exports.updateTeamMember = errorMiddleware(async (req, res) => {
+  const { id } = req.user;
+  let { businessId, memberId } = req.params;
+  let { role, department } = req.body;
+  const errors = validationResult(req);
+  let updatedTeams;
+
+  if (!errors.isEmpty()) {
+    const validationErrors = [];
+    for (const error of errors.array()) {
+      validationErrors.push({ field: error.path, message: error.msg });
+    }
+    return res
+      .status(400)
+      .json({ message: "Bad request", data: validationErrors });
+  }
+
+  let business = await Business.findOne({ businessId }).select("teams _id");
+
+  if (!business) {
+    return res
+      .status(404)
+      .json({ message: "Business not found", data: business });
+  }
+
+  //check that individual triggering update is a member of the business
+  const isMember = isMemberOfBusiness(business, id);
+
+  if (!isMember || isMember.role === "member") {
+    return res.status(403).json({
+      message: "You do not possess the permission to access this resource",
+    });
+  }
+
+  //check that individual about to be updated is a member of the business
+  const member = isMemberOfBusiness(business, memberId);
+
+  if (!member) {
+    return res
+      .status(403)
+      .json({ message: "Team member not found", data: isMemberValid });
+  }
+
+  const memberIndex = business.teams.findIndex(
+    (team) => team.userId.toString() === memberId
+  );
+
+  if (role) {
+    member.role = req.body.role;
+  }
+
+  if (department) {
+    member.department = req.body.department;
+  }
+
+  updatedTeams = business.teams;
+
+  // console.log(updatedTeams);
+
+  updatedTeams[memberIndex] = member;
+
+  // console.log(member, memberIndex, updatedTeams);
+
+  business.teams = updatedTeams;
+
+  await business.save();
+
+  return res.status(200).send({
+    message: "Team member updated successfully",
+    // data: updatedTeams,
+    data: member,
   });
 });

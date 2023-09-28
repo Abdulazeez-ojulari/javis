@@ -12,6 +12,7 @@ const schema = new mongoose.Schema(
       minlength: 1,
       maxlength: 50,
     },
+    email: { type: String },
   },
   { timestamps: true }
 );
