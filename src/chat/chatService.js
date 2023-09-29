@@ -229,9 +229,9 @@ const autoReply = async (
     ticketId,
     content:
       escalated == true && department
-        ? `Your request has been escalated to the ${department} department`
+        ? `Your request has been escalated to the ${department} department, I'll be in touch with you shortly`
         : escalated == true && !department
-        ? `Your request has been escalated to the proper department`
+        ? `Your request has been escalated to the proper department, I'll be in touch with you shortly`
         : msg,
     role: "assistance",
   });
@@ -380,10 +380,10 @@ const supervisedReply = async (
   const assistantResMsg = new ChatMessage({
     ticketId,
     content:
-      escalated == (true && department)
-        ? `Your request has been escalated to the ${department} department`
+      escalated == true && department
+        ? `Your request has been escalated to the ${department} department, I'll be in touch with you shortly`
         : escalated == true && !department
-        ? `Your request has been escalated to the proper department`
+        ? `Your request has been escalated to the proper department, I'll be in touch with you shortly`
         : msg,
     role: "assistance",
     status: "draft",

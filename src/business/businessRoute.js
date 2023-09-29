@@ -54,7 +54,7 @@ router.patch(
 router.post(
   "/:businessId/avatar",
   [avatar, auth],
-  businessController.updateBusinessAvater
+  businessController.updateBusinessAvatar
 );
 
 module.exports = router;

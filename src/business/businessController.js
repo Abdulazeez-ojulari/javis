@@ -432,7 +432,7 @@ module.exports.updateTeamMember = errorMiddleware(async (req, res) => {
   });
 });
 
-module.exports.updateBusinessAvater = errorMiddleware(async (req, res) => {
+module.exports.updateBusinessAvatar = errorMiddleware(async (req, res) => {
   const { id } = req.user;
   const { businessId } = req.params;
   const file = req.file;
@@ -460,5 +460,18 @@ module.exports.updateBusinessAvater = errorMiddleware(async (req, res) => {
     console.log("delete message", prev);
   }
 
-  
+  const uploadedParams = {
+    Bucket: process.env.S3_BUCKET,
+    Key: FILE_KEY,
+    Body: file.buffer,
+    ContentType: file.mimetype,
+  };
+
+  s3.upload(uploadedParams, (uploadErr, uploadData) => {
+    if (uploadErr) {
+      return res.status(500).send(uploadErr);
+    }
+    console.log(uploadData);
+    res.send("Image uploaded successfully to S3!");
+  });
 });

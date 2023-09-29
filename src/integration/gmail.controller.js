@@ -167,7 +167,7 @@ exports.getBusinessMailByTicketId = errorMiddleware(async (req, res) => {
   }
 
   result.mails = await GoogleMail.find({ ticketId })
-    .sort(" originalMailDate ")
+    .sort({ originalMailDate: -1 })
     .skip(pageNumber)
     .limit(limit);
 

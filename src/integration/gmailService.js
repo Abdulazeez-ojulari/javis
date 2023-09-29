@@ -354,9 +354,9 @@ const autoReply = async (
     {
       assistantResponse:
         escalated == true && department
-          ? `Your request has been escalated to the ${department} department`
+          ? `Your request has been escalated to the ${department} department, I'll be in touch with you shortly`
           : escalated == true && !department
-          ? `Your request has been escalated to the proper department`
+          ? `Your request has been escalated to the proper department, I'll be in touch with you shortly`
           : msg,
       assistantResponseDate: new Date(),
     },
@@ -506,9 +506,9 @@ const supervisedReply = async (
     {
       assistantResponse:
         escalated == true && department
-          ? `Your request has been escalated to the ${department} department`
+          ? `Your request has been escalated to the ${department} department, I'll be in touch with you shortly`
           : escalated == true && !department
-          ? `Your request has been escalated to the proper department`
+          ? `Your request has been escalated to the proper department, I'll be in touch with you shortly`
           : msg,
       assistantResponseDate: new Date(),
     },
