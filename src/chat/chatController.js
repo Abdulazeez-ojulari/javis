@@ -56,6 +56,7 @@ module.exports.sendChat = errorMiddleware(async (req, res) => {
     customer,
     promptMsg
   );
+  console.log("hello");
 
   eventEmitter.emit("notifyNewChatMessage", {
     businessId,

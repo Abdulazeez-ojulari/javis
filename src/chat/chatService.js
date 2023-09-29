@@ -156,6 +156,7 @@ const autoReply = async (
   let type = "";
   let department = "";
   let sentiment = "";
+  let escalated;
   let escalation_department = "";
   let title = "";
   let isCompleted;
