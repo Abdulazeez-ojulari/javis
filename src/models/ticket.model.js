@@ -5,6 +5,8 @@ const schema = new mongoose.Schema(
     // ticketId: { type: String, required: true, unique: true, minlength: 1 },
     email: {
       type: String,
+      required: true,
+      minlength: 1,
     },
     emailThread: {
       type: String,
@@ -19,6 +21,8 @@ const schema = new mongoose.Schema(
     },
     customer: {
       type: String,
+      required: true,
+      minlength: 1,
     },
     phoneNo: {
       type: String,
