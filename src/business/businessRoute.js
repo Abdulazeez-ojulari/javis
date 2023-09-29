@@ -3,6 +3,7 @@ const auth = require("../middlewares/auth");
 const businessController = require("./businessController");
 const express = require("express");
 const router = express.Router();
+const { avatar } = require("../middlewares/multer");
 
 router.post("/create", businessController.createBusiness);
 
@@ -48,6 +49,12 @@ router.patch(
     auth,
   ],
   businessController.updateTeamMember
+);
+
+router.post(
+  "/:businessId/avatar",
+  [avatar, auth],
+  businessController.updateBusinessAvater
 );
 
 module.exports = router;

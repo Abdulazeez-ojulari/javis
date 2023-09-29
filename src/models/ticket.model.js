@@ -65,6 +65,10 @@ const schema = new mongoose.Schema(
     agentName: {
       type: String,
     },
+    isActive: {
+      type: Boolean,
+      default: false,
+    },
     created_date: {
       type: Date,
       required: true,
@@ -113,6 +117,7 @@ schema.virtual("gmail", {
   justOne: true,
   foreignField: "ticketId",
 });
+
 const Ticket = mongoose.model("Ticket", schema);
 
 Ticket.syncIndexes();

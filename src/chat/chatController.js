@@ -66,6 +66,14 @@ module.exports.sendChat = errorMiddleware(async (req, res) => {
     ticketId,
   });
 
+  const ticket = await Ticket.findOne({ _id: ticketId }).select("isActive");
+
+  // if a new message drops make the ticket active
+  // if isActive === false then make ticket active
+  if (!ticket.isActive) {
+    await Ticket.findByIdAndUpdate(ticket._id, { isActive: true });
+  }
+
   return res.send(data);
 });
 
@@ -243,17 +251,36 @@ module.exports.getConversation = errorMiddleware(async (req, res) => {
 
 module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
   let { businessId } = req.params;
+  let { active } = req.query;
+  let tickets;
+  active = active.toLowerCase();
 
   const business = await Business.findOne({ businessId: businessId }).exec();
   if (!business) {
     return res.status(400).send({ message: "Business doesn't exists" });
   }
 
-  const tickets = await Ticket.find({ businessId })
+  tickets = await Ticket.find({ businessId })
     .sort({ created_date: -1 })
     .populate("message")
     .populate({ path: "messages", match: { role: "user" } })
     .exec();
+
+  if ((active = "true")) {
+    tickets = await Ticket.find({ businessId, isActive: true })
+      .sort({ created_date: -1 })
+      .populate("message")
+      .populate({ path: "messages", match: { role: "user" } })
+      .exec();
+  }
+
+  if ((active = "false")) {
+    tickets = await Ticket.find({ businessId, isActive: false })
+      .sort({ created_date: -1 })
+      .populate("message")
+      .populate({ path: "messages", match: { role: "user" } })
+      .exec();
+  }
 
   // tickets[0]
 

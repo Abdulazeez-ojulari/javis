@@ -145,6 +145,7 @@ let schema = new mongoose.Schema(
       required: true,
       minlength: 1,
     },
+    avatar: { type: String },
     gmail: {
       type: gmailSchema,
     },

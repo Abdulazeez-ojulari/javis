@@ -921,7 +921,8 @@ const fetchEmailDetails = async (messageId, gmail, business) => {
     mail["to"] = getGmailTo(res.data);
     mail["mailSentDate"] = new Date(getGmailDate(res.data));
     mail["subject"] = getGmailSubject(res.data);
-    mail["body"] = stripSpecialCharacters(getMailBody(res));
+    // mail["body"] = stripSpecialCharacters(getMailBody(res));
+    mail["body"] = getMailBody(res);
     console.log(mail);
     // return;
     const ticket = await Ticket.findOne({ emailThread: mail.threadId });

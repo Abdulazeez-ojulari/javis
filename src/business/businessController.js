@@ -9,6 +9,7 @@ const {
 } = require("./businessService");
 const { isMemberOfBusiness } = require("../utils/helper");
 const { validationResult } = require("express-validator");
+const s3 = require("../utils/aws");
 
 module.exports.createBusiness = errorMiddleware(async (req, res) => {
   const {
@@ -429,4 +430,35 @@ module.exports.updateTeamMember = errorMiddleware(async (req, res) => {
     // data: updatedTeams,
     data: member,
   });
+});
+
+module.exports.updateBusinessAvater = errorMiddleware(async (req, res) => {
+  const { id } = req.user;
+  const { businessId } = req.params;
+  const file = req.file;
+  const folder = "businessAvaters";
+
+  if (!file) {
+    return res
+      .status(400)
+      .json({ message: "Upload a valid image", data: file });
+  }
+
+  const business = await Business.findOne({ businessId });
+
+  if (!business) {
+    return res.status(404).json({ message: "Business not found", data: null });
+  }
+
+  let prevAvatar = business.avatar;
+
+  // delete previous avatar
+  if (prevAvatar) {
+    const prev = await s3
+      .deleteObject({ Bucket: process.env.S3_BUCKET, Key: prevAvatar })
+      .promise();
+    console.log("delete message", prev);
+  }
+
+  
 });
