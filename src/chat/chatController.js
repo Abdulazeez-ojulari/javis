@@ -56,7 +56,6 @@ module.exports.sendChat = errorMiddleware(async (req, res) => {
     customer,
     promptMsg
   );
-  console.log("hello");
 
   eventEmitter.emit("notifyNewChatMessage", {
     businessId,
@@ -254,7 +253,7 @@ module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
   let { businessId } = req.params;
   let { active } = req.query;
   let tickets;
-  active = active.toLowerCase();
+  active = active && active.toLowerCase();
 
   const business = await Business.findOne({ businessId: businessId }).exec();
   if (!business) {
@@ -267,7 +266,7 @@ module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
     .populate({ path: "messages", match: { role: "user" } })
     .exec();
 
-  if ((active = "true")) {
+  if ((active === "true")) {
     tickets = await Ticket.find({ businessId, isActive: true })
       .sort({ created_date: -1 })
       .populate("message")
@@ -275,7 +274,7 @@ module.exports.getBusinessChats = errorMiddleware(async (req, res) => {
       .exec();
   }
 
-  if ((active = "false")) {
+  if ((active === "false")) {
     tickets = await Ticket.find({ businessId, isActive: false })
       .sort({ created_date: -1 })
       .populate("message")
