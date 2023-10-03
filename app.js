@@ -12,11 +12,7 @@ const cors = require("cors");
 //     "fine-tune"
 // );
 
-const business = require("./src/business/businessRoute");
 const chat = require("./src/chat/chatRoute");
-const knowledgeBase = require("./src/knowledgeBase/knowledgeBaseRoute");
-const user = require("./src/user/userRoute");
-const order = require("./src/order/orderRoute");
 
 let data = [
   {
@@ -242,16 +238,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/ai/business", business);
 app.use("/ai/chat", chat);
-app.use("/ai/knowledge-base", knowledgeBase);
-app.use("/ai/user", user);
-app.use("/ai/order", order);
-require("./src/admin/admin.routes")(app);
-require("./src/payment/payment.routes")(app);
-require("./src/notification/notification.routes")(app);
-require("./src/integration/gmail.routes")(app);
-require("./src/detectedFAQ/detectedFAQ.routes")(app);
 
 const PORT = process.env.PORT || 3000;
 
