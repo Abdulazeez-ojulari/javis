@@ -17,6 +17,10 @@ const FaqSchema = new mongoose.Schema({
         type: String,
         required: false,
     },
+    embeddings: {
+        type: Object,
+        required: true,
+    },
     id: {}
     
 },  {timestamps: true});

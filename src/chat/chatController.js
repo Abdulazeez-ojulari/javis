@@ -316,8 +316,8 @@ module.exports.generateVectors = async (req, res) => {
 };
 
 module.exports.processMessage = async (req, res) => {
-  let { prompt } = req.body;
-  let { businessId } = req.body;
+  let { promptMsg } = req.body;
+  let { businessId } = req.params;
 
   const knowledge = await KnowledgeBase.findOne({ businessId: businessId });
   if (!knowledge) {
@@ -328,8 +328,8 @@ module.exports.processMessage = async (req, res) => {
 
   let faqs = await Faq.find({knowledgeBaseId: knowledge._id}).select("question response embeddings -_id")
 
-  console.log(prompt)
-  await processMsg(prompt, res, faqs)
+  console.log(promptMsg)
+  await processMsg(promptMsg, res, faqs)
 
   // res.send(faqs)
   return

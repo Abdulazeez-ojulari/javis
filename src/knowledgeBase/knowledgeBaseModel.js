@@ -7,12 +7,6 @@ let schema = new mongoose.Schema({
     minlength: 1,
     unique: true,
   },
-  faqs: {
-    type: [Object],
-  },
-  knowledgeBase: {
-    type: Object,
-  },
   created_date: {
     type: Date,
     required: true,
