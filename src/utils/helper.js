@@ -93,3 +93,16 @@ exports.stripSpecialCharacters = (str) => {
 
   return str.trim();
 };
+
+exports.daysUntilExpiration = (expirationDate) => {
+  // Parse the provided dates
+  const current = new Date();
+  const expiration = new Date(expirationDate);
+
+  // Calculate the difference in milliseconds and then convert it to days
+  const differenceInMilliseconds = expiration - current;
+  const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
+
+  // Return the difference, rounding down to ensure a full day count
+  return Math.floor(differenceInDays);
+};

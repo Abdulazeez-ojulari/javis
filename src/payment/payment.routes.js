@@ -19,5 +19,11 @@ module.exports = function (app) {
   // router.post("/webhook", controller.verifyPayment);
   router.post("/verify/:trxRef", controller.verifyPayment);
 
+  router.get(
+    "/:businessId/plan-days-to-expiration",
+    auth,
+    controller.getPlanExpirationDaysLeft
+  );
+
   app.use("/ai/plan/pay", auth, router);
 };
