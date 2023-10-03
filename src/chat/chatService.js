@@ -626,9 +626,9 @@ const javisEmbeddings = async (message) => {
   return completion.data;
 };
 
-module.exports.processMsg = async (prompt, res, faqs) => {
-
-  let embeddingCompletion = await javisEmbeddings(prompt)
+module.exports.processMsg = async (promptMsg, res, faqs) => {
+  console.log(promptMsg)
+  let embeddingCompletion = await javisEmbeddings(promptMsg)
   let embedding = embeddingCompletion.data[0].embedding;
   let similarity_array = []
   // let embeddings = []
@@ -684,8 +684,13 @@ module.exports.processMsg = async (prompt, res, faqs) => {
   //   res.send(completion.data)
   // })
 
-  for(let i = 0; i<faqs.length; i++){
-    let faqEmbedding = faqs[i].embeddings
+  // console.log(faqs)
+
+  for(let i=0; i<faqs.length; i++){
+    console.log(faqs[i])
+    console.log(i)
+    let faqEmbedding = faqs[i]["embeddings"];
+    console.log(faqEmbedding)
     similarity_array.push(calculate_similarity(faqEmbedding, embedding))
   }
 
@@ -713,7 +718,7 @@ module.exports.processMsg = async (prompt, res, faqs) => {
     ${faqs[index].response}
     
     [Question]
-    ${prompt}
+    ${promptMsg}
   `
 
   let knowledge = [
@@ -750,7 +755,7 @@ function indexOfMax(arr) {
 }
 
 const calculate_similarity = (vec1, vec2) => {
-
+  console.log(vec1)
   let dot_product = dotProduct(vec1, vec2);
   let magnitude1 = calculateMagnitude(vec1)
   let magnitude2 = calculateMagnitude(vec2)
