@@ -33,3 +33,21 @@ exports.avatar = multer({
     }
   },
 }).single("avatar");
+
+exports.doc = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: function (req, file, cb) {
+    if (
+      file.mimetype === "application/msword" ||
+      file.mimetype ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+      file.mimetype === "application/pdf"
+    ) {
+      return cb(null, true);
+    } else {
+      let error = new Error("Only .PDF and Word Docs allowed.");
+      error.status = 400;
+      cb(error, false);
+    }
+  },
+}).single("doc");

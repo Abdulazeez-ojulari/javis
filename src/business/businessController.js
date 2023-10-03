@@ -436,7 +436,7 @@ module.exports.updateBusinessAvatar = errorMiddleware(async (req, res) => {
   const { id } = req.user;
   const { businessId } = req.params;
   const file = req.file;
-  const folder = "businessAvaters";
+  const folder = "businessAvatars/";
 
   if (!file) {
     return res
@@ -457,21 +457,79 @@ module.exports.updateBusinessAvatar = errorMiddleware(async (req, res) => {
     const prev = await s3
       .deleteObject({ Bucket: process.env.S3_BUCKET, Key: prevAvatar })
       .promise();
-    console.log("delete message", prev);
+    // console.log("delete prev", prev);
   }
+
+  let fileKey = folder + business.businessName + "-" + file.originalname;
 
   const uploadedParams = {
     Bucket: process.env.S3_BUCKET,
-    Key: FILE_KEY,
+    Key: fileKey,
     Body: file.buffer,
     ContentType: file.mimetype,
   };
 
-  s3.upload(uploadedParams, (uploadErr, uploadData) => {
+  s3.upload(uploadedParams, async (uploadErr, uploadData) => {
     if (uploadErr) {
       return res.status(500).send(uploadErr);
     }
-    console.log(uploadData);
-    res.send("Image uploaded successfully to S3!");
+    business.avatar = uploadData.Location;
+    await business.save();
+    // console.log(uploadData);
+    res.send({
+      message: "Business avatar uploaded successfully",
+      data: uploadData.Location,
+    });
+  });
+});
+
+module.exports.updateBusinessDoc = errorMiddleware(async (req, res) => {
+  const { id } = req.user;
+  const { businessId } = req.params;
+  const file = req.file;
+  const folder = "businessAvatars/";
+
+  if (!file) {
+    return res
+      .status(400)
+      .json({ message: "Upload a valid document", data: file });
+  }
+
+  const business = await Business.findOne({ businessId });
+
+  if (!business) {
+    return res.status(404).json({ message: "Business not found", data: null });
+  }
+
+  let prevDoc = business.businessDoc;
+
+  // delete previous document
+  if (prevDoc) {
+    const prev = await s3
+      .deleteObject({ Bucket: process.env.S3_BUCKET, Key: prevDoc })
+      .promise();
+    // console.log("delete prev", prev);
+  }
+
+  let fileKey = folder + business.businessName + "-" + file.originalname;
+
+  const uploadedParams = {
+    Bucket: process.env.S3_BUCKET,
+    Key: fileKey,
+    Body: file.buffer,
+    ContentType: file.mimetype,
+  };
+
+  s3.upload(uploadedParams, async (uploadErr, uploadData) => {
+    if (uploadErr) {
+      return res.status(500).send(uploadErr);
+    }
+    business.businessDoc = uploadData.Location;
+    await business.save();
+    // console.log(uploadData);
+    res.send({
+      message: "Business document uploaded successfully",
+      data: uploadData.Location,
+    });
   });
 });

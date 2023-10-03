@@ -511,3 +511,51 @@ exports.imagesUpload = errorMiddleWare(async (req, res) => {
     data: uploadedUrls,
   });
 });
+
+module.exports.uploadUserAvatar = errorMiddleWare(async (req, res) => {
+  const { id } = req.user;
+  const file = req.file;
+  const folder = "userAvatars/";
+  const user = await User.findById(id);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found", data: user });
+  }
+
+  if (!file) {
+    return res
+      .status(400)
+      .json({ message: "Upload a valid image", data: file });
+  }
+
+  let prevAvatar = user.avatar;
+
+  // delete previous avatar
+  if (prevAvatar) {
+    const prev = await s3
+      .deleteObject({ Bucket: process.env.S3_BUCKET, Key: prevAvatar })
+      .promise();
+    // console.log("delete prev", prev);
+  }
+
+  let fileKey = folder + user.lastName + "-" + file.originalname;
+
+  const uploadedParams = {
+    Bucket: process.env.S3_BUCKET,
+    Key: fileKey,
+    Body: file.buffer,
+    ContentType: file.mimetype,
+  };
+
+  s3.upload(uploadedParams, async (uploadErr, uploadData) => {
+    if (uploadErr) {
+      return res.status(500).send(uploadErr);
+    }
+    user.avatar = uploadData.Location;
+    await user.save();
+    res.send({
+      message: "User avatar uploaded successfully",
+      data: uploadData.Location,
+    });
+  });
+});

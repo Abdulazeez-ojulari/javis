@@ -146,6 +146,7 @@ let schema = new mongoose.Schema(
       minlength: 1,
     },
     avatar: { type: String },
+    businessDoc: { type: String },
     gmail: {
       type: gmailSchema,
     },
@@ -183,5 +184,7 @@ schema.virtual("agents", {
   limit: 5,
   foreignField: "businessId",
 });
+
+Business.syncIndexes();
 
 exports.Business = Business;
