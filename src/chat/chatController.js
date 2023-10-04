@@ -13,8 +13,10 @@ const {
 // const { Ticket } = require("../models/ticket.model");
 // const { ChatMessage } = require("../models/chat-message.model");
 // const { Agent } = require("../business/agent.model");
-const { KnowledgeBase } = require("../knowledgeBase/knowledgeBaseModel");
-const { Faq } = require("../faq/faqModel");
+const { KnowledgeBase } = require("../model/knowledgeBaseModel");
+const { Faq } = require("../model/faqModel");
+const { Business } = require("../model/businessModel");
+const { Department } = require("../model/departmentModel");
 
 // module.exports.newChat = errorMiddleware(async (req, res) => {
 //   let { email, businessId, channel, customer, phoneNo } = req.body;
@@ -325,11 +327,14 @@ module.exports.processMessage = async (req, res) => {
       .status(404)
       .send({ message: "This business dosen't have a knowledge base" });
   }
+  const business = await Business.findOne({ businessId: businessId });
+
+  const departments = await Department.find({ businessId: business._id });
 
   let faqs = await Faq.find({knowledgeBaseId: knowledge._id}).select("question response embeddings -_id")
 
   console.log(promptMsg)
-  await processMsg(promptMsg, res, faqs)
+  await processMsg(promptMsg, res, faqs, departments, business)
 
   // res.send(faqs)
   return

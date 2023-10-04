@@ -58,55 +58,55 @@ const openai = new OpenAIApi(configuration);
 //     faqs = knowledgeBase.faqs;
 //   }
 
-//   let systemKnowledge = [
-//     {
-//       role: "system",
-//       content: `
-//             You are a sales representative for a company called ${business.businessName}.
-//             Do not mention or act like an AI to the customer.
-//             You will be provided with customer service queries.
-//             The customer service query will be delimited with ${delimiter} characters.
-//             Your previous messages with customer will be delimited with ${delimiter2} characters.
-//             Always use only the information delimited with ${delimiter3} to respond to user query. 
-//             If request is not in the inventory, faqs and company informations that was sent with the query you are to return a json format with escalated set to true and escalation_department to the appropriate department.
-//             If the user's message includes pleasantries like 'good morning' or 'hello', you should respond with pleasantries as well.
-//             Always classify each query into a category.
-//             Always classify each query and your previous chat with customer into a sentiment.
-//             Always classify each query into a type.
-//             Generate a title based on customer previous chat with you and customer new query.
-//             Always classify each query and your previous chat with customer into a escalated.
-//             Always classify each query and your previous chat with customer into a department.
-//             If customer is about to place order set placingOrder to true.
-//             Determine if user has completed their chat using their current query and set isCompleted to true.
-//             Set escalated to true if customer query is not related to your inventory else set escalated to false.
-//             Always classify each query and your previous chat with customer into an escalation_department if escalated is set to true else set escalation_department to null
-//             Make sure you don't add any other key aside this keys response, category, sentiment, type, department, escalated, escalation_department, placingOrder, isCompleted and title in your json response.
-//             Always return product details in the response key when you want to display a product to the user from the inventory in text format.
+  // let systemKnowledge = [
+  //   {
+  //     role: "system",
+  //     content: `
+  //           You are a sales representative for a company called ${business.businessName}.
+  //           Do not mention or act like an AI to the customer.
+  //           You will be provided with customer service queries.
+  //           The customer service query will be delimited with ${delimiter} characters.
+  //           Your previous messages with customer will be delimited with ${delimiter2} characters.
+  //           Always use only the information delimited with ${delimiter3} to respond to user query. 
+  //           If request is not in the inventory, faqs and company informations that was sent with the query you are to return a json format with escalated set to true and escalation_department to the appropriate department.
+  //           If the user's message includes pleasantries like 'good morning' or 'hello', you should respond with pleasantries as well.
+  //           Always classify each query into a category.
+  //           Always classify each query and your previous chat with customer into a sentiment.
+  //           Always classify each query into a type.
+  //           Generate a title based on customer previous chat with you and customer new query.
+  //           Always classify each query and your previous chat with customer into a escalated.
+  //           Always classify each query and your previous chat with customer into a department.
+  //           If customer is about to place order set placingOrder to true.
+  //           Determine if user has completed their chat using their current query and set isCompleted to true.
+  //           Set escalated to true if customer query is not related to your inventory else set escalated to false.
+  //           Always classify each query and your previous chat with customer into an escalation_department if escalated is set to true else set escalation_department to null
+  //           Make sure you don't add any other key aside this keys response, category, sentiment, type, department, escalated, escalation_department, placingOrder, isCompleted and title in your json response.
+  //           Always return product details in the response key when you want to display a product to the user from the inventory in text format.
 
-//             Categories: General Inquiries, Order, Issue, Complains.
-//             Sentiment: Happy, Neutral, Angry.
-//             Type: Bugs, Features, Refunds,Payment, Fruad, Inquiry, Feedback, Request, Order.
-//             Department: ${business.departments}.
-//             Escalation Department: ${business.departments}.
-//             `,
-//     },
-//     {
-//       role: "system",
-//       content: `Company faqs to answer related questions: ${delimiter3}${JSON.stringify(
-//         faqs
-//       )}${delimiter3}.
-//       `,
-//     },
-//     {
-//       role: "system",
-//       content: `
-//             Inventory to answer from: ${JSON.stringify(knowledge_base)}.
-//             If customer service query is regarding a product in your inventory you must include the image of that product from your inventory in your response key in text format.
-//             If customer service query is not related to your inventory then inform the customer that you will escalate their query then set escalated key to true and classify the escalation_department key in your json response.
-//             Use the response key to return all the content of your response of the customer query including content from your inventory.
-//             `,
-//     },
-//   ];
+  //           Categories: General Inquiries, Order, Issue, Complains.
+  //           Sentiment: Happy, Neutral, Angry.
+  //           Type: Bugs, Features, Refunds,Payment, Fruad, Inquiry, Feedback, Request, Order.
+  //           Department: ${business.departments}.
+  //           Escalation Department: ${business.departments}.
+  //           `,
+  //   },
+  //   {
+  //     role: "system",
+  //     content: `Company faqs to answer related questions: ${delimiter3}${JSON.stringify(
+  //       faqs
+  //     )}${delimiter3}.
+  //     `,
+  //   },
+  //   {
+  //     role: "system",
+  //     content: `
+  //           Inventory to answer from: ${JSON.stringify(knowledge_base)}.
+  //           If customer service query is regarding a product in your inventory you must include the image of that product from your inventory in your response key in text format.
+  //           If customer service query is not related to your inventory then inform the customer that you will escalate their query then set escalated key to true and classify the escalation_department key in your json response.
+  //           Use the response key to return all the content of your response of the customer query including content from your inventory.
+  //           `,
+  //   },
+  // ];
 
 //   if (!business.aiMode || business.aiMode == "auto") {
 //     let reply = await autoReply(
@@ -626,7 +626,7 @@ const javisEmbeddings = async (message) => {
   return completion.data;
 };
 
-module.exports.processMsg = async (promptMsg, res, faqs) => {
+module.exports.processMsg = async (promptMsg, res, faqs, departments, business) => {
   console.log(promptMsg)
   let embeddingCompletion = await javisEmbeddings(promptMsg)
   let embedding = embeddingCompletion.data[0].embedding;
@@ -635,70 +635,72 @@ module.exports.processMsg = async (promptMsg, res, faqs) => {
   let df = ""
   df
 
-  // fs.createReadStream("public/vectors.csv")
-  // .pipe(parse({ delimiter: ",", from_line: 2 }))
-  // .on("data", function (row) {
-  //   embeddings.push(row)
-  //   similarity_array.push(calculate_similarity(row[0].split(","), embedding))
-  // })
-  // .on("end", async function () {
-  //   console.log(similarity_array);
-  //   let index = indexOfMax(similarity_array)
-  //   console.log(index)
-  //   console.log({ret: embeddings[index][1]})
-
-  //   let system_prompt = `
-  //   You are an AI assistant. You work for Credpal. You will be asked questions from a
-  //   customer and will answer in a helpful and friendly manner.
-    
-  //   You will be provided company information from credpal under the
-  //   [Article] section. The customer question will be provided under the
-  //   [Question] section. You will answer the customers questions based on the
-  //   article. Only provide the answer to the query don't respond with completed part of question.
-  //   Answer in points and not in long paragraphs
-    
-  //   If the users question is not answered by the article you will respond with
-  //   'I'm sorry I don't know.'
-  //   `
-    
-  //   let question_prompt = `
-  //     [Article]
-  //     ${embeddings[index][1]}
-      
-  //     [Question]
-  //     ${prompt}
-  //   `
-
-  //   let knowledge = [
-  //     {
-  //         "role": "system",
-  //         "content": system_prompt
-  //     },
-  //     {
-  //         "role": "user",
-  //         "content": question_prompt
-  //     }
-  //   ]
-
-  //   let completion = await javis(knowledge)
-  //   res.send(completion.data)
-  // })
-
-  // console.log(faqs)
-
   for(let i=0; i<faqs.length; i++){
-    console.log(faqs[i])
-    console.log(i)
     let faqEmbedding = faqs[i]["embeddings"];
-    console.log(faqEmbedding)
     similarity_array.push(calculate_similarity(faqEmbedding, embedding))
   }
 
-  console.log(similarity_array);
   let index = indexOfMax(similarity_array)
-  console.log(index)
-  console.log({ret: faqs[index].response})
 
+  let delimiter = "#####";
+  let delimiter2 = "####";
+  let delimiter3 = "*****";
+
+  let systemKnowledge = [
+    {
+      role: "system",
+      content: `
+            You are a sales representative for a company called ${business.businessName}.
+            Do not mention or act like an AI to the customer.
+            You will be provided with customer service queries.
+            The customer service query will be delimited with ${delimiter} characters.
+            Your previous messages with customer will be delimited with ${delimiter2} characters.
+            Always use only the information delimited with ${delimiter3} to respond to user query. 
+            If request is not in the inventory, faqs and company informations that was sent with the query you are to return a json format with escalated set to true and escalation_department to the appropriate department.
+            If the user's message includes pleasantries like 'good morning' or 'hello', you should respond with pleasantries as well.
+            Always classify each query into a category.
+            Always classify each query and your previous chat with customer into a sentiment.
+            Always classify each query into a type.
+            Generate a title based on customer previous chat with you and customer new query.
+            Always classify each query and your previous chat with customer into a escalated.
+            Always classify each query and your previous chat with customer into a department.
+            If customer is about to place order set placingOrder to true.
+            Determine if user has completed their chat using their current query and set isCompleted to true.
+            Set escalated to true if customer query is not related to your inventory else set escalated to false.
+            Always classify each query and your previous chat with customer into an escalation_department if escalated is set to true else set escalation_department to null
+            Make sure you don't add any other key aside this keys response, category, sentiment, type, department, escalated, escalation_department, placingOrder, isCompleted and title in your json response.
+            Always return product details in the response key when you want to display a product to the user from the inventory in text format.
+
+            Categories: General Inquiries, Order, Issue, Complains.
+            Sentiment: Happy, Neutral, Angry.
+            Type: Bugs, Features, Refunds,Payment, Fruad, Inquiry, Feedback, Request, Order.
+            Department: ${departments}.
+            Escalation Department: ${departments}.
+            `,
+    },
+    {
+      role: "system",
+      content: `Company faqs to answer related questions: ${delimiter3}${JSON.stringify(
+        {
+          question: faqs[index].question,
+          response: faqs[index].response
+        }
+      )}${delimiter3}.
+      `,
+    },
+    // {
+    //   role: "system",
+    //   content: `Previous messages between you and the customer${delimiter2}${JSON.stringify(
+    //     previousMsg
+    //   )}${delimiter2}`,
+    // },
+    {
+      role: "user",
+      content: `${delimiter}${promptMsg}${delimiter}`,
+    }
+  ];
+
+  console.log(systemKnowledge)
   let system_prompt = `
     You are an AI assistant. You work for Credpal. You will be asked questions from a
     customer and will answer in a helpful and friendly manner.
@@ -732,7 +734,8 @@ module.exports.processMsg = async (promptMsg, res, faqs) => {
     }
   ]
 
-  let completion = await javis(knowledge)
+  let completion = await javis(systemKnowledge)
+  console.log(completion.data.choices[0])
   res.send(completion.data.choices[0].message)
 }
 
