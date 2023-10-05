@@ -17,6 +17,7 @@ const { KnowledgeBase } = require("../model/knowledgeBaseModel");
 const { Faq } = require("../model/faqModel");
 const { Business } = require("../model/businessModel");
 const { Department } = require("../model/departmentModel");
+const { ChatMessage } = require("../model/chatModel");
 
 // module.exports.newChat = errorMiddleware(async (req, res) => {
 //   let { email, businessId, channel, customer, phoneNo } = req.body;
@@ -318,7 +319,7 @@ module.exports.generateVectors = async (req, res) => {
 };
 
 module.exports.processMessage = async (req, res) => {
-  let { promptMsg } = req.body;
+  let { promptMsg, ticketId } = req.body;
   let { businessId } = req.params;
 
   const knowledge = await KnowledgeBase.findOne({ businessId: businessId });
@@ -328,13 +329,24 @@ module.exports.processMessage = async (req, res) => {
       .send({ message: "This business dosen't have a knowledge base" });
   }
   const business = await Business.findOne({ businessId: businessId });
+  
+  let chat
+  let previousMsg
+  if(ticketId){
+    chat = await ChatMessage.find({ ticketId: ticketId }).sort({ createdAt: -1 }).limit(5);
+    previousMsg = chat.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+    console.log(previousMsg)
+  }
 
   const departments = await Department.find({ businessId: business._id });
 
   let faqs = await Faq.find({knowledgeBaseId: knowledge._id}).select("question response embeddings -_id")
 
   console.log(promptMsg)
-  await processMsg(promptMsg, res, faqs, departments, business)
+  await processMsg(promptMsg, res, faqs, departments, business, previousMsg)
 
   // res.send(faqs)
   return
