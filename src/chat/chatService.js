@@ -750,9 +750,12 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   ];
   let categorization;
   let response;
-
+  let stringifiedResponse = "";
+  console.log(completion2.choices[0].message.content);
+  stringifiedResponse = completion2.choices[0].message.content.toString()
   try{
-    categorization = JSON.parse(completion2.choices[0].message.content)
+    console.log(stringifiedResponse.replace(/'/g, '"'))
+    categorization = JSON.parse(stringifiedResponse.replace(/'/g, '"'))
     response = {
       response: completion.choices[0].message.content,
       department: categorization.department,
