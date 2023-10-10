@@ -15,6 +15,7 @@ const gmailSchema = new mongoose.Schema(
       required: true,
       minlength: 1,
       unique: true,
+      sparse:true
     },
     from: {
       type: String,
