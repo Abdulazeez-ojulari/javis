@@ -13,6 +13,7 @@ const cors = require("cors");
 // );
 
 const chat = require("./src/chat/chatRoute");
+const gmail = require("./src/gmail/gmailRoute");
 
 let data = [
   {
@@ -239,6 +240,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/ai/chat", chat);
+app.use("/ai/gmail", gmail);
 
 const PORT = process.env.PORT || 3000;
 
