@@ -70,5 +70,6 @@ gmailSchema.method("toJSON", function () {
 // gmailSchema.plugin(mongoosePaginate);
 
 const Gmail = mongoose.model("Gmail", gmailSchema);
+Gmail.syncIndexes();
 
 exports.Gmail = Gmail;
