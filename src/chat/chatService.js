@@ -627,7 +627,15 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
   console.log(foundFaq, "faq")
   const response_instructions_chat = `You are a customer support agent. Do not mention that you're an AI or resemble it. Do not include 'AI' or 'ai' or 'A.I.' or 'a.i.' in your response. Your task is to generate concise responses based on the knowledge base provided, do not instruct the user to email anyone or call any number nor provide wrong information. Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent. Instead, inform them that you will refer them to an agent and they should stand by.`
-  const query_categorization_instructions = `You are a query analyst that categorizes message in a correct Javascript JSON format. Your responses should have the following keys: department, urgency, sentiment, title, type, category. Keys explanation "department": ${departments.length > 0 ? departments.join('/'): "none"}, "urgency": <low/medium/high>, "sentiment": <Happy/Neutral/Angry>, "title": <categorize the message into a ticket title>, "type": <categorize the message into a ticket type>, "category": <categorize the message into a ticket category>. Make sure to analyze the user's message to determine the department, urgency, sentiment, title, type, category. Always confirm that your response is in a correct Javascript JSON format`;
+  const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
+
+  "department": Determine the department based on the user's message. Departments to check from ${departments.length > 0 ? departments.join('/'): "none"}. If a department is identified, set it to that department; otherwise, set it to "none."
+  "urgency": Assess the urgency as low, medium, or high based on the user's message.
+  "sentiment": Analyze the sentiment of the message and set it to Happy, Neutral, or Angry accordingly.
+  "title": Categorize the message content into a suitable ticket title.
+  "type": Categorize the message content into an appropriate ticket type.
+  "category": Categorize the message content into an applicable ticket category.
+  Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly`;
   const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
   const escalation_instructions3 = `
@@ -740,19 +748,29 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
       "content": `${delimiter}${promptMsg}${delimiter}`
     }
   ];
+  let categorization;
+  let response;
 
-  let categorization = JSON.parse(completion2.choices[0].message.content)
-
-  let response = {
-    response: completion.choices[0].message.content,
-    department: categorization.department,
-    urgency: categorization.urgency,
-    sentiment: categorization.sentiment,
-    title: categorization.title,
-    type: categorization.type,
-    category: categorization.category,
-    escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
-    escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
+  try{
+    categorization = JSON.parse(completion2.choices[0].message.content)
+    response = {
+      response: completion.choices[0].message.content,
+      department: categorization.department,
+      urgency: categorization.urgency,
+      sentiment: categorization.sentiment,
+      title: categorization.title,
+      type: categorization.type,
+      category: categorization.category,
+      escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
+      escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
+    }
+  }catch(e){
+    response = response = {
+      response: completion.choices[0].message.content,
+      escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
+      escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
+    }
+    console.log(e.message)
   }
 
   console.log(response)
