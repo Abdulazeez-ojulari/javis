@@ -10,8 +10,8 @@ const { OpenAI } = require("openai");
 // const { Agent } = require("../business/agent.model");
 // const { MongooseError } = require("mongoose");
 // const error = require("../middlewares/error");
-const fs = require('fs')
-const parse = require('csv-parse').parse
+const fs = require("fs");
+const parse = require("csv-parse").parse;
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY // This is also the default, can be omitted
@@ -55,55 +55,55 @@ const openai = new OpenAI({
 //     faqs = knowledgeBase.faqs;
 //   }
 
-  // let systemKnowledge = [
-  //   {
-  //     role: "system",
-  //     content: `
-  //           You are a sales representative for a company called ${business.businessName}.
-  //           Do not mention or act like an AI to the customer.
-  //           You will be provided with customer service queries.
-  //           The customer service query will be delimited with ${delimiter} characters.
-  //           Your previous messages with customer will be delimited with ${delimiter2} characters.
-  //           Always use only the information delimited with ${delimiter3} to respond to user query. 
-  //           If request is not in the inventory, faqs and company informations that was sent with the query you are to return a json format with escalated set to true and escalation_department to the appropriate department.
-  //           If the user's message includes pleasantries like 'good morning' or 'hello', you should respond with pleasantries as well.
-  //           Always classify each query into a category.
-  //           Always classify each query and your previous chat with customer into a sentiment.
-  //           Always classify each query into a type.
-  //           Generate a title based on customer previous chat with you and customer new query.
-  //           Always classify each query and your previous chat with customer into a escalated.
-  //           Always classify each query and your previous chat with customer into a department.
-  //           If customer is about to place order set placingOrder to true.
-  //           Determine if user has completed their chat using their current query and set isCompleted to true.
-  //           Set escalated to true if customer query is not related to your inventory else set escalated to false.
-  //           Always classify each query and your previous chat with customer into an escalation_department if escalated is set to true else set escalation_department to null
-  //           Make sure you don't add any other key aside this keys response, category, sentiment, type, department, escalated, escalation_department, placingOrder, isCompleted and title in your json response.
-  //           Always return product details in the response key when you want to display a product to the user from the inventory in text format.
+// let systemKnowledge = [
+//   {
+//     role: "system",
+//     content: `
+//           You are a sales representative for a company called ${business.businessName}.
+//           Do not mention or act like an AI to the customer.
+//           You will be provided with customer service queries.
+//           The customer service query will be delimited with ${delimiter} characters.
+//           Your previous messages with customer will be delimited with ${delimiter2} characters.
+//           Always use only the information delimited with ${delimiter3} to respond to user query.
+//           If request is not in the inventory, faqs and company informations that was sent with the query you are to return a json format with escalated set to true and escalation_department to the appropriate department.
+//           If the user's message includes pleasantries like 'good morning' or 'hello', you should respond with pleasantries as well.
+//           Always classify each query into a category.
+//           Always classify each query and your previous chat with customer into a sentiment.
+//           Always classify each query into a type.
+//           Generate a title based on customer previous chat with you and customer new query.
+//           Always classify each query and your previous chat with customer into a escalated.
+//           Always classify each query and your previous chat with customer into a department.
+//           If customer is about to place order set placingOrder to true.
+//           Determine if user has completed their chat using their current query and set isCompleted to true.
+//           Set escalated to true if customer query is not related to your inventory else set escalated to false.
+//           Always classify each query and your previous chat with customer into an escalation_department if escalated is set to true else set escalation_department to null
+//           Make sure you don't add any other key aside this keys response, category, sentiment, type, department, escalated, escalation_department, placingOrder, isCompleted and title in your json response.
+//           Always return product details in the response key when you want to display a product to the user from the inventory in text format.
 
-  //           Categories: General Inquiries, Order, Issue, Complains.
-  //           Sentiment: Happy, Neutral, Angry.
-  //           Type: Bugs, Features, Refunds,Payment, Fruad, Inquiry, Feedback, Request, Order.
-  //           Department: ${business.departments}.
-  //           Escalation Department: ${business.departments}.
-  //           `,
-  //   },
-  //   {
-  //     role: "system",
-  //     content: `Company faqs to answer related questions: ${delimiter3}${JSON.stringify(
-  //       faqs
-  //     )}${delimiter3}.
-  //     `,
-  //   },
-  //   {
-  //     role: "system",
-  //     content: `
-  //           Inventory to answer from: ${JSON.stringify(knowledge_base)}.
-  //           If customer service query is regarding a product in your inventory you must include the image of that product from your inventory in your response key in text format.
-  //           If customer service query is not related to your inventory then inform the customer that you will escalate their query then set escalated key to true and classify the escalation_department key in your json response.
-  //           Use the response key to return all the content of your response of the customer query including content from your inventory.
-  //           `,
-  //   },
-  // ];
+//           Categories: General Inquiries, Order, Issue, Complains.
+//           Sentiment: Happy, Neutral, Angry.
+//           Type: Bugs, Features, Refunds,Payment, Fruad, Inquiry, Feedback, Request, Order.
+//           Department: ${business.departments}.
+//           Escalation Department: ${business.departments}.
+//           `,
+//   },
+//   {
+//     role: "system",
+//     content: `Company faqs to answer related questions: ${delimiter3}${JSON.stringify(
+//       faqs
+//     )}${delimiter3}.
+//     `,
+//   },
+//   {
+//     role: "system",
+//     content: `
+//           Inventory to answer from: ${JSON.stringify(knowledge_base)}.
+//           If customer service query is regarding a product in your inventory you must include the image of that product from your inventory in your response key in text format.
+//           If customer service query is not related to your inventory then inform the customer that you will escalate their query then set escalated key to true and classify the escalation_department key in your json response.
+//           Use the response key to return all the content of your response of the customer query including content from your inventory.
+//           `,
+//   },
+// ];
 
 //   if (!business.aiMode || business.aiMode == "auto") {
 //     let reply = await autoReply(
@@ -553,7 +553,7 @@ const javis = async (messages, tokens) => {
 //             You are an analyst.
 //             You will be provided with a list of titles.
 //             The titles will be delimited with ${delimiter} characters.
-//             Determine the common title from the list of titles. 
+//             Determine the common title from the list of titles.
 //             Make sure you don't add any other key aside this key title in your json response.
 
 //             Titles: ${delimiter}${JSON.stringify(titles)}${delimiter}.
@@ -571,55 +571,53 @@ const javis = async (messages, tokens) => {
 // };
 
 module.exports.createVector = async (faqs) => {
-  let embedding_array = []
+  let embedding_array = [];
 
-  for(let i=0; i<faqs.length; i++){
+  for (let i = 0; i < faqs.length; i++) {
     // console.log(faqs[i])
-    let faq = JSON.stringify(faqs[i])
-    let completion = await javisEmbeddings(faq)
+    let faq = JSON.stringify(faqs[i]);
+    let completion = await javisEmbeddings(faq);
 
     let embedding = completion.choices[0].embedding
 
     // Create a Python dictionary containing the vector and the original text
-    let embedding_dict = {'embedding': embedding, 'text': faqs[i]}
+    let embedding_dict = { embedding: embedding, text: faqs[i] };
     // Store the dictionary in a list.
-    embedding_array.push(embedding_dict)
+    embedding_array.push(embedding_dict);
   }
-
 
   let csv = await generateCSVFile(embedding_array);
 
-  fs.writeFile('public/vectors.csv', csv, (err) => {
+  fs.writeFile("public/vectors.csv", csv, (err) => {
     if (err) {
-      console.log(err)
-    return err;
-  }
-    console.log('CSV vectors generated successfully.');
+      console.log(err);
+      return err;
+    }
+    console.log("CSV vectors generated successfully.");
   });
 
-  return
-}
+  return;
+};
 
 const generateCSVFile = async (embeddings) => {
-  let csv = 'embedding,text\n';
+  let csv = "embedding,text\n";
 
   for (const embed of embeddings) {
-      // console.log("response", products)
+    // console.log("response", products)
 
-      let { embedding, text } = embed;
-  
-      csv += `"${embedding}","${text}"\n`;
+    let { embedding, text } = embed;
+
+    csv += `"${embedding}","${text}"\n`;
   }
 
   return csv;
-}
+};
 
 const javisEmbeddings = async (message) => {
   const completion = await openai.embeddings.create({
     input: message,
-    model: "text-embedding-ada-002"
-  }
-  );
+    model: "text-embedding-ada-002",
+  });
 
   return completion.data;
 };
@@ -774,12 +772,12 @@ const getFaq = async (promptMsg, faqs, previousMsg) => {
   let similarity_array = []
   let prev_similarity_array = []
   // let embeddings = []
-  let df = ""
-  df
+  let df = "";
+  df;
 
-  for(let i=0; i<faqs.length; i++){
+  for (let i = 0; i < faqs.length; i++) {
     let faqEmbedding = faqs[i]["embeddings"];
-    similarity_array.push(calculate_similarity(faqEmbedding, embedding))
+    similarity_array.push(calculate_similarity(faqEmbedding, embedding));
   }
 
   if(previousMsg.length > 0){
@@ -815,7 +813,7 @@ const getFaq = async (promptMsg, faqs, previousMsg) => {
         },
         {
           question: faqs[index].question,
-          response: faqs[index].response
+          response: faqs[index].response,
         }
       ]
     }else{
@@ -851,14 +849,14 @@ function indexOfMax(arr) {
 
 const calculate_similarity = (vec1, vec2) => {
   let dot_product = dotProduct(vec1, vec2);
-  let magnitude1 = calculateMagnitude(vec1)
-  let magnitude2 = calculateMagnitude(vec2)
-  return dot_product / (magnitude1 * magnitude2)
-}
+  let magnitude1 = calculateMagnitude(vec1);
+  let magnitude2 = calculateMagnitude(vec2);
+  return dot_product / (magnitude1 * magnitude2);
+};
 
 function dotProduct(vec1, vec2) {
   if (vec1.length !== vec2.length) {
-    throw new Error('Vectors must have the same length');
+    throw new Error("Vectors must have the same length");
   }
 
   let result = 0;

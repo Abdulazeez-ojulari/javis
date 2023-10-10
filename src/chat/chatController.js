@@ -311,12 +311,14 @@ module.exports.generateVectors = async (req, res) => {
       .send({ message: "This business dosen't have a knowledge base" });
   }
 
-  let faqs = await Faq.find({knowledgeBaseId: knowledge._id}).select("question response -_id")
+  let faqs = await Faq.find({ knowledgeBaseId: knowledge._id }).select(
+    "question response -_id"
+  );
 
-  await createVector(faqs)
+  await createVector(faqs);
 
-  res.send(faqs)
-  return
+  res.send(faqs);
+  return;
 };
 
 module.exports.processMessage = async (req, res) => {
@@ -330,28 +332,32 @@ module.exports.processMessage = async (req, res) => {
       .send({ message: "This business dosen't have a knowledge base" });
   }
   const business = await Business.findOne({ businessId: businessId });
-  
-  let chat
-  let previousMsg
-  if(ticketId){
-    chat = await ChatMessage.find({ ticketId: ticketId }).sort({ createdAt: -1 }).limit(5);
+
+  let chat;
+  let previousMsg;
+  if (ticketId) {
+    chat = await ChatMessage.find({ ticketId: ticketId })
+      .sort({ createdAt: -1 })
+      .limit(5);
     previousMsg = chat.map((msg) => ({
       role: msg.role,
       content: msg.content,
     }));
-    console.log(previousMsg)
+    // console.log(previousMsg);
   }
 
   const departments = await Department.find({ businessId: business._id }).select("department -_id");
   const ticket = await Ticket.findById(ticketId).select("customer -_id");
 
-  let faqs = await Faq.find({knowledgeBaseId: knowledge._id}).select("question response embeddings -_id")
+  let faqs = await Faq.find({ knowledgeBaseId: knowledge._id }).select(
+    "question response embeddings -_id"
+  );
 
   console.log(promptMsg)
   await processMsg(promptMsg, res, faqs, departments, business, previousMsg, ticket.customer)
 
   // res.send(faqs)
-  return
+  return;
 };
 
 // module.exports.acknowledgeChat = errorMiddleware(async (req, res) => {});
