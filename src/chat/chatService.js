@@ -1,4 +1,4 @@
-const { OpenAIApi, Configuration } = require("openai");
+const { OpenAI } = require("openai");
 // const { Chat } = require("./chatModel");
 // const { Ticket } = require("../models/ticket.model");
 // const { ChatMessage } = require("../models/chat-message.model");
@@ -13,12 +13,9 @@ const { OpenAIApi, Configuration } = require("openai");
 const fs = require('fs')
 const parse = require('csv-parse').parse
 
-const configuration = new Configuration({
-  organization: "org-oRjT38IDR8URxu112r663l81",
-  apiKey: process.env.OPENAI_API_KEY,
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY // This is also the default, can be omitted
 });
-
-const openai = new OpenAIApi(configuration);
 
 // module.exports.processChatService = async (
 //   ticketId,
@@ -476,18 +473,19 @@ const openai = new OpenAIApi(configuration);
 //   return await javis(message, null);
 // };
 
-const javis = async (messages, ticketId = null) => {
+const javis = async (messages, tokens) => {
   let data = {
-    model: "gpt-3.5-turbo",
+    model: "gpt-4",
     messages: messages,
-    temperature: 0.2,
-    frequency_penalty: 0,
-    presence_penalty: 0,
+    max_tokens: tokens,
+    temperature: 0.6,
+    frequency_penalty: 1.29,
+    presence_penalty: 1.02,
   };
 
-  if (ticketId) data["user"] = ticketId;
+  // if (ticketId) data["user"] = ticketId;
 
-  const completion = await openai.createChatCompletion(data);
+  const completion = await openai.chat.completions.create(data);
   // console.log(completion)
   return completion;
 };
@@ -580,7 +578,7 @@ module.exports.createVector = async (faqs) => {
     let faq = JSON.stringify(faqs[i])
     let completion = await javisEmbeddings(faq)
 
-    let embedding = completion.data[0].embedding
+    let embedding = completion.choices[0].embedding
 
     // Create a Python dictionary containing the vector and the original text
     let embedding_dict = {'embedding': embedding, 'text': faqs[i]}
@@ -617,7 +615,7 @@ const generateCSVFile = async (embeddings) => {
 }
 
 const javisEmbeddings = async (message) => {
-  const completion = await openai.createEmbedding({
+  const completion = await openai.embeddings.create({
     input: message,
     model: "text-embedding-ada-002"
   }
@@ -626,11 +624,155 @@ const javisEmbeddings = async (message) => {
   return completion.data;
 };
 
-module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg) => {
-  console.log(promptMsg)
+module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg, customer) => {
+  console.log(customer, `${previousMsg.length > 0 ? previousMsg[previousMsg.length -2].content: ""}`)
+  let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
+  console.log(foundFaq, "faq")
+  const response_instructions_chat = `You are a customer support agent. Do not mention that you're an AI or resemble it. Do not include 'AI' or 'ai' or 'A.I.' or 'a.i.' in your response. Your task is to generate concise responses based on the knowledge base provided, do not instruct the user to email anyone or call any number nor provide wrong information. Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent. Instead, inform them that you will refer them to an agent and they should stand by.`
+  const query_categorization_instructions = `You are a query analyst that categorizes message in a correct Javascript JSON format. Your responses should the following keys: [department: ${departments.length > 0 ? departments.join('/'): "none"}, urgency: <low/medium/high>, sentiment: <Happy/Neutral/Angry>, title: <categorize the message into a ticket title>, type: <categorize the message into a ticket type>, category: <categorize the message into a ticket category>] Make sure to analyze the user's message to determine the department, urgency, sentiment, title, type, category `;
+  const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
+  const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
+  const escalation_instructions3 = `
+  You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
+  Check if the response contains the word 'escalation'.
+  Look for apology statements in the response.
+  Assess if the message resembles or includes common phrases found in escalation messages.
+  If the response lacks information or states an inability to assist, consider it for escalation.
+  Return a boolean value 'true' if the response meets any of these criteria; otherwise, return ‘false’.
+  `;
+
+  let delimiter = "#####";
+  let delimiter2 = "####";
+  let delimiter3 = "*****";
+
+  const responseInstructionsLogic = [
+    {
+      "role": "system",
+      "content": `response_instructions: ${response_instructions_chat}`
+    },
+    {
+      "role": "system",
+      "content": `knowledge base to answer from: ${JSON.stringify(foundFaq)}`
+    },
+    {
+      "role": "system",
+      "content": `User's previous messages for reflection: ${previousMsg.length > 0 ? previousMsg[previousMsg.length -1].content: ""} and user's name is ${customer}`
+    },
+    {"role": "user", "content": `${promptMsg}`},
+  ];
+
+  const queryCategorizationLogic = [
+    {
+        "role": "system",
+        "content": `query_categorization_instructions: ${query_categorization_instructions}.`
+    },
+    {
+        "role": "assistant",
+        "content": `message to be analysed: ${promptMsg}`
+    },
+  ]
+
+  let completion = await javis(responseInstructionsLogic, 300)
+  console.log(completion.choices[0], "response")
+
+  let completion2 = await javis(queryCategorizationLogic, 100)
+  console.log(completion2.choices[0], "categorization")
+
+
+  const escalationLogic = [
+    {
+        "role": "system",
+        "content": `escalation_instructions: ${escalation_instructions3}.`
+    },
+    {
+      "role": "assistant",
+      "content": `agent_response to be analysed: ${completion.choices[0].message.content}`
+    },
+  ]
+
+  let completion3 = await javis(escalationLogic, 1)
+  console.log(completion3.choices[0], "escalation")
+
+  let related = [
+    "Introductions",
+    "Gratitude Expressions",
+    "Closing Remarks",
+    "Cultural Greetings",
+    "Casual Greetings",
+    "Formal Greetings",
+    "Complements"
+  ]
+
+  let systemKnowledge2 = [
+    {
+      "role": "system",
+      "content": `
+        You are an analyst.
+        You will be provided with the customer query, agent response and faq that the agent used to answer customer response.
+        Customer query is delimited by ${delimiter} characters.
+        Agent response is delimited by ${delimiter2} characters.
+        Faq is delimited by ${delimiter3} characters.
+      `
+    },
+    {
+      "role": "system",
+      "content": `
+        ${delimiter2}${completion.choices[0].message.content}${delimiter2}
+        ${delimiter3}${JSON.stringify(foundFaq)}${delimiter3}
+        Determine if the agent generated the response from the faq delimited with ${delimiter3} characters.
+        Set Escalation to "yes" if "From Faq" is set "no" and query is not related to ${JSON.stringify(related)}.
+        Categorize user query using this categorization and return your response in json format:
+        - Ticket Class
+        - Ticket Type
+        - Ticket Sentiment
+        - Title
+        - Urgency
+        - Escalation [yes, no]
+        - Satisfaction
+        - From Faq: [yes,no]
+        - Formal Greetings: [yes, no]
+        - Casual Greetings: [yes, no]
+        - Cultural Greetings: [yes, no]
+        - Departments: ${departments}
+        - escalation_department: ${departments}
+      `
+    },
+    {
+      "role": `user`,
+      "content": `${delimiter}${promptMsg}${delimiter}`
+    }
+  ];
+
+  let categorization = JSON.parse(completion2.choices[0].message.content)
+
+  let response = {
+    response: completion.choices[0].message.content,
+    department: categorization.department,
+    urgency: categorization.urgency,
+    sentiment: categorization.sentiment,
+    title: categorization.title,
+    type: categorization.type,
+    category: categorization.category,
+    escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
+    escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
+  }
+
+  console.log(response)
+
+  res.send(
+    {
+      role: "assistant",
+      content: JSON.stringify(response)
+    }
+  )
+}
+
+const getFaq = async (promptMsg, faqs, previousMsg) => {
+  // console.log(promptMsg)
   let embeddingCompletion = await javisEmbeddings(promptMsg)
-  let embedding = embeddingCompletion.data[0].embedding;
+  let embedding = embeddingCompletion[0].embedding;
   let similarity_array = []
+  let prev_similarity_array = []
   // let embeddings = []
   let df = ""
   df
@@ -640,103 +782,53 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     similarity_array.push(calculate_similarity(faqEmbedding, embedding))
   }
 
+  if(previousMsg.length > 0){
+    let userMessages = []
+    for(let i=0; i<previousMsg.length; i++){
+      if(previousMsg[i].role === "user"){
+        userMessages.push(previousMsg[i].content)
+      }
+    }
+
+    if(userMessages.length > 0){
+      let previousEmbeddingCompletion = await javisEmbeddings(userMessages)
+      let previousEmbedding = previousEmbeddingCompletion[0].embedding;
+      for(let i=0; i<faqs.length; i++){
+        let faqEmbedding = faqs[i]["embeddings"];
+        prev_similarity_array.push(calculate_similarity(faqEmbedding, previousEmbedding))
+      }
+    }
+    // console.log(userMessages, prev_similarity_array)
+  }
+
   let index = indexOfMax(similarity_array)
+  let previousIndex = indexOfMax(prev_similarity_array)
 
-  let delimiter = "#####";
-  let delimiter2 = "####";
-  let delimiter3 = "*****";
-
-  let systemKnowledge = [
-    {
-      role: "system",
-      content: `
-        You are a sales representative and a customer support agent for a company called ${business.businessName}.
-        Do not mention or act like an AI to the customer.
-        You will be provided with customer service queries.
-        The customer service query will be delimited with ${delimiter} characters.
-        Your previous messages with customer will be delimited with ${delimiter2} characters.
-        Always use only the information delimited with ${delimiter3} to respond to user query. 
-        If request is not in the inventory, faqs and company informations that was sent with the query you are to return a json format with escalated set to true and escalation_department to the appropriate department.
-        If the user's message includes pleasantries like 'good morning' or 'hello', you should respond with pleasantries as well.
-        Always classify each query into a category.
-        Always classify each query and your previous chat with customer into a sentiment.
-        Always classify each query into a type.
-        Generate a title based on customer previous chat with you and customer new query.
-        Always classify each query and your previous chat with customer into a escalated.
-        Always classify each query and your previous chat with customer into a department.
-        If customer is about to place order set placingOrder to true.
-        Determine if user has completed their chat using their current query and set isCompleted to true.
-        Set escalated to true if customer query is not related to your inventory else set escalated to false.
-        Always classify each query and your previous chat with customer into an escalation_department if escalated is set to true else set escalation_department to null
-        Make sure you don't add any other key aside this keys response, category, sentiment, type, department, escalated, escalation_department, placingOrder, isCompleted and title in your json response.
-        Always return product details in the response key when you want to display a product to the user from the inventory in text format.
-
-        Categories: General Inquiries, Order, Issue, Complains.
-        Sentiment: Happy, Neutral, Angry.
-        Type: Bugs, Features, Refunds,Payment, Fruad, Inquiry, Feedback, Request, Order.
-        Department: ${departments}.
-        Escalation Department: ${departments}.
-        `
-    },
-    {
-      role: "system",
-      content: `Company faqs to answer related questions: ${delimiter3}${JSON.stringify(
+  let foundFaq = []
+  // console.log(index, similarity_array)
+  if(index >= 0){
+    if(previousIndex >= 0){
+      foundFaq = [
+        {
+          question: faqs[previousIndex].question,
+          response: faqs[previousIndex].response
+        },
         {
           question: faqs[index].question,
           response: faqs[index].response
         }
-      )}${delimiter3}.
-      `,
-    },
-    {
-      role: "system",
-      content: `Previous messages between you and the customer${delimiter2}${JSON.stringify(
-        previousMsg
-      )}${delimiter2}`,
-    },
-    {
-      role: "user",
-      content: `${delimiter}${promptMsg}${delimiter}`,
+      ]
+    }else{
+      foundFaq = [
+        {
+          question: faqs[index].question,
+          response: faqs[index].response
+        }
+      ]
     }
-  ];
+  }
 
-  console.log(systemKnowledge)
-  let system_prompt = `
-    You are an AI assistant. You work for Credpal. You will be asked questions from a
-    customer and will answer in a helpful and friendly manner.
-    
-    You will be provided company information from credpal under the
-    [Article] section. The customer question will be provided under the
-    [Question] section. You will answer the customers questions based on the
-    article. Only provide the answer to the query don't respond with completed part of question.
-    Answer in points and not in long paragraphs
-    
-    If the users question is not answered by the article you will respond with
-    'I'm sorry I don't know.'
-    `
-    
-  let question_prompt = `
-    [Article]
-    ${faqs[index].response}
-    
-    [Question]
-    ${promptMsg}
-  `
-
-  let knowledge = [
-    {
-        "role": "system",
-        "content": system_prompt
-    },
-    {
-        "role": "user",
-        "content": question_prompt
-    }
-  ]
-
-  let completion = await javis(systemKnowledge)
-  console.log(completion.data.choices[0])
-  res.send(completion.data.choices[0].message)
+  return foundFaq;
 }
 
 function indexOfMax(arr) {
@@ -758,7 +850,6 @@ function indexOfMax(arr) {
 }
 
 const calculate_similarity = (vec1, vec2) => {
-  console.log(vec1)
   let dot_product = dotProduct(vec1, vec2);
   let magnitude1 = calculateMagnitude(vec1)
   let magnitude2 = calculateMagnitude(vec2)

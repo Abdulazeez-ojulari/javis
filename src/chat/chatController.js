@@ -18,6 +18,7 @@ const { Faq } = require("../model/faqModel");
 const { Business } = require("../model/businessModel");
 const { Department } = require("../model/departmentModel");
 const { ChatMessage } = require("../model/chatModel");
+const { Ticket } = require("../model/ticket.model");
 
 // module.exports.newChat = errorMiddleware(async (req, res) => {
 //   let { email, businessId, channel, customer, phoneNo } = req.body;
@@ -341,12 +342,13 @@ module.exports.processMessage = async (req, res) => {
     console.log(previousMsg)
   }
 
-  const departments = await Department.find({ businessId: business._id });
+  const departments = await Department.find({ businessId: business._id }).select("department -_id");
+  const ticket = await Ticket.findById(ticketId).select("customer -_id");
 
   let faqs = await Faq.find({knowledgeBaseId: knowledge._id}).select("question response embeddings -_id")
 
   console.log(promptMsg)
-  await processMsg(promptMsg, res, faqs, departments, business, previousMsg)
+  await processMsg(promptMsg, res, faqs, departments, business, previousMsg, ticket.customer)
 
   // res.send(faqs)
   return
