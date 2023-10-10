@@ -108,7 +108,7 @@ ticketSchema.virtual("messages", {
 });
 
 ticketSchema.virtual("gmail", {
-  ref: "GoogleMail",
+  ref: "Gmail",
   localField: "_id",
   options: { sort: { createdAt: -1 } },
   justOne: true,
