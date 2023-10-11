@@ -1,4 +1,8 @@
-const { OpenAIApi, Configuration } = require("openai");
+const { OpenAI } = require("openai");
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // This is also the default, can be omitted
+});
 
 module.exports.processMl = async (
   promptMail,
@@ -121,7 +125,7 @@ module.exports.processMl = async (
 };
 
 const javisEmbeddings = async (message) => {
-  const completion = await openai.createEmbedding({
+  const completion = await openai.embeddings.create({
     input: message,
     model: "text-embedding-ada-002",
   });

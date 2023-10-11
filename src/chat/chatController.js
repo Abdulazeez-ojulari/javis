@@ -308,7 +308,7 @@ module.exports.generateVectors = async (req, res) => {
   if (!knowledge) {
     return res
       .status(404)
-      .send({ message: "This business dosen't have a knowledge base" });
+      .send({ message: "This business doesn't have a knowledge base" });
   }
 
   let faqs = await Faq.find({ knowledgeBaseId: knowledge._id }).select(
@@ -329,7 +329,7 @@ module.exports.processMessage = async (req, res) => {
   if (!knowledge) {
     return res
       .status(404)
-      .send({ message: "This business dosen't have a knowledge base" });
+      .send({ message: "This business doesn't have a knowledge base" });
   }
   const business = await Business.findOne({ businessId: businessId });
 
