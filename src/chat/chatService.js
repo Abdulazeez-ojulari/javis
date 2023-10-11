@@ -629,15 +629,15 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   const response_instructions_chat = `You are a customer support agent. Do not mention that you're an AI or resemble it. Do not include 'AI' or 'ai' or 'A.I.' or 'a.i.' in your response. Your task is to generate concise responses based on the knowledge base provided, do not instruct the user to email anyone or call any number nor provide wrong information. Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent. Instead, inform them that you will refer them to an agent and they should stand by.`
   const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
 
-  "department": Determine the department based on the user's message. Departments to check from ${departments.length > 0 ? departments.join('/'): "none"}. If a department is identified, set it to that department; otherwise, set it to "none."
+  "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
   "urgency": Assess the urgency as low, medium, or high based on the user's message.
   "sentiment": Analyze the sentiment of the message and set it to Happy, Neutral, or Angry accordingly.
   "title": Categorize the message content into a suitable ticket title.
   "type": Categorize the message content into an appropriate ticket type.
   "category": Categorize the message content into an applicable ticket category.
   Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly`;
-  const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
-  const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
+  // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
+  // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
   const escalation_instructions3 = `
   You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
   Check if the response contains the word 'escalation'.
@@ -647,10 +647,15 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
   `;
 
-  let delimiter = "#####";
-  let delimiter2 = "####";
-  let delimiter3 = "*****";
+  // let delimiter = "#####";
+  // let delimiter2 = "####";
+  // let delimiter3 = "*****";
 
+  let mes = previousMsg.reverse().map(msg => { 
+      return msg.content
+  })
+
+  mes.push(promptMsg)
   const responseInstructionsLogic = [
     {
       "role": "system",
@@ -674,7 +679,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     },
     {
         "role": "assistant",
-        "content": `message to be analysed: ${promptMsg}`
+        "content": `message to be analysed: ${mes.join(",")}`
     },
   ]
 
@@ -699,63 +704,63 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   let completion3 = await javis(escalationLogic, 1)
   console.log(completion3.choices[0], "escalation")
 
-  let related = [
-    "Introductions",
-    "Gratitude Expressions",
-    "Closing Remarks",
-    "Cultural Greetings",
-    "Casual Greetings",
-    "Formal Greetings",
-    "Complements"
-  ]
+  // let related = [
+  //   "Introductions",
+  //   "Gratitude Expressions",
+  //   "Closing Remarks",
+  //   "Cultural Greetings",
+  //   "Casual Greetings",
+  //   "Formal Greetings",
+  //   "Complements"
+  // ]
 
-  let systemKnowledge2 = [
-    {
-      "role": "system",
-      "content": `
-        You are an analyst.
-        You will be provided with the customer query, agent response and faq that the agent used to answer customer response.
-        Customer query is delimited by ${delimiter} characters.
-        Agent response is delimited by ${delimiter2} characters.
-        Faq is delimited by ${delimiter3} characters.
-      `
-    },
-    {
-      "role": "system",
-      "content": `
-        ${delimiter2}${completion.choices[0].message.content}${delimiter2}
-        ${delimiter3}${JSON.stringify(foundFaq)}${delimiter3}
-        Determine if the agent generated the response from the faq delimited with ${delimiter3} characters.
-        Set Escalation to "yes" if "From Faq" is set "no" and query is not related to ${JSON.stringify(related)}.
-        Categorize user query using this categorization and return your response in json format:
-        - Ticket Class
-        - Ticket Type
-        - Ticket Sentiment
-        - Title
-        - Urgency
-        - Escalation [yes, no]
-        - Satisfaction
-        - From Faq: [yes,no]
-        - Formal Greetings: [yes, no]
-        - Casual Greetings: [yes, no]
-        - Cultural Greetings: [yes, no]
-        - Departments: ${departments}
-        - escalation_department: ${departments}
-      `
-    },
-    {
-      "role": `user`,
-      "content": `${delimiter}${promptMsg}${delimiter}`
-    }
-  ];
+  // let systemKnowledge2 = [
+  //   {
+  //     "role": "system",
+  //     "content": `
+  //       You are an analyst.
+  //       You will be provided with the customer query, agent response and faq that the agent used to answer customer response.
+  //       Customer query is delimited by ${delimiter} characters.
+  //       Agent response is delimited by ${delimiter2} characters.
+  //       Faq is delimited by ${delimiter3} characters.
+  //     `
+  //   },
+  //   {
+  //     "role": "system",
+  //     "content": `
+  //       ${delimiter2}${completion.choices[0].message.content}${delimiter2}
+  //       ${delimiter3}${JSON.stringify(foundFaq)}${delimiter3}
+  //       Determine if the agent generated the response from the faq delimited with ${delimiter3} characters.
+  //       Set Escalation to "yes" if "From Faq" is set "no" and query is not related to ${JSON.stringify(related)}.
+  //       Categorize user query using this categorization and return your response in json format:
+  //       - Ticket Class
+  //       - Ticket Type
+  //       - Ticket Sentiment
+  //       - Title
+  //       - Urgency
+  //       - Escalation [yes, no]
+  //       - Satisfaction
+  //       - From Faq: [yes,no]
+  //       - Formal Greetings: [yes, no]
+  //       - Casual Greetings: [yes, no]
+  //       - Cultural Greetings: [yes, no]
+  //       - Departments: ${departments}
+  //       - escalation_department: ${departments}
+  //     `
+  //   },
+  //   {
+  //     "role": `user`,
+  //     "content": `${delimiter}${promptMsg}${delimiter}`
+  //   }
+  // ];
   let categorization;
   let response;
   let stringifiedResponse = "";
-  console.log(completion2.choices[0].message.content);
-  stringifiedResponse = completion2.choices[0].message.content.toString()
+  // console.log(completion2.choices[0].message.content);
+  stringifiedResponse = completion2.choices[0].message.content.toString().replace(/'/g, '"').replace(/“/g, '"')
   try{
-    console.log(stringifiedResponse.replace(/'/g, '"'))
-    categorization = JSON.parse(stringifiedResponse.replace(/'/g, '"'))
+    // console.log(stringifiedResponse.replace(/'/g, '"'))
+    categorization = JSON.parse(stringifiedResponse)
     response = {
       response: completion.choices[0].message.content,
       department: categorization.department,

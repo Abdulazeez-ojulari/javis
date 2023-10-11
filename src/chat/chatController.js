@@ -338,7 +338,7 @@ module.exports.processMessage = async (req, res) => {
   if (ticketId) {
     chat = await ChatMessage.find({ ticketId: ticketId })
       .sort({ createdAt: -1 })
-      .limit(5);
+      .limit(10);
     previousMsg = chat.map((msg) => ({
       role: msg.role,
       content: msg.content,
