@@ -66,7 +66,43 @@ exports.extractNameAndEmail = (str) => {
   }
   let split = str.split("<");
   let name = split[0];
-  let email = split[1].slice(0, -1);
+  let email = split[1] ? split[1].slice(0, -1) : "";
+  // console.log("slice-issue", str, split);
 
   return [name, email];
+};
+
+exports.isMemberOfBusiness = (business, id) => {
+  const teams = business.teams;
+  let response = teams.find((member) => member.userId.toString() === id);
+  if (response === undefined) {
+    return false;
+  }
+  return response;
+};
+
+exports.stripSpecialCharacters = (str) => {
+  if (typeof str != "string") {
+    return "";
+  }
+  // Replace newline characters with spaces.
+  str = str.replace(/\n/g, " ");
+
+  // Remove characters that are not letters, numbers, spaces, or in the set [.,-:']
+  str = str.replace(/[^a-zA-Z0-9 .,-:'"]/g, "");
+
+  return str.trim();
+};
+
+exports.daysUntilExpiration = (expirationDate) => {
+  // Parse the provided dates
+  const current = new Date();
+  const expiration = new Date(expirationDate);
+
+  // Calculate the difference in milliseconds and then convert it to days
+  const differenceInMilliseconds = expiration - current;
+  const differenceInDays = differenceInMilliseconds / (1000 * 60 * 60 * 24);
+
+  // Return the difference, rounding down to ensure a full day count
+  return Math.floor(differenceInDays);
 };
