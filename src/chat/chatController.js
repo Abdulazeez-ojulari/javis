@@ -19,6 +19,7 @@ const { Business } = require("../model/businessModel");
 const { Department } = require("../model/departmentModel");
 const { ChatMessage } = require("../model/chatModel");
 const { Ticket } = require("../model/ticket.model");
+const { Inventory } = require("../model/inventoryModel");
 
 // module.exports.newChat = errorMiddleware(async (req, res) => {
 //   let { email, businessId, channel, customer, phoneNo } = req.body;
@@ -353,8 +354,12 @@ module.exports.processMessage = async (req, res) => {
     "question response embeddings -_id"
   );
 
+  let inventories = await Inventory.find({ knowledgeBaseId: knowledge._id }).select(
+    "name image quantity category price status more embeddings -_id"
+  );
+
   console.log(promptMsg)
-  await processMsg(promptMsg, res, faqs, departments, business, previousMsg, ticket.customer)
+  await processMsg(promptMsg, res, faqs, departments, business, previousMsg, ticket.customer, inventories)
 
   // res.send(faqs)
   return;

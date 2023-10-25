@@ -622,10 +622,12 @@ const javisEmbeddings = async (message) => {
   return completion.data;
 };
 
-module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg, customer) => {
+module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg, customer, inventories) => {
   console.log(customer, `${previousMsg.length > 0 ? previousMsg[previousMsg.length -2].content: ""}`)
   let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
+  let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
   console.log(foundFaq, "faq")
+  console.log(foundInventory, "inventory")
   const response_instructions_chat = `You are a customer support agent for ${business.businessName}. Do not mention that you're an AI or resemble it. Do not include 'AI' or 'ai' or 'A.I.' or 'a.i.' in your response. Your task is to generate concise responses based on the knowledge base provided, do not instruct the user to email anyone or call any number nor provide wrong information. Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.`
   const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
   "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
@@ -672,7 +674,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     },
     {
       "role": "system",
-      "content": `knowledge base to answer from: ${JSON.stringify(foundFaq)}`
+      "content": `knowledge base to answer from: FAQ - ${JSON.stringify(foundFaq)}, Inventories - ${JSON.stringify(foundInventory)}`
     },
     {
       "role": "system",
@@ -862,6 +864,89 @@ const getFaq = async (promptMsg, faqs, previousMsg) => {
   }
 
   return foundFaq;
+}
+
+const getInventory = async (promptMsg, inventories, previousMsg) => {
+  // console.log(promptMsg)
+  let embeddingCompletion = await javisEmbeddings(promptMsg)
+  let embedding = embeddingCompletion[0].embedding;
+  let similarity_array = []
+  let prev_similarity_array = []
+  // let embeddings = []
+  let df = "";
+  df;
+
+  for (let i = 0; i < inventories.length; i++) {
+    let inventoryEmbedding = inventories[i]["embeddings"];
+    similarity_array.push(calculate_similarity(inventoryEmbedding, embedding));
+  }
+
+  if(previousMsg.length > 0){
+    let userMessages = []
+    for(let i=0; i<previousMsg.length; i++){
+      if(previousMsg[i].role === "user"){
+        userMessages.push(previousMsg[i].content)
+      }
+    }
+
+    if(userMessages.length > 0){
+      let previousEmbeddingCompletion = await javisEmbeddings(userMessages)
+      let previousEmbedding = previousEmbeddingCompletion[0].embedding;
+      for(let i=0; i<inventories.length; i++){
+        let inventoryEmbedding = inventories[i]["embeddings"];
+        prev_similarity_array.push(calculate_similarity(inventoryEmbedding, previousEmbedding))
+      }
+    }
+    // console.log(userMessages, prev_similarity_array)
+  }
+
+  let index = indexOfMax(similarity_array)
+  let previousIndex = indexOfMax(prev_similarity_array)
+
+  let foundInventory = []
+  // console.log(index, similarity_array)
+  if(index >= 0){
+    if(previousIndex >= 0){
+      delete inventories[previousIndex].embeddings;
+      delete inventories[index].embeddings;
+      foundInventory = [
+        {
+          name: inventories[previousIndex].name,
+          image: inventories[previousIndex].image,
+          quantity: inventories[previousIndex].quantity,
+          category: inventories[previousIndex].category,
+          price: inventories[previousIndex].price,
+          status: inventories[previousIndex].status,
+          more: inventories[previousIndex].more
+        },
+        {
+          name: inventories[index].name,
+          image: inventories[index].image,
+          quantity: inventories[index].quantity,
+          category: inventories[index].category,
+          price: inventories[index].price,
+          status: inventories[index].status,
+          more: inventories[index].more
+        }
+      ]
+    }else{
+      foundInventory = [
+        {
+          name: inventories[index].name,
+          image: inventories[index].image,
+          quantity: inventories[index].quantity,
+          category: inventories[index].category,
+          price: inventories[index].price,
+          status: inventories[index].status,
+          more: inventories[index].more
+        }
+      ]
+    }
+  }
+
+  console.log(foundInventory, "found")
+
+  return foundInventory;
 }
 
 function indexOfMax(arr) {
