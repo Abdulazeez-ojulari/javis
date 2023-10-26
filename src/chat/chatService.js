@@ -628,7 +628,13 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
   console.log(foundFaq, "faq")
   console.log(foundInventory, "inventory")
-  const response_instructions_chat = `You are a customer support agent for ${business.businessName}. Do not mention that you're an AI or resemble it. Do not include 'AI' or 'ai' or 'A.I.' or 'a.i.' in your response. Your task is to generate concise responses based on the knowledge base provided, do not instruct the user to email anyone or call any number nor provide wrong information. Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.`
+  const response_instructions_chat = `
+  You are a customer support agent for ${business.businessName}. 
+  Do not mention that you're an AI or resemble it. Do not include 'AI' or 'ai' or 'A.I.' or 'a.i.' in your response. 
+  Your task is to generate concise responses based on the knowledge base provided, do not instruct the user to email anyone or call any number nor provide wrong information. 
+  Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. 
+  Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. 
+  If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.`
   const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
   "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
   "urgency": Assess the urgency as low, medium, or high based on the user's message.
@@ -666,6 +672,11 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     return msg.content
   })
 
+  let company_information = {
+    account_number: business.accountNo,
+    bank_name: business.bankName,
+  }
+
   mes.push(promptMsg)
   const responseInstructionsLogic = [
     {
@@ -674,7 +685,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     },
     {
       "role": "system",
-      "content": `knowledge base to answer from: FAQ - ${JSON.stringify(foundFaq)}, Inventories - ${JSON.stringify(foundInventory)}`
+      "content": `knowledge base to answer from: FAQ - ${JSON.stringify(foundFaq)}, Inventories - ${JSON.stringify(foundInventory)}, Company Information - ${JSON.stringify(company_information)}`
     },
     {
       "role": "system",
