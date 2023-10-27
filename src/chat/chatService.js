@@ -1,4 +1,4 @@
-const { OpenAI } = require("openai");
+
 // const { Chat } = require("./chatModel");
 // const { Ticket } = require("../models/ticket.model");
 // const { ChatMessage } = require("../models/chat-message.model");
@@ -10,12 +10,10 @@ const { OpenAI } = require("openai");
 // const { Agent } = require("../business/agent.model");
 // const { MongooseError } = require("mongoose");
 // const error = require("../middlewares/error");
-const fs = require("fs");
-const parse = require("csv-parse").parse;
+// const fs = require("fs");
+// const parse = require("csv-parse").parse;
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY // This is also the default, can be omitted
-});
+const { javisEmbeddings, javis } = require("../../openai");
 
 // module.exports.processChatService = async (
 //   ticketId,
@@ -473,23 +471,6 @@ const openai = new OpenAI({
 //   return await javis(message, null);
 // };
 
-const javis = async (messages, tokens) => {
-  let data = {
-    model: "gpt-4",
-    messages: messages,
-    max_tokens: tokens,
-    temperature: 0.6,
-    frequency_penalty: 1.29,
-    presence_penalty: 1.02,
-  };
-
-  // if (ticketId) data["user"] = ticketId;
-
-  const completion = await openai.chat.completions.create(data);
-  // console.log(completion)
-  return completion;
-};
-
 // module.exports.question = question;
 
 // const createChatService = async (
@@ -613,17 +594,8 @@ const generateCSVFile = async (embeddings) => {
   return csv;
 };
 
-const javisEmbeddings = async (message) => {
-  const completion = await openai.embeddings.create({
-    input: message,
-    model: "text-embedding-ada-002",
-  });
-
-  return completion.data;
-};
-
 module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg, customer, inventories) => {
-  console.log(customer, `${previousMsg.length > 0 ? previousMsg[previousMsg.length -2].content: ""}`)
+  console.log(customer, previousMsg)
   let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
   let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
   console.log(foundFaq, "faq")
