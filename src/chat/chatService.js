@@ -646,6 +646,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
 
   let company_information = {
     company_description: business.description,
+    company_address: business.address,
     account_number: business.accountNo,
     bank_name: business.bankName,
   }
