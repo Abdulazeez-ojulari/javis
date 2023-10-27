@@ -645,6 +645,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   })
 
   let company_information = {
+    company_description: business.description,
     account_number: business.accountNo,
     bank_name: business.bankName,
   }
@@ -657,7 +658,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     },
     {
       "role": "system",
-      "content": `knowledge base to answer from: FAQ - ${JSON.stringify(foundFaq)}, Inventories - ${JSON.stringify(foundInventory)}, Company Information - ${JSON.stringify(company_information)}`
+      "content": `knowledge base to answer from: Company Information - ${JSON.stringify(company_information)}, Inventories - ${JSON.stringify(foundInventory)}, FAQ - ${JSON.stringify(foundFaq)}`
     },
     {
       "role": "system",
