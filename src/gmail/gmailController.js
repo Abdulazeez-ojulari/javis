@@ -1,7 +1,7 @@
 // const { Business } = require("../business/businessModel");
 // const errorMiddleware = require("../middlewares/error");
 // const { Chat } = require("./chatModel");
-const { processMl } = require("./gmailService");
+const { processMail } = require("./gmailService");
 // const eventEmitter = require("../event/events");
 // const { Ticket } = require("../models/ticket.model");
 // const { Agent } = require("../business/agent.model");
@@ -9,9 +9,9 @@ const { KnowledgeBase } = require("../model/knowledgeBaseModel");
 const { Faq } = require("../model/faqModel");
 const { Business } = require("../model/businessModel");
 const { Department } = require("../model/departmentModel");
-const { ChatMessage } = require("../model/chatModel");
 const { Gmail } = require("../model/gmailModel");
 const { Ticket } = require("../model/ticket.model");
+const { Inventory } = require("../model/inventoryModel");
 
 module.exports.processMail = async (req, res) => {
   let { promptMail, ticketId } = req.body;
@@ -55,15 +55,20 @@ module.exports.processMail = async (req, res) => {
     "question response embeddings -_id"
   );
 
+  const inventories = await Inventory.find({ knowledgeBaseId: knowledge._id }).select(
+    "name image quantity category price status more embeddings -_id"
+  );
+
   console.log("udom - promptMail", promptMail);
-  await processMl(
+  await processMail(
     promptMail,
     res,
     faqs,
     departments,
     business,
     previousMails,
-    ticket.customer
+    ticket.customer,
+    inventories
   );
 
   return;
