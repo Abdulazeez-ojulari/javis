@@ -3,7 +3,8 @@ const { javis } = require("../../openai");
 exports.restructureMsg = async (message) => {
     const restructure_instructions = `
     You are a paraphraser.
-    Your job is to only correct grammatical errors in the message provided to you
+    Your job is to only correct grammatical errors in the message provided to you.
+    If the message is grammatically correct then return the massage back only else return the correct message only
     `;
 
     const restructureLogic = [
