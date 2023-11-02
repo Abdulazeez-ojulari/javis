@@ -348,7 +348,7 @@ module.exports.processMessage = async (req, res) => {
   }
 
   const departments = await Department.find({ businessId: business._id }).select("department -_id");
-  const ticket = await Ticket.findById(ticketId).select("customer -_id");
+  const ticket = await Ticket.findById(ticketId).select("customer agentName -_id");
 
   let faqs = await Faq.find({ knowledgeBaseId: knowledge._id }).select(
     "question response embeddings -_id"
@@ -359,7 +359,7 @@ module.exports.processMessage = async (req, res) => {
   );
 
   console.log(promptMsg)
-  await processMsg(promptMsg, res, faqs, departments, business, previousMsg, ticket.customer, inventories)
+  await processMsg(promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories)
 
   // res.send(faqs)
   return;

@@ -594,14 +594,19 @@ const generateCSVFile = async (embeddings) => {
   return csv;
 };
 
-module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg, customer, inventories) => {
-  console.log(customer, previousMsg)
+module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories) => {
+  const customer = ticket.customer
+  const agentName = ticket.agentName
+  console.log(customer, previousMsg, agentName)
+  previousMsg.shift()
   let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
   let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
   console.log(foundFaq, "faq")
   console.log(foundInventory, "inventory")
   const response_instructions_chat = `
-  You are a customer support agent for ${business.businessName}. 
+  You are a customer support agent for ${business.businessName} and your name is ${agentName}. 
+  ${previousMsg.length <= 0 && "Always introduce yourself to the user with your name while replying the user if this is the users first message."}
+  Do not repeat or mention the user's name in every response only in the first user message  
   Do not mention that you're an AI or resemble it. Do not include 'AI' or 'ai' or 'A.I.' or 'a.i.' in your response. 
   Your task is to generate concise responses based on the knowledge base provided, do not instruct the user to email anyone or call any number nor provide wrong information. 
   Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. 
@@ -651,7 +656,6 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     bank_name: business.bankName,
   }
 
-  mes.push(promptMsg)
   const responseInstructionsLogic = [
     {
       "role": "system",
@@ -663,10 +667,12 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     },
     {
       "role": "system",
-      "content": `User's previous messages for reflection: ${previousMsg.length > 0 ? previousMsg[previousMsg.length -1].content: ""} and user's name is ${customer}`
+      "content": `User's previous messages for reflection: ${mes.length > 0 ? mes.join(","): ""} and user's name is ${customer}`
     },
     {"role": "user", "content": `${promptMsg}`},
   ];
+
+  mes.push(promptMsg)
 
   const queryCategorizationLogic = [
     {
@@ -757,6 +763,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   try{
     console.log(stringifiedResponse)
     categorization = JSON.parse(stringifiedResponse)
+    console.log(categorization)
     response = {
       response: completion.choices[0].message.content,
       department: categorization.department,
@@ -875,7 +882,7 @@ const getInventory = async (promptMsg, inventories, previousMsg) => {
     }
 
     if(userMessages.length > 0){
-      let previousEmbeddingCompletion = await javisEmbeddings(userMessages)
+      let previousEmbeddingCompletion = await javisEmbeddings(userMessages.join(","))
       let previousEmbedding = previousEmbeddingCompletion[0].embedding;
       for(let i=0; i<inventories.length; i++){
         let inventoryEmbedding = inventories[i]["embeddings"];

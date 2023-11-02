@@ -582,6 +582,7 @@ module.exports.createVector = async (faqs) => {
 
 module.exports.processMail = async (promptMsg, res, faqs, departments, business, previousMsg, customer, inventories) => {
   console.log(customer, previousMsg)
+  previousMsg.shift()
   let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
   let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
   console.log(foundFaq, "faq")
@@ -743,6 +744,7 @@ module.exports.processMail = async (promptMsg, res, faqs, departments, business,
   try{
     console.log(stringifiedResponse)
     categorization = JSON.parse(stringifiedResponse)
+    console.log(categorization)
     response = {
       response: completion.choices[0].message.content,
       department: categorization.department,
@@ -861,7 +863,7 @@ const getInventory = async (promptMsg, inventories, previousMsg) => {
     }
 
     if(userMessages.length > 0){
-      let previousEmbeddingCompletion = await javisEmbeddings(userMessages)
+      let previousEmbeddingCompletion = await javisEmbeddings(userMessages.join(","))
       let previousEmbedding = previousEmbeddingCompletion[0].embedding;
       for(let i=0; i<inventories.length; i++){
         let inventoryEmbedding = inventories[i]["embeddings"];
