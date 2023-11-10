@@ -30,6 +30,8 @@ router.get('/:businessId/generatevectors', chatController.generateVectors);
 
 router.post('/:businessId/prompt', chatController.processMessage);
 
+router.post('/categorization', chatController.messageCategorization);
+
 // router.post(
 //   "/acknowledge-chat-messages/business/:businessId",
 //   [auth],

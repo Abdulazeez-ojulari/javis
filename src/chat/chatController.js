@@ -8,6 +8,7 @@ const {
   getRandomAgent,
   createVector,
   processMsg,
+  msgCategorization,
 } = require("./chatService");
 // const eventEmitter = require("../event/events");
 // const { Ticket } = require("../models/ticket.model");
@@ -360,6 +361,34 @@ module.exports.processMessage = async (req, res) => {
 
   console.log(promptMsg)
   await processMsg(promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories)
+
+  // res.send(faqs)
+  return;
+};
+
+module.exports.messageCategorization = async (req, res) => {
+  let { promptMsg, ticketId, newres, businessId } = req.body;
+
+  console.log(req.body)
+
+  const business = await Business.findOne({ businessId: businessId });
+
+  let chat;
+  let previousMsg;
+  if (ticketId) {
+    chat = await ChatMessage.find({ ticketId: ticketId })
+      .sort({ createdAt: -1 })
+      .limit(10);
+    previousMsg = chat.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+    // console.log(previousMsg);
+  }
+
+  const departments = await Department.find({ businessId: business._id }).select("department -_id");
+
+  msgCategorization(promptMsg, departments, previousMsg, newres, res)
 
   // res.send(faqs)
   return;

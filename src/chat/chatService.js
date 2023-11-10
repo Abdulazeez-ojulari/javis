@@ -612,24 +612,10 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. 
   Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. 
   If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.`
-  const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
-  "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
-  "urgency": Assess the urgency as low, medium, or high based on the user's message.
-  "sentiment": Analyze the sentiment of the message and set it to Happy, Neutral, or Angry accordingly.
-  "title": Categorize the message content into a suitable ticket title.
-  "type": Categorize the message content into an appropriate ticket type.
-  "category": Categorize the message content into an applicable ticket category.
-  Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly`;
+
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
-  const escalation_instructions3 = `
-  You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
-  Check if the response contains the word 'escalation'.
-  Look for apology statements in the response.
-  Assess if the message resembles or includes common phrases found in escalation messages.
-  If the response lacks information or states an inability to assist, consider it for escalation.
-  Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
-  `;
+
 
   // let delimiter = "#####";
   // let delimiter2 = "####";
@@ -637,16 +623,6 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
 
   let mes = previousMsg.reverse().map(msg => { 
       return msg.content
-  })
-
-  let _agentmsg = previousMsg.filter(msg => { 
-    return msg.role == "assistance"
-  })
-
-  console.log(_agentmsg)
-
-  let agentmsg = _agentmsg.reverse().map(msg => { 
-    return msg.content
   })
 
   let company_information = {
@@ -672,39 +648,8 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     {"role": "user", "content": `${promptMsg}`},
   ];
 
-  mes.push(promptMsg)
-
-  const queryCategorizationLogic = [
-    {
-        "role": "system",
-        "content": `query_categorization_instructions: ${query_categorization_instructions}.`
-    },
-    {
-        "role": "assistant",
-        "content": `message to be analysed: ${mes.join(",")}`
-    },
-  ]
-
   let completion = await javis(responseInstructionsLogic, 500)
   console.log(completion.choices[0], "response")
-
-  let completion2 = await javis(queryCategorizationLogic, 100)
-  console.log(completion2.choices[0], "categorization")
-
-  agentmsg.push(completion.choices[0].message.content)
-  const escalationLogic = [
-    {
-        "role": "system",
-        "content": `escalation_instructions: ${escalation_instructions3}.`
-    },
-    {
-      "role": "assistant",
-      "content": `agent_response to be analysed: ${agentmsg.join(",")}`
-    },
-  ]
-
-  let completion3 = await javis(escalationLogic, 1)
-  console.log(completion3.choices[0], "escalation")
 
   // let related = [
   //   "Introductions",
@@ -755,6 +700,87 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   //     "content": `${delimiter}${promptMsg}${delimiter}`
   //   }
   // ];
+
+  res.send(
+    {
+      role: "assistant",
+      content: completion.choices[0].message.content
+    }
+  )
+  // await msgCategorization(promptMsg, departments, previousMsg, completion.choices[0].message.content)
+
+}
+
+module.exports.msgCategorization = async (promptMsg, departments, previousMsg, newres, res) => {
+
+  const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
+  "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
+  "urgency": Assess the urgency as low, medium, or high based on the user's message.
+  "sentiment": Analyze the sentiment of the message and set it to Happy, Neutral, or Angry accordingly.
+  "title": Categorize the message content into a suitable ticket title.
+  "type": Categorize the message content into an appropriate ticket type.
+  "category": Categorize the message content into an applicable ticket category.
+  Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly`;
+  // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
+  // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
+  const escalation_instructions3 = `
+  You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
+  Check if the response contains the word 'escalation'.
+  Look for apology statements in the response.
+  Assess if the message resembles or includes common phrases found in escalation messages.
+  If the response lacks information or states an inability to assist, consider it for escalation.
+  Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
+  `;
+
+  // let delimiter = "#####";
+  // let delimiter2 = "####";
+  // let delimiter3 = "*****";
+
+  let mes = previousMsg.reverse().map(msg => { 
+      return msg.content
+  })
+
+  let _agentmsg = previousMsg.filter(msg => { 
+    return msg.role == "assistance"
+  })
+
+  console.log(_agentmsg)
+
+  let agentmsg = _agentmsg.reverse().map(msg => { 
+    return msg.content
+  })
+
+  mes.push(promptMsg)
+
+  const queryCategorizationLogic = [
+    {
+        "role": "system",
+        "content": `query_categorization_instructions: ${query_categorization_instructions}.`
+    },
+    {
+        "role": "assistant",
+        "content": `message to be analysed: ${mes.join(",")}`
+    },
+  ]
+
+  let completion2 = await javis(queryCategorizationLogic, 100)
+  console.log(completion2.choices[0], "categorization")
+
+  agentmsg.push(newres)
+  const escalationLogic = [
+    {
+        "role": "system",
+        "content": `escalation_instructions: ${escalation_instructions3}.`
+    },
+    {
+      "role": "assistant",
+      "content": `agent_response to be analysed: ${agentmsg.join(",")}`
+    },
+  ]
+
+  let completion3 = await javis(escalationLogic, 1)
+  console.log(completion3.choices[0], "escalation")
+
   let categorization;
   let response;
   let stringifiedResponse = "";
@@ -765,7 +791,6 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     categorization = JSON.parse(stringifiedResponse)
     console.log(categorization)
     response = {
-      response: completion.choices[0].message.content,
       department: categorization.department,
       urgency: categorization.urgency,
       sentiment: categorization.sentiment,
@@ -777,7 +802,6 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     }
   }catch(e){
     response = response = {
-      response: completion.choices[0].message.content,
       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
       escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
     }
