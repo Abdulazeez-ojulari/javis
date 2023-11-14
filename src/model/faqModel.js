@@ -19,7 +19,7 @@ const FaqSchema = new mongoose.Schema({
     },
     embeddings: {
         type: Object,
-        required: true,
+        // required: true,
     },
     id: {}
     

@@ -58,6 +58,10 @@ const ticketSchema = new mongoose.Schema(
     title: {
       type: String,
     },
+    placingOrder: {
+      type: Boolean,
+      default: false,
+    },
     isCompleted: {
       type: Boolean,
       default: false,

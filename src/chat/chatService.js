@@ -13,7 +13,9 @@
 // const fs = require("fs");
 // const parse = require("csv-parse").parse;
 
+const { default: axios } = require("axios");
 const { javisEmbeddings, javis } = require("../../openai");
+const { Inventory } = require("../model/inventoryModel");
 
 // module.exports.processChatService = async (
 //   ticketId,
@@ -611,7 +613,9 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   Your task is to generate concise responses based on the knowledge base provided, do not instruct the user to email anyone or call any number nor provide wrong information. 
   Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. 
   Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. 
-  If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.`
+  If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.
+  Assume the role of a salesperson. Verify the product's availability in the provided inventory based on the user's inquiry. Ask the customer if they wish to proceed with placing an order, providing a call-to-action (CTA) with options "Yes" or "No." If the response is "yes," guide the user to make a payment to a shared bank account and request them to share the receipt for confirmation. If the response is "no," continue the conversation without placing an order for the user. Postpone the creation of the order until the user shares the payment confirmation. Upon receiving the payment confirmation from the user, escalate the ticket, create the order, inform the user about the successful order creation, and notify the sales team.
+  `
 
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
@@ -711,7 +715,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
 
 }
 
-module.exports.msgCategorization = async (promptMsg, departments, previousMsg, newres, res) => {
+module.exports.msgCategorization = async (promptMsg, departments, previousMsg, newres, res, ticket, businessId) => {
 
   const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
   "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
@@ -720,6 +724,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   "title": Categorize the message content into a suitable ticket title.
   "type": Categorize the message content into an appropriate ticket type.
   "category": Categorize the message content into an applicable ticket category.
+  "placingOrder": Determine if the user is ready to place order and has sent payment receipt. return true or false only.
   Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly`;
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
@@ -731,6 +736,8 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   If the response lacks information or states an inability to assist, consider it for escalation.
   Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
   `;
+
+  const placing_order_instructions = `You are a query analyst return the product name the user wants to place an order for. return only the product name`;
 
   // let delimiter = "#####";
   // let delimiter2 = "####";
@@ -763,7 +770,18 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
     },
   ]
 
-  let completion2 = await javis(queryCategorizationLogic, 100)
+  const placingOrderLogic = [
+    {
+        "role": "system",
+        "content": `placing_order_instructions: ${placing_order_instructions}.`
+    },
+    {
+        "role": "assistant",
+        "content": `message to be analysed: ${mes.join(",")}`
+    },
+  ]
+
+  let completion2 = await javis(queryCategorizationLogic, 200)
   console.log(completion2.choices[0], "categorization")
 
   agentmsg.push(newres)
@@ -785,7 +803,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   let response;
   let stringifiedResponse = "";
   // console.log(completion2.choices[0].message.content);
-  stringifiedResponse = completion2.choices[0].message.content.toString().replace(/'/g, '"').replace(/“/g, '"')
+  stringifiedResponse = completion2.choices[0].message.content.toString().replace(/'/g, '"').replace(/“/g, '"').replace(/”/g, '"')
   try{
     console.log(stringifiedResponse)
     categorization = JSON.parse(stringifiedResponse)
@@ -800,10 +818,26 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
       escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
     }
+
+    if(categorization.placingOrder){
+      if(!ticket.placingOrder){
+        console.log("New Order")
+        let completion4 = await javis(placingOrderLogic, 50)
+        let product = await Inventory.findOne({name: completion4.choices[0].message.content}).select("-embeddings");
+        console.log(product)
+        console.log(ticket)
+        axios.post(`${process.env.BACKEND_URL}/api/order/`, {
+          businessId: businessId,
+          ticketId: ticket._id,
+          item: product
+        })
+        console.log(completion4.choices[0], "order")
+      }
+    }
   }catch(e){
     response = response = {
       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
-      escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
+      escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization ? categorization.department : "Customer Support" : null
     }
     console.log(e.message)
   }

@@ -9,45 +9,45 @@ let schema = new mongoose.Schema({
     },
     name: {
       type: String,
-      required: true,
-      minlength: 1,
+      // required: true,
+      // minlength: 1,
     },
     image: {
       type: String,
-      required: true,
-      minLength: 1,
+      // required: true,
+      // minLength: 1,
     },
     quantity: {
       type: String,
-      required: true,
-      minlength: 1,
+      // required: true,
+      // minlength: 1,
     },
     category: {
       type: String,
-      required: true,
-      minlength: 1,
+      // required: true,
+      // minlength: 1,
     },
     price: {
       type: String,
-      required: true,
-      minlength: 1,
+      // required: true,
+      // minlength: 1,
     },
     currency: {
       type: String,
       // required: true,
-      minlength: 1,
+      // minlength: 1,
     },
     status: {
       type: String,
-      required: true,
-      minlength: 1,
+      // required: true,
+      // minlength: 1,
     },
     more: {
       type: Object,
     },
     embeddings: {
         type: Object,
-        required: true,
+        // required: true,
     },
     
 },  {timestamps: true});

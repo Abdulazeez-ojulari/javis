@@ -340,7 +340,7 @@ module.exports.processMessage = async (req, res) => {
   if (ticketId) {
     chat = await ChatMessage.find({ ticketId: ticketId })
       .sort({ createdAt: -1 })
-      .limit(10);
+      // .limit(20);
     previousMsg = chat.map((msg) => ({
       role: msg.role,
       content: msg.content,
@@ -353,11 +353,11 @@ module.exports.processMessage = async (req, res) => {
 
   let faqs = await Faq.find({ knowledgeBaseId: knowledge._id }).select(
     "question response embeddings -_id"
-  );
+  ).where("embeddings").exists().ne(null);
 
   let inventories = await Inventory.find({ knowledgeBaseId: knowledge._id }).select(
     "name image quantity category price status more embeddings -_id"
-  );
+  ).where("embeddings").exists().ne(null);
 
   console.log(promptMsg)
   await processMsg(promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories)
@@ -369,7 +369,7 @@ module.exports.processMessage = async (req, res) => {
 module.exports.messageCategorization = async (req, res) => {
   let { promptMsg, ticketId, newres, businessId } = req.body;
 
-  console.log(req.body)
+  const ticket = await Ticket.findById(ticketId);
 
   const business = await Business.findOne({ businessId: businessId });
 
@@ -378,7 +378,7 @@ module.exports.messageCategorization = async (req, res) => {
   if (ticketId) {
     chat = await ChatMessage.find({ ticketId: ticketId })
       .sort({ createdAt: -1 })
-      .limit(10);
+      // .limit(20);
     previousMsg = chat.map((msg) => ({
       role: msg.role,
       content: msg.content,
@@ -388,7 +388,7 @@ module.exports.messageCategorization = async (req, res) => {
 
   const departments = await Department.find({ businessId: business._id }).select("department -_id");
 
-  msgCategorization(promptMsg, departments, previousMsg, newres, res)
+  msgCategorization(promptMsg, departments, previousMsg, newres, res, ticket, business._id)
 
   // res.send(faqs)
   return;
