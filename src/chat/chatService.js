@@ -830,6 +830,10 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
           businessId: businessId,
           ticketId: ticket._id,
           item: product
+        }).then(res => {
+          console.log(res.data)
+        }).catch((e) => {
+          console.log(e.message)
         })
         console.log(completion4.choices[0], "order")
       }
@@ -951,7 +955,15 @@ const getInventory = async (promptMsg, inventories, previousMsg) => {
   }
 
   let index = indexOfMax(similarity_array)
+  similarity_array[index] = 0
+  let index2 = indexOfMax(similarity_array)
+  similarity_array[index2] = 0
+  let index3 = indexOfMax(similarity_array)
   let previousIndex = indexOfMax(prev_similarity_array)
+  prev_similarity_array[previousIndex] = 0
+  let previousIndex2 = indexOfMax(prev_similarity_array)
+  prev_similarity_array[previousIndex2] = 0
+  let previousIndex3 = indexOfMax(prev_similarity_array)
 
   let foundInventory = []
   // console.log(index, similarity_array)
@@ -977,7 +989,7 @@ const getInventory = async (promptMsg, inventories, previousMsg) => {
           price: inventories[index].price,
           status: inventories[index].status,
           more: inventories[index].more
-        }
+        },
       ]
     }else{
       foundInventory = [
@@ -992,6 +1004,58 @@ const getInventory = async (promptMsg, inventories, previousMsg) => {
         }
       ]
     }
+  }
+
+  if(inventories.length > 3){
+    foundInventory.push({
+      name: inventories[index2].name,
+      image: inventories[index2].image,
+      quantity: inventories[index2].quantity,
+      category: inventories[index2].category,
+      price: inventories[index2].price,
+      status: inventories[index2].status,
+      more: inventories[index2].more
+    })
+    foundInventory.push({
+      name: inventories[index3].name,
+      image: inventories[index3].image,
+      quantity: inventories[index3].quantity,
+      category: inventories[index3].category,
+      price: inventories[index3].price,
+      status: inventories[index3].status,
+      more: inventories[index3].more
+    })
+    foundInventory.push({
+      name: inventories[index3].name,
+      image: inventories[index3].image,
+      quantity: inventories[index3].quantity,
+      category: inventories[index3].category,
+      price: inventories[index3].price,
+      status: inventories[index3].status,
+      more: inventories[index3].more
+    })
+
+    if(previousIndex2>=0)
+    foundInventory.push({
+      name: inventories[previousIndex2].name,
+      image: inventories[previousIndex2].image,
+      quantity: inventories[previousIndex2].quantity,
+      category: inventories[previousIndex2].category,
+      price: inventories[previousIndex2].price,
+      status: inventories[previousIndex2].status,
+      more: inventories[previousIndex2].more
+    })
+
+    if(previousIndex3>=0)
+    foundInventory.push({
+      name: inventories[previousIndex3].name,
+      image: inventories[previousIndex3].image,
+      quantity: inventories[previousIndex3].quantity,
+      category: inventories[previousIndex3].category,
+      price: inventories[previousIndex3].price,
+      status: inventories[previousIndex3].status,
+      more: inventories[previousIndex3].more
+    })
   }
 
   console.log(foundInventory, "found")
