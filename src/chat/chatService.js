@@ -725,7 +725,9 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   "type": Categorize the message content into an appropriate ticket type.
   "category": Categorize the message content into an applicable ticket category.
   "placingOrder": Determine if the user is ready to place order and has sent payment receipt. return true or false only.
-  Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly`;
+  "css": Give me a customer satisfaction score in percentage. Example: customer satisfaction score: 84%.
+  Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly
+  JSON response format {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string}`;
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
   const escalation_instructions3 = `
@@ -815,20 +817,30 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
       title: categorization.title,
       type: categorization.type,
       category: categorization.category,
+      placingOrder: categorization.placingOrder,
+      css: categorization.css,
       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
       escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
     }
 
     if(categorization.placingOrder){
+      let imageLink = extractImageLink(promptMsg);
+      console.log(imageLink)
+      let isM = isImage(imageLink);
+      console.log(isM, "Is Image")
       if(!ticket.placingOrder){
         console.log("New Order")
         let completion4 = await javis(placingOrderLogic, 50)
-        let product = await Inventory.findOne({name: completion4.choices[0].message.content}).select("-embeddings");
-        console.log(product)
+        console.log(completion4.choices[0].message.content)
+        const regex = new RegExp(completion4.choices[0].message.content, "i");
+        let product = await Inventory.findOne({name: { $regex: regex }}).select("-embeddings");
+        console.log(product, "product")
         console.log(ticket)
+        if(product)
         axios.post(`${process.env.BACKEND_URL}/api/order/`, {
           businessId: businessId,
           ticketId: ticket._id,
+          receipt: isM ? imageLink: "",
           item: product
         }).then(res => {
           console.log(res.data)
@@ -836,6 +848,16 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
           console.log(e.message)
         })
         console.log(completion4.choices[0], "order")
+      }else{
+        axios.put(`${process.env.BACKEND_URL}/api/order/update`, {
+          businessId: businessId,
+          ticketId: ticket._id,
+          receipt: isM ? imageLink: "null",
+        }).then(res => {
+          console.log(res.data)
+        }).catch((e) => {
+          console.log(e.message)
+        })
       }
     }
   }catch(e){
@@ -854,6 +876,21 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
       content: JSON.stringify(response)
     }
   )
+}
+
+function isImage(url) {
+  return /\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(url);
+}
+
+function extractImageLink(inputString) {
+  // Regular expression to match common image URL patterns
+  const imageLinkRegex = /\((https?:\/\/\S+\.(?:jpeg|jpg|gif|png|bmp|svg|webp)\S*)\)/i;
+
+  // Extract the first match
+  const match = inputString.match(imageLinkRegex);
+
+  // Return the matched image link or null if no match is found
+  return match ? match[1] : null;
 }
 
 const getFaq = async (promptMsg, faqs, previousMsg) => {
