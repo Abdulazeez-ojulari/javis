@@ -1,7 +1,7 @@
 // const { Business } = require("../business/businessModel");
 // const errorMiddleware = require("../middlewares/error");
 // const { Chat } = require("./chatModel");
-const { processMail } = require("./gmailService");
+const { processMail, emailCategorization } = require("./gmailService");
 // const eventEmitter = require("../event/events");
 // const { Ticket } = require("../models/ticket.model");
 // const { Agent } = require("../business/agent.model");
