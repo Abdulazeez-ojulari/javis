@@ -89,13 +89,13 @@ module.exports.mailCategorization = async (req, res) => {
 
   const business = await Business.findOne({ businessId: businessId });
 
-  let chat;
+  let mail;
   let previousMsg;
   if (ticketId) {
-    chat = await ChatMessage.find({ ticketId: ticketId })
+    mail = await Gmail.find({ ticketId: ticketId })
       .sort({ createdAt: -1 })
       // .limit(20);
-    previousMsg = chat.map((msg) => ({
+    previousMsg = mail.map((msg) => ({
       role: msg.role,
       content: msg.content,
     }));
