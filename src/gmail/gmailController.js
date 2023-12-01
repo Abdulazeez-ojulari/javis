@@ -26,6 +26,11 @@ module.exports.processMail = async (req, res) => {
   }
 
   const business = await Business.findOne({ businessId: businessId });
+  if(!business){
+    return res
+      .status(404)
+      .send({ message: "business not found" });
+  }
 
   let mails;
   let previousMails;
@@ -53,11 +58,14 @@ module.exports.processMail = async (req, res) => {
 
   let faqs = await Faq.find({ knowledgeBaseId: knowledge._id }).select(
     "question response embeddings -_id"
-  );
+  ).where("embeddings").exists().ne(null);
 
-  const inventories = await Inventory.find({ knowledgeBaseId: knowledge._id }).select(
+  // console.log(faqs)
+  let inventories = await Inventory.find({ knowledgeBaseId: knowledge._id }).select(
     "name image quantity category price status more embeddings -_id"
-  );
+  ).where("embeddings").exists().ne(null);
+
+  // console.log(inventories)
 
   console.log("udom - promptMail", promptMail);
   await processMail(
@@ -71,5 +79,33 @@ module.exports.processMail = async (req, res) => {
     inventories
   );
 
+  return;
+};
+
+module.exports.mailCategorization = async (req, res) => {
+  let { promptMsg, ticketId, newres, businessId } = req.body;
+
+  const ticket = await Ticket.findById(ticketId);
+
+  const business = await Business.findOne({ businessId: businessId });
+
+  let chat;
+  let previousMsg;
+  if (ticketId) {
+    chat = await ChatMessage.find({ ticketId: ticketId })
+      .sort({ createdAt: -1 })
+      // .limit(20);
+    previousMsg = chat.map((msg) => ({
+      role: msg.role,
+      content: msg.content,
+    }));
+    // console.log(previousMsg);
+  }
+
+  const departments = await Department.find({ businessId: business._id }).select("department -_id");
+
+  emailCategorization(promptMsg, departments, previousMsg, newres, res, ticket, business._id)
+
+  // res.send(faqs)
   return;
 };

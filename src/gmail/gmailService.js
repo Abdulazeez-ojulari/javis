@@ -13,7 +13,9 @@
 // const fs = require("fs");
 // const parse = require("csv-parse").parse;
 
+const { default: axios } = require("axios");
 const { javisEmbeddings, javis } = require("../../openai");
+const { Inventory } = require("../model/inventoryModel");
 
 // module.exports.processChatService = async (
 //   ticketId,
@@ -580,8 +582,24 @@ module.exports.createVector = async (faqs) => {
   return;
 };
 
-module.exports.processMail = async (promptMsg, res, faqs, departments, business, previousMsg, customer, inventories) => {
-  console.log(customer, previousMsg)
+const generateCSVFile = async (embeddings) => {
+  let csv = "embedding,text\n";
+
+  for (const embed of embeddings) {
+    // console.log("response", products)
+
+    let { embedding, text } = embed;
+
+    csv += `"${embedding}","${text}"\n`;
+  }
+
+  return csv;
+};
+
+module.exports.processMail = async (promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories) => {
+  const customer = ticket.customer
+  const agentName = ticket.agentName
+  console.log(customer, previousMsg, agentName)
   previousMsg.shift()
   let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
   let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
@@ -594,24 +612,10 @@ module.exports.processMail = async (promptMsg, res, faqs, departments, business,
   Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. 
   Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. 
   If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.`
-  const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
-  "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
-  "urgency": Assess the urgency as low, medium, or high based on the user's message.
-  "sentiment": Analyze the sentiment of the message and set it to Happy, Neutral, or Angry accordingly.
-  "title": Categorize the message content into a suitable ticket title.
-  "type": Categorize the message content into an appropriate ticket type.
-  "category": Categorize the message content into an applicable ticket category.
-  Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly`;
+
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
-  const escalation_instructions3 = `
-  You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
-  Check if the response contains the word 'escalation'.
-  Look for apology statements in the response.
-  Assess if the message resembles or includes common phrases found in escalation messages.
-  If the response lacks information or states an inability to assist, consider it for escalation.
-  Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
-  `;
+
 
   // let delimiter = "#####";
   // let delimiter2 = "####";
@@ -621,16 +625,6 @@ module.exports.processMail = async (promptMsg, res, faqs, departments, business,
       return msg.content
   })
 
-  let _agentmsg = previousMsg.filter(msg => { 
-    return msg.role == "assistance"
-  })
-
-  console.log(_agentmsg)
-
-  let agentmsg = _agentmsg.reverse().map(msg => { 
-    return msg.content
-  })
-
   let company_information = {
     company_description: business.description,
     company_address: business.address,
@@ -638,7 +632,6 @@ module.exports.processMail = async (promptMsg, res, faqs, departments, business,
     bank_name: business.bankName,
   }
 
-  mes.push(promptMsg)
   const responseInstructionsLogic = [
     {
       "role": "system",
@@ -650,42 +643,13 @@ module.exports.processMail = async (promptMsg, res, faqs, departments, business,
     },
     {
       "role": "system",
-      "content": `User's previous messages for reflection: ${previousMsg.length > 0 ? previousMsg[previousMsg.length -1].content: ""} and user's name is ${customer}`
+      "content": `User's previous messages for reflection: ${mes.length > 0 ? mes.join(","): ""} and user's name is ${customer}`
     },
     {"role": "user", "content": `${promptMsg}`},
   ];
 
-  const queryCategorizationLogic = [
-    {
-        "role": "system",
-        "content": `query_categorization_instructions: ${query_categorization_instructions}.`
-    },
-    {
-        "role": "assistant",
-        "content": `message to be analysed: ${mes.join(",")}`
-    },
-  ]
-
   let completion = await javis(responseInstructionsLogic, 500)
   console.log(completion.choices[0], "response")
-
-  let completion2 = await javis(queryCategorizationLogic, 100)
-  console.log(completion2.choices[0], "categorization")
-
-  agentmsg.push(completion.choices[0].message.content)
-  const escalationLogic = [
-    {
-        "role": "system",
-        "content": `escalation_instructions: ${escalation_instructions3}.`
-    },
-    {
-      "role": "assistant",
-      "content": `agent_response to be analysed: ${agentmsg.join(",")}`
-    },
-  ]
-
-  let completion3 = await javis(escalationLogic, 1)
-  console.log(completion3.choices[0], "escalation")
 
   // let related = [
   //   "Introductions",
@@ -736,31 +700,166 @@ module.exports.processMail = async (promptMsg, res, faqs, departments, business,
   //     "content": `${delimiter}${promptMsg}${delimiter}`
   //   }
   // ];
+
+  res.send(
+    {
+      role: "assistant",
+      content: completion.choices[0].message.content
+    }
+  )
+  // await msgCategorization(promptMsg, departments, previousMsg, completion.choices[0].message.content)
+
+}
+
+module.exports.emailCategorization = async (promptMsg, departments, previousMsg, newres, res, ticket, businessId) => {
+
+  const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
+  "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
+  "urgency": Assess the urgency as low, medium, or high based on the user's message.
+  "sentiment": Analyze the sentiment of the message and set it to Happy, Neutral, or Angry accordingly.
+  "title": Categorize the message content into a suitable ticket title.
+  "type": Categorize the message content into an appropriate ticket type.
+  "category": Categorize the message content into an applicable ticket category.
+  "placingOrder": Determine if the user is ready to place order and has sent payment receipt. return true or false only.
+  "css": Give me a customer satisfaction score in percentage. Example: customer satisfaction score: 84%.
+  Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly
+  JSON response format {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string}`;
+  // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
+  // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
+  const escalation_instructions3 = `
+  You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
+  Check if the response contains the word 'escalation'.
+  Look for apology statements in the response.
+  Assess if the message resembles or includes common phrases found in escalation messages.
+  If the response lacks information or states an inability to assist, consider it for escalation.
+  Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
+  `;
+
+  const placing_order_instructions = `You are a query analyst return the product name the user wants to place an order for. return only the product name`;
+
+  // let delimiter = "#####";
+  // let delimiter2 = "####";
+  // let delimiter3 = "*****";
+
+  let mes = previousMsg.reverse().map(msg => { 
+      return msg.content
+  })
+
+  let _agentmsg = previousMsg.filter(msg => { 
+    return msg.role == "assistance"
+  })
+
+  console.log(_agentmsg)
+
+  let agentmsg = _agentmsg.reverse().map(msg => { 
+    return msg.content
+  })
+
+  mes.push(promptMsg)
+
+  const queryCategorizationLogic = [
+    {
+        "role": "system",
+        "content": `query_categorization_instructions: ${query_categorization_instructions}.`
+    },
+    {
+        "role": "assistant",
+        "content": `message to be analysed: ${mes.join(",")}`
+    },
+  ]
+
+  const placingOrderLogic = [
+    {
+        "role": "system",
+        "content": `placing_order_instructions: ${placing_order_instructions}.`
+    },
+    {
+        "role": "assistant",
+        "content": `message to be analysed: ${mes.join(",")}`
+    },
+  ]
+
+  let completion2 = await javis(queryCategorizationLogic, 200)
+  console.log(completion2.choices[0], "categorization")
+
+  agentmsg.push(newres)
+  const escalationLogic = [
+    {
+        "role": "system",
+        "content": `escalation_instructions: ${escalation_instructions3}.`
+    },
+    {
+      "role": "assistant",
+      "content": `agent_response to be analysed: ${agentmsg.join(",")}`
+    },
+  ]
+
+  let completion3 = await javis(escalationLogic, 1)
+  console.log(completion3.choices[0], "escalation")
+
   let categorization;
   let response;
   let stringifiedResponse = "";
   // console.log(completion2.choices[0].message.content);
-  stringifiedResponse = completion2.choices[0].message.content.toString().replace(/'/g, '"').replace(/“/g, '"')
+  stringifiedResponse = completion2.choices[0].message.content.toString().replace(/'/g, '"').replace(/“/g, '"').replace(/”/g, '"')
   try{
     console.log(stringifiedResponse)
     categorization = JSON.parse(stringifiedResponse)
     console.log(categorization)
     response = {
-      response: completion.choices[0].message.content,
       department: categorization.department,
       urgency: categorization.urgency,
       sentiment: categorization.sentiment,
       title: categorization.title,
       type: categorization.type,
       category: categorization.category,
+      placingOrder: categorization.placingOrder,
+      css: categorization.css,
       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
       escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
     }
+
+    if(categorization.placingOrder){
+      let imageLink = extractImageLink(promptMsg);
+      console.log(imageLink)
+      let isM = isImage(imageLink);
+      console.log(isM, "Is Image")
+      if(!ticket.placingOrder){
+        console.log("New Order")
+        let completion4 = await javis(placingOrderLogic, 50)
+        console.log(completion4.choices[0].message.content)
+        const regex = new RegExp(completion4.choices[0].message.content, "i");
+        let product = await Inventory.findOne({name: { $regex: regex }}).select("-embeddings");
+        console.log(product, "product")
+        console.log(ticket)
+        if(product)
+        axios.post(`${process.env.BACKEND_URL}/api/order/`, {
+          businessId: businessId,
+          ticketId: ticket._id,
+          receipt: isM ? imageLink: "",
+          item: product
+        }).then(res => {
+          console.log(res.data)
+        }).catch((e) => {
+          console.log(e.message)
+        })
+        console.log(completion4.choices[0], "order")
+      }else{
+        axios.put(`${process.env.BACKEND_URL}/api/order/update`, {
+          businessId: businessId,
+          ticketId: ticket._id,
+          receipt: isM ? imageLink: "null",
+        }).then(res => {
+          console.log(res.data)
+        }).catch((e) => {
+          console.log(e.message)
+        })
+      }
+    }
   }catch(e){
     response = response = {
-      response: completion.choices[0].message.content,
       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
-      escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
+      escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization ? categorization.department : "Customer Support" : null
     }
     console.log(e.message)
   }
@@ -773,6 +872,21 @@ module.exports.processMail = async (promptMsg, res, faqs, departments, business,
       content: JSON.stringify(response)
     }
   )
+}
+
+function isImage(url) {
+  return /\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(url);
+}
+
+function extractImageLink(inputString) {
+  // Regular expression to match common image URL patterns
+  const imageLinkRegex = /\((https?:\/\/\S+\.(?:jpeg|jpg|gif|png|bmp|svg|webp)\S*)\)/i;
+
+  // Extract the first match
+  const match = inputString.match(imageLinkRegex);
+
+  // Return the matched image link or null if no match is found
+  return match ? match[1] : null;
 }
 
 const getFaq = async (promptMsg, faqs, previousMsg) => {
@@ -874,7 +988,15 @@ const getInventory = async (promptMsg, inventories, previousMsg) => {
   }
 
   let index = indexOfMax(similarity_array)
+  similarity_array[index] = 0
+  let index2 = indexOfMax(similarity_array)
+  similarity_array[index2] = 0
+  let index3 = indexOfMax(similarity_array)
   let previousIndex = indexOfMax(prev_similarity_array)
+  prev_similarity_array[previousIndex] = 0
+  let previousIndex2 = indexOfMax(prev_similarity_array)
+  prev_similarity_array[previousIndex2] = 0
+  let previousIndex3 = indexOfMax(prev_similarity_array)
 
   let foundInventory = []
   // console.log(index, similarity_array)
@@ -900,7 +1022,7 @@ const getInventory = async (promptMsg, inventories, previousMsg) => {
           price: inventories[index].price,
           status: inventories[index].status,
           more: inventories[index].more
-        }
+        },
       ]
     }else{
       foundInventory = [
@@ -915,6 +1037,58 @@ const getInventory = async (promptMsg, inventories, previousMsg) => {
         }
       ]
     }
+  }
+
+  if(inventories.length > 3){
+    foundInventory.push({
+      name: inventories[index2].name,
+      image: inventories[index2].image,
+      quantity: inventories[index2].quantity,
+      category: inventories[index2].category,
+      price: inventories[index2].price,
+      status: inventories[index2].status,
+      more: inventories[index2].more
+    })
+    foundInventory.push({
+      name: inventories[index3].name,
+      image: inventories[index3].image,
+      quantity: inventories[index3].quantity,
+      category: inventories[index3].category,
+      price: inventories[index3].price,
+      status: inventories[index3].status,
+      more: inventories[index3].more
+    })
+    foundInventory.push({
+      name: inventories[index3].name,
+      image: inventories[index3].image,
+      quantity: inventories[index3].quantity,
+      category: inventories[index3].category,
+      price: inventories[index3].price,
+      status: inventories[index3].status,
+      more: inventories[index3].more
+    })
+
+    if(previousIndex2>=0)
+    foundInventory.push({
+      name: inventories[previousIndex2].name,
+      image: inventories[previousIndex2].image,
+      quantity: inventories[previousIndex2].quantity,
+      category: inventories[previousIndex2].category,
+      price: inventories[previousIndex2].price,
+      status: inventories[previousIndex2].status,
+      more: inventories[previousIndex2].more
+    })
+
+    if(previousIndex3>=0)
+    foundInventory.push({
+      name: inventories[previousIndex3].name,
+      image: inventories[previousIndex3].image,
+      quantity: inventories[previousIndex3].quantity,
+      category: inventories[previousIndex3].category,
+      price: inventories[previousIndex3].price,
+      status: inventories[previousIndex3].status,
+      more: inventories[previousIndex3].more
+    })
   }
 
   console.log(foundInventory, "found")

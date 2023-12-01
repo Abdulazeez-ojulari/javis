@@ -5,4 +5,6 @@ const { body } = require("express-validator");
 
 router.post("/:businessId/prompt", gmailController.processMail);
 
+router.post('/categorization', gmailController.mailCategorization);
+
 module.exports = router;
