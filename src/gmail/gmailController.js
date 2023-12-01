@@ -54,6 +54,8 @@ module.exports.processMail = async (req, res) => {
     businessId: business._id,
   }).select("department -_id");
 
+  console.log(ticketId, "ticketID")
+
   const ticket = await Ticket.findById(ticketId).select("customer -_id");
 
   let faqs = await Faq.find({ knowledgeBaseId: knowledge._id }).select(
@@ -69,14 +71,7 @@ module.exports.processMail = async (req, res) => {
 
   console.log("udom - promptMail", promptMail);
   await processMail(
-    promptMail,
-    res,
-    faqs,
-    departments,
-    business,
-    previousMails,
-    ticket.customer,
-    inventories
+    promptMail, res, faqs, departments, business, previousMails, ticket, inventories
   );
 
   return;
