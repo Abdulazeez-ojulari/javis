@@ -853,6 +853,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
           businessId: businessId,
           ticketId: ticket._id,
           receipt: isM ? imageLink: "null",
+          item: product
         }).then(res => {
           console.log(res.data)
         }).catch((e) => {
