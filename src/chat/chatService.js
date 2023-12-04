@@ -824,16 +824,16 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
     }
 
     if(categorization.placingOrder){
+      let completion4 = await javis(placingOrderLogic, 50)
+      console.log(completion4.choices[0].message.content)
+      const regex = new RegExp(completion4.choices[0].message.content, "i");
+      let product = await Inventory.findOne({name: { $regex: regex }}).select("-embeddings");
       let imageLink = extractImageLink(promptMsg);
       console.log(imageLink)
       let isM = isImage(imageLink);
       console.log(isM, "Is Image")
       if(!ticket.placingOrder){
         console.log("New Order")
-        let completion4 = await javis(placingOrderLogic, 50)
-        console.log(completion4.choices[0].message.content)
-        const regex = new RegExp(completion4.choices[0].message.content, "i");
-        let product = await Inventory.findOne({name: { $regex: regex }}).select("-embeddings");
         console.log(product, "product")
         console.log(ticket)
         if(product)
@@ -849,6 +849,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
         })
         console.log(completion4.choices[0], "order")
       }else{
+        if(product)
         axios.put(`${process.env.BACKEND_URL}/api/order/update`, {
           businessId: businessId,
           ticketId: ticket._id,
