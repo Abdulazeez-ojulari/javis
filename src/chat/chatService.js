@@ -616,7 +616,6 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor. 
   Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. 
   If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.
-  Assume the role of a salesperson. Verify the product's availability in the provided inventory based on the user's inquiry. Ask the customer if they wish to proceed with placing an order, providing a call-to-action (CTA) with options "Yes" or "No." If the response is "yes," guide the user to make a payment to a shared bank account and request them to share the receipt for confirmation. If the response is "no," continue the conversation without placing an order for the user. Postpone the creation of the order until the user shares the payment confirmation. Upon receiving the payment confirmation from the user, escalate the ticket, create the order, inform the user about the successful order creation, and notify the sales team.
   `
   if(ticket.isResolved){
     response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been resolved, prompting a "yes or no" response. If the user responds with "no," send a customer resolution message and update the conversation status to "AI closed." but never inform the user, just let them know that they can check back only after ${SLA}. Once the ticket status is "AI closed," dispatch a resolution message to the customer, indicating that the conversation has been closed. Inform them that they can reach out after ${SLA}, and for further inquiries, they can send an email to ${email}. Generate a “conversation closed” status for tracking when the customer has no more questions and inform users the conversation has ended until the next ${SLA}.`
@@ -630,7 +629,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
 
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
-
+  console.log(response_instructions_chat)
 
   // let delimiter = "#####";
   // let delimiter2 = "####";
@@ -663,7 +662,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
     {"role": "user", "content": `${promptMsg}`},
   ];
 
-  let completion = await javis(responseInstructionsLogic, 500)
+  let completion = await javis(responseInstructionsLogic, 200)
   console.log(completion.choices[0], "response")
 
   // let related = [
@@ -796,7 +795,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
     },
   ]
 
-  let completion2 = await javis(queryCategorizationLogic, 300)
+  let completion2 = await javis(queryCategorizationLogic, 150)
   console.log(completion2.choices[0], "categorization")
 
   agentmsg.push(newres)
