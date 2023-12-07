@@ -46,6 +46,9 @@ const BusinessSchema = new mongoose.Schema(
       minlength: 3,
       maxlength: 50,
     },
+    sla: {
+      type: String,
+    },
     phoneNo: {
       type: String,
       minlength: 7,

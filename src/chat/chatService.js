@@ -599,8 +599,8 @@ const generateCSVFile = async (embeddings) => {
 module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories) => {
   const customer = ticket.customer
   const agentName = ticket.agentName
-  const SLA = "24hours"
-  const email= "hello@credpal.com"
+  const SLA = business.sla
+  const email= business.supportEmail
   console.log(customer, previousMsg, agentName)
   previousMsg.shift()
   let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
