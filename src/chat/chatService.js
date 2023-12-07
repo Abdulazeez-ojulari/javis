@@ -599,7 +599,7 @@ const generateCSVFile = async (embeddings) => {
 module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories) => {
   const customer = ticket.customer
   const agentName = ticket.agentName
-  const SLA = business.sla
+  const SLA = business.sla || "6hr"
   const email= business.supportEmail
   console.log(customer, previousMsg, agentName)
   previousMsg.shift()
