@@ -27,6 +27,10 @@ const ticketSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    newMessage: {
+      type: Boolean,
+      default: false,
+    },
     sentiment: {
       type: String,
       default: "Neutral",
@@ -71,6 +75,14 @@ const ticketSchema = new mongoose.Schema(
     },
     agentName: {
       type: String,
+    },
+    isActive: {
+      type: Boolean,
+      default: false,
+    },
+    isResolved: {
+      type: Boolean,
+      default: false,
     },
     created_date: {
       type: Date,

@@ -599,13 +599,15 @@ const generateCSVFile = async (embeddings) => {
 module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories) => {
   const customer = ticket.customer
   const agentName = ticket.agentName
+  const SLA = "24hours"
+  const email= "hello@credpal.com"
   console.log(customer, previousMsg, agentName)
   previousMsg.shift()
   let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
   let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
   console.log(foundFaq, "faq")
   console.log(foundInventory, "inventory")
-  const response_instructions_chat = `
+  let response_instructions_chat = `
   You are a customer support agent for ${business.businessName} and your name is ${agentName}. 
   ${previousMsg.length <= 0 && "Always introduce yourself to the user with your name while replying the user if this is the users first message."}
   Do not repeat or mention the user's name in every response only in the first user message  
@@ -616,6 +618,15 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.
   Assume the role of a salesperson. Verify the product's availability in the provided inventory based on the user's inquiry. Ask the customer if they wish to proceed with placing an order, providing a call-to-action (CTA) with options "Yes" or "No." If the response is "yes," guide the user to make a payment to a shared bank account and request them to share the receipt for confirmation. If the response is "no," continue the conversation without placing an order for the user. Postpone the creation of the order until the user shares the payment confirmation. Upon receiving the payment confirmation from the user, escalate the ticket, create the order, inform the user about the successful order creation, and notify the sales team.
   `
+  if(ticket.isResolved){
+    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been resolved, prompting a "yes or no" response. If the user responds with "no," send a customer resolution message and update the conversation status to "AI closed." but never inform the user, just let them know that they can check back only after ${SLA}. Once the ticket status is "AI closed," dispatch a resolution message to the customer, indicating that the conversation has been closed. Inform them that they can reach out after ${SLA}, and for further inquiries, they can send an email to ${email}. Generate a “conversation closed” status for tracking when the customer has no more questions and inform users the conversation has ended until the next ${SLA}.`
+  }else if(ticket.escalated){
+    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been escalated, prompting a "yes or no" response. If the user responds with "yes," request specifics. If the issue is the same or related, generate a one-time assurance to the user. Inform the user that the issue has been properly escalated, and they will receive feedback within this ${SLA}. Cease responding to the customer until the next ${SLA}.  Generate a “conversation closed” status for tracking when the customer has no more questions and inform users the conversation has ended until the next ${SLA}.`
+  }else{
+    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been resolved, prompting a "yes or no" response. If the user responds with "no," send a customer resolution message and update the conversation status to "AI closed." but never inform the user, just let them know that they can check back only after ${SLA}. Once the ticket status is "AI closed," dispatch a resolution message to the customer, indicating that the conversation has been closed. Inform them that they can reach out after ${SLA}, and for further inquiries, they can send an email to ${email}. Generate a “conversation closed” status for tracking when the customer has no more questions and inform users the conversation has ended until the next ${SLA}.`
+  }
+
+  response_instructions_chat = response_instructions_chat + `Always make your response simple to read, direct, short, and precise like a human chatting with a user-perfect experience.`
 
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
@@ -726,6 +737,8 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   "category": Categorize the message content into an applicable ticket category.
   "placingOrder": Determine if the user is ready to place order and has sent payment receipt. return true or false only.
   "css": Give me a customer satisfaction score in percentage. Example: customer satisfaction score: 84%.
+  "isResolved": Determine if the user has made a request and the response provided answers the user request. return true or false only.
+  "isCompleted": Determine if the user has made a request and the user is satisfied with the response. return true or false only.
   Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly
   JSON response format {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string}`;
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
@@ -783,7 +796,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
     },
   ]
 
-  let completion2 = await javis(queryCategorizationLogic, 200)
+  let completion2 = await javis(queryCategorizationLogic, 300)
   console.log(completion2.choices[0], "categorization")
 
   agentmsg.push(newres)
@@ -819,6 +832,8 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
       category: categorization.category,
       placingOrder: categorization.placingOrder,
       css: categorization.css,
+      isResolved: categorization.isResolved,
+      isCompleted: categorization.isCompleted,
       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
       escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
     }
