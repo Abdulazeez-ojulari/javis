@@ -629,7 +629,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
 
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
-  console.log(response_instructions_chat)
+  // console.log(response_instructions_chat)
 
   // let delimiter = "#####";
   // let delimiter2 = "####";
@@ -725,7 +725,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
 
 }
 
-module.exports.msgCategorization = async (promptMsg, departments, previousMsg, newres, res, ticket, businessId) => {
+module.exports.msgCategorization = async (promptMsg, departments, previousMsg, newres, res, ticket, businessId, newProductCategories) => {
 
   const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
   "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
@@ -737,9 +737,9 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   "placingOrder": Determine if the user is ready to place order and has sent payment receipt. return true or false only.
   "css": Give me a customer satisfaction score in percentage. Example: customer satisfaction score: 84%.
   "isResolved": Determine if the user has made a request and the response provided answers the user request. return true or false only.
-  "isCompleted": Determine if the user has made a request and the user is satisfied with the response. return true or false only.
+  "product": Determine the product the user is talking about based on the user's message. Products to check from <${newProductCategories.length > 0 ? newProductCategories.map(newProductCategory => newProductCategory.name).join('/'): "null"}>. If a product is identified, set it to that product; otherwise, set it to null."
   Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly
-  JSON response format {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string}`;
+  JSON response format {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string; "isResolved": string; "product": string}`;
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
   const escalation_instructions3 = `
@@ -750,6 +750,8 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   If the response lacks information or states an inability to assist, consider it for escalation.
   Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
   `;
+
+  console.log("products", newProductCategories.map(newProductCategory => newProductCategory.name).join('/'))
 
   const placing_order_instructions = `You are a query analyst return the product name the user wants to place an order for. return only the product name`;
 
@@ -832,10 +834,12 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
       placingOrder: categorization.placingOrder,
       css: categorization.css,
       isResolved: categorization.isResolved,
-      isCompleted: categorization.isCompleted,
+      product: categorization.product,
       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
       escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
     }
+
+    // if(categorization.product !== undefined && categorization.product !== "null" && categorization.product)
 
     if(categorization.placingOrder){
       let completion4 = await javis(placingOrderLogic, 50)

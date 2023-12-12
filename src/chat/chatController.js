@@ -21,6 +21,7 @@ const { Department } = require("../model/departmentModel");
 const { ChatMessage } = require("../model/chatModel");
 const { Ticket } = require("../model/ticket.model");
 const { Inventory } = require("../model/inventoryModel");
+const { FaqProductCat } = require("../model/faq-product-categorization.model");
 
 // module.exports.newChat = errorMiddleware(async (req, res) => {
 //   let { email, businessId, channel, customer, phoneNo } = req.body;
@@ -340,7 +341,7 @@ module.exports.processMessage = async (req, res) => {
   if (ticketId) {
     chat = await ChatMessage.find({ ticketId: ticketId })
       .sort({ createdAt: -1 })
-      // .limit(20);
+      .limit(30);
     previousMsg = chat.map((msg) => ({
       role: msg.role,
       content: msg.content,
@@ -378,7 +379,7 @@ module.exports.messageCategorization = async (req, res) => {
   if (ticketId) {
     chat = await ChatMessage.find({ ticketId: ticketId })
       .sort({ createdAt: -1 })
-      // .limit(20);
+      .limit(30);
     previousMsg = chat.map((msg) => ({
       role: msg.role,
       content: msg.content,
@@ -386,9 +387,13 @@ module.exports.messageCategorization = async (req, res) => {
     // console.log(previousMsg);
   }
 
+  let newProductCategories = await FaqProductCat.find({
+    businessId: business._id,
+  }).select("name -_id");
+
   const departments = await Department.find({ businessId: business._id }).select("department -_id");
 
-  msgCategorization(promptMsg, departments, previousMsg, newres, res, ticket, business._id)
+  msgCategorization(promptMsg, departments, previousMsg, newres, res, ticket, business._id, newProductCategories)
 
   // res.send(faqs)
   return;
