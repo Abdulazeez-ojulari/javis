@@ -560,6 +560,9 @@ module.exports.createVector = async (faqs) => {
     // console.log(faqs[i])
     let faq = JSON.stringify(faqs[i]);
     let completion = await javisEmbeddings(faq);
+    if(completion.status === "error"){
+      break;
+    }
 
     let embedding = completion.choices[0].embedding
 
@@ -663,8 +666,13 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   ];
 
   let completion = await javis(responseInstructionsLogic, 200)
+  if(completion.status === "error"){
+    res.status(completion.code).send(
+      completion
+    )
+    return;
+  }
   console.log(completion.choices[0], "response")
-
   // let related = [
   //   "Introductions",
   //   "Gratitude Expressions",
@@ -798,6 +806,12 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   ]
 
   let completion2 = await javis(queryCategorizationLogic, 150)
+  if(completion2.status === "error"){
+    res.status(completion2.code).send(
+      completion2
+    )
+    return;
+  }
   console.log(completion2.choices[0], "categorization")
 
   agentmsg.push(newres)
@@ -916,6 +930,9 @@ function extractImageLink(inputString) {
 const getFaq = async (promptMsg, faqs, previousMsg) => {
   // console.log(promptMsg)
   let embeddingCompletion = await javisEmbeddings(promptMsg)
+  if(embeddingCompletion.status === "error"){
+    return []
+  }
   let embedding = embeddingCompletion[0].embedding;
   let similarity_array = []
   let prev_similarity_array = []
@@ -980,6 +997,9 @@ const getFaq = async (promptMsg, faqs, previousMsg) => {
 const getInventory = async (promptMsg, inventories, previousMsg) => {
   // console.log(promptMsg)
   let embeddingCompletion = await javisEmbeddings(promptMsg)
+  if(embeddingCompletion.status === "error"){
+    return []
+  }
   let embedding = embeddingCompletion[0].embedding;
   let similarity_array = []
   let prev_similarity_array = []
