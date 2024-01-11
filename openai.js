@@ -19,11 +19,11 @@ exports.javis = async (messages, tokens) => {
   try {
     completion = "swegw"
     completion = await openai.chat.completions.create(data);
-    completion = {
-      status: "success",
-      code: 200,
-      data: await openai.chat.completions.create(data)
-    }
+    // completion = {
+    //   status: "success",
+    //   code: 200,
+    //   data: await openai.chat.completions.create(data)
+    // }
   } catch (error) {
     if (error instanceof OpenAI.RateLimitError) {
       // Handle rate limit error here
