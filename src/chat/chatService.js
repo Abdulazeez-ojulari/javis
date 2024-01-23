@@ -733,7 +733,197 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
 
 }
 
-module.exports.msgCategorization = async (promptMsg, departments, previousMsg, newres, res, ticket, businessId, newProductCategories) => {
+// module.exports.msgCategorization = async (promptMsg, departments, previousMsg, newres, res, ticket, businessId, newProductCategories) => {
+
+//   const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
+//   "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
+//   "urgency": Assess the urgency as low, medium, or high based on the user's message.
+//   "sentiment": Analyze the sentiment of the message and set it to Happy, Neutral, or Angry accordingly.
+//   "title": Categorize the message content into a suitable ticket title.
+//   "type": Categorize the message content into an appropriate ticket type.
+//   "category": Categorize the message content into an applicable ticket category.
+//   "placingOrder": Determine if the user is ready to place order and has sent payment receipt. return true or false only.
+//   "css": Give me a customer satisfaction score in percentage. Example: customer satisfaction score: 84%.
+//   "isResolved": Determine if the user has made a request and the response provided answers the user request. return true or false only.
+//   "product": Determine the product the user is currently talking about based on the user's message on only return one product. Products to check from <${newProductCategories.length > 0 ? newProductCategories.map(newProductCategory => newProductCategory.name).join('/'): "null"}>. If a product is identified, set it to that product; otherwise, set it to null."
+//   Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly
+//   JSON response format {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string; "isResolved": string; "product": string}`;
+//   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
+//   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
+//   const escalation_instructions3 = `
+//   You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
+//   Check if the response contains the word 'escalation'.
+//   Look for apology statements in the response.
+//   Assess if the message resembles or includes common phrases found in escalation messages.
+//   If the response lacks information or states an inability to assist, consider it for escalation.
+//   Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
+//   `;
+
+//   console.log("products", newProductCategories.map(newProductCategory => newProductCategory.name).join('/'))
+
+//   const placing_order_instructions = `You are a query analyst return the product name the user wants to place an order for. return only the product name`;
+
+//   // let delimiter = "#####";
+//   // let delimiter2 = "####";
+//   // let delimiter3 = "*****";
+
+//   let mes = previousMsg.reverse().map(msg => { 
+//       return msg.content
+//   })
+
+//   let _agentmsg = previousMsg.filter(msg => { 
+//     return msg.role == "assistance"
+//   })
+
+//   console.log(_agentmsg)
+
+//   let agentmsg = _agentmsg.reverse().map(msg => { 
+//     return msg.content
+//   })
+
+//   mes.push(promptMsg)
+
+//   const queryCategorizationLogic = [
+//     {
+//         "role": "system",
+//         "content": `query_categorization_instructions: ${query_categorization_instructions}.`
+//     },
+//     {
+//         "role": "assistant",
+//         "content": `message to be analysed: ${mes.join(",")}`
+//     },
+//   ]
+
+//   const placingOrderLogic = [
+//     {
+//         "role": "system",
+//         "content": `placing_order_instructions: ${placing_order_instructions}.`
+//     },
+//     {
+//         "role": "assistant",
+//         "content": `message to be analysed: ${mes.join(",")}`
+//     },
+//   ]
+
+//   let completion2 = await javis(queryCategorizationLogic, 150)
+//   if(completion2.status === "error"){
+//     res.status(completion2.code).send(
+//       completion2
+//     )
+//     return;
+//   }
+//   console.log(completion2.choices[0], "categorization")
+
+//   agentmsg.push(newres)
+//   const escalationLogic = [
+//     {
+//         "role": "system",
+//         "content": `escalation_instructions: ${escalation_instructions3}.`
+//     },
+//     {
+//       "role": "assistant",
+//       "content": `agent_response to be analysed: ${agentmsg.join(",")}`
+//     },
+//   ]
+
+//   let completion3 = await javis(escalationLogic, 1)
+//   console.log(completion3.choices[0], "escalation")
+
+//   let categorization;
+//   let response;
+//   let stringifiedResponse = "";
+//   // console.log(completion2.choices[0].message.content);
+//   stringifiedResponse = completion2.choices[0].message.content.toString().replace(/'/g, '"').replace(/“/g, '"').replace(/”/g, '"')
+//   try{
+//     console.log(stringifiedResponse)
+//     categorization = JSON.parse(stringifiedResponse)
+//     console.log(categorization)
+//     response = {
+//       department: categorization.department,
+//       urgency: categorization.urgency,
+//       sentiment: categorization.sentiment,
+//       title: categorization.title,
+//       type: categorization.type,
+//       category: categorization.category,
+//       placingOrder: categorization.placingOrder,
+//       css: categorization.css,
+//       isResolved: categorization.isResolved,
+//       product: categorization.product,
+//       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
+//       escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
+//     }
+
+//     // if(categorization.product !== undefined && categorization.product !== "null" && categorization.product)
+
+//     if(categorization.placingOrder){
+//       let completion4 = await javis(placingOrderLogic, 50)
+//       console.log(completion4.choices[0].message.content)
+//       const regex = new RegExp(completion4.choices[0].message.content, "i");
+//       let product = await Inventory.findOne({name: { $regex: regex }}).select("-embeddings");
+//       let imageLink = extractImageLink(promptMsg);
+//       console.log(imageLink)
+//       let isM = isImage(imageLink);
+//       console.log(isM, "Is Image")
+//       if(!ticket.placingOrder){
+//         console.log("New Order")
+//         console.log(product, "product")
+//         console.log(ticket)
+//         if(product)
+//         axios.post(`${process.env.BACKEND_URL}/api/order/`, {
+//           businessId: businessId,
+//           ticketId: ticket._id,
+//           receipt: isM ? imageLink: "",
+//           item: product
+//         }).then(res => {
+//           console.log(res.data)
+//         }).catch((e) => {
+//           console.log(e.message)
+//         })
+//         console.log(completion4.choices[0], "order")
+//       }else{
+//         if(product)
+//         axios.put(`${process.env.BACKEND_URL}/api/order/update`, {
+//           businessId: businessId,
+//           ticketId: ticket._id,
+//           receipt: isM ? imageLink: "null",
+//           item: product
+//         }).then(res => {
+//           console.log(res.data)
+//         }).catch((e) => {
+//           console.log(e.message)
+//         })
+//       }
+//     }
+//   }catch(e){
+//     response = response = {
+//       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
+//       escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization ? categorization.department : "Customer Support" : null
+//     }
+//     console.log(e.message)
+//   }
+
+//   console.log(response)
+
+//   res.send(
+//     {
+//       role: "assistant",
+//       content: JSON.stringify(response)
+//     }
+//   )
+// }
+
+module.exports.msgCategorization = async (promptMsg, departments, previousMsg, newres, res, ticket, businessId, newProductCategories, faqs, inventories, business) => {
+
+  let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
+  let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
+  let company_information = {
+    company_description: business.description,
+    company_address: business.address,
+    account_number: business.accountNo,
+    bank_name: business.bankName,
+  }
+  console.log(foundFaq, "faq")
+  console.log(foundInventory, "inventory")
 
   const query_categorization_instructions = `You are a query analyst responsible for categorizing messages into a JavaScript JSON format. Your responses must contain the following keys: department, urgency, sentiment, title, type, and category. Here's an explanation of the keys:
   "department": Determine the department based on the user's message. Departments to check from <${departments.length > 0 ? departments.join('/'): "Customer Support"}>. If a department is identified, set it to that department; otherwise, set it to "Customer Support"."
@@ -750,12 +940,18 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   JSON response format {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string; "isResolved": string; "product": string}`;
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
+  // const escalation_instructions3 = `
+  // You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
+  // Check if the response contains the word 'escalation'.
+  // Look for apology statements in the response.
+  // Assess if the message resembles or includes common phrases found in escalation messages.
+  // If the response lacks information or states an inability to assist, consider it for escalation.
+  // Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
+  // `;
+
   const escalation_instructions3 = `
-  You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
-  Check if the response contains the word 'escalation'.
-  Look for apology statements in the response.
-  Assess if the message resembles or includes common phrases found in escalation messages.
-  If the response lacks information or states an inability to assist, consider it for escalation.
+  You are an escalation detector for messages. Your task is to evaluate whether a given message should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
+  Check if you can solve the user message can be answered using the knowledge base provided only.
   Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
   `;
 
@@ -821,8 +1017,12 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
         "content": `escalation_instructions: ${escalation_instructions3}.`
     },
     {
+      "role": "system",
+      "content": `knowledge base to answer from: Company Information - ${JSON.stringify(company_information)}, Inventories - ${JSON.stringify(foundInventory)}, FAQ - ${JSON.stringify(foundFaq)}`
+    },
+    {
       "role": "assistant",
-      "content": `agent_response to be analysed: ${agentmsg.join(",")}`
+      "content": `message to be analysed: ${mes.join(",")}`
     },
   ]
 

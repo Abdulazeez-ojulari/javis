@@ -367,6 +367,38 @@ module.exports.processMessage = async (req, res) => {
   return;
 };
 
+// module.exports.messageCategorization = async (req, res) => {
+//   let { promptMsg, ticketId, newres, businessId } = req.body;
+
+//   const ticket = await Ticket.findById(ticketId);
+
+//   const business = await Business.findOne({ businessId: businessId });
+
+//   let chat;
+//   let previousMsg;
+//   if (ticketId) {
+//     chat = await ChatMessage.find({ ticketId: ticketId })
+//       .sort({ createdAt: -1 })
+//       .limit(30);
+//     previousMsg = chat.map((msg) => ({
+//       role: msg.role,
+//       content: msg.content,
+//     }));
+//     // console.log(previousMsg);
+//   }
+
+//   let newProductCategories = await FaqProductCat.find({
+//     businessId: business._id,
+//   }).select("name -_id");
+
+//   const departments = await Department.find({ businessId: business._id }).select("department -_id");
+
+//   msgCategorization(promptMsg, departments, previousMsg, newres, res, ticket, business._id, newProductCategories)
+
+//   // res.send(faqs)
+//   return;
+// };
+
 module.exports.messageCategorization = async (req, res) => {
   let { promptMsg, ticketId, newres, businessId } = req.body;
 
@@ -391,9 +423,24 @@ module.exports.messageCategorization = async (req, res) => {
     businessId: business._id,
   }).select("name -_id");
 
+  const knowledge = await KnowledgeBase.findOne({ businessId: businessId });
+  if (!knowledge) {
+    return res
+      .status(404)
+      .send({ message: "This business doesn't have a knowledge base" });
+  }
+
+  let faqs = await Faq.find({ knowledgeBaseId: knowledge._id }).select(
+    "question response embeddings -_id"
+  ).where("embeddings").exists().ne(null);
+
+  let inventories = await Inventory.find({ knowledgeBaseId: knowledge._id }).select(
+    "name image quantity category price status more embeddings -_id"
+  ).where("embeddings").exists().ne(null);
+
   const departments = await Department.find({ businessId: business._id }).select("department -_id");
 
-  msgCategorization(promptMsg, departments, previousMsg, newres, res, ticket, business._id, newProductCategories)
+  msgCategorization(promptMsg, departments, previousMsg, newres, res, ticket, business._id, newProductCategories, faqs, inventories, business)
 
   // res.send(faqs)
   return;
