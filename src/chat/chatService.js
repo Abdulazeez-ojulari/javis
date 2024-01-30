@@ -937,7 +937,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   "isResolved": Determine if the user has made a request and the response provided answers the user request. return true or false only.
   "product": Determine the product the user is currently talking about based on the user's message and only return one product or return the word others if product cannot be identified. Products to check from <${newProductCategories.length > 0 ? newProductCategories.map(newProductCategory => newProductCategory.name).join('/'): "others"}>. If a product is identified, set it to that product; otherwise, set it to 'others'."
   Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly
-  JSON response format {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string; "isResolved": string; "product": string}`;
+  JSON response structure that you must follow to retrun your response. {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string; "isResolved": string; "product": string} . You must not add any other key other than the ones provided or modify the keys`;
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
   // const escalation_instructions3 = `
@@ -1001,7 +1001,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
     },
   ]
 
-  let completion2 = await javis(queryCategorizationLogic, 150)
+  let completion2 = await javis(queryCategorizationLogic, 200)
   if(completion2.status === "error"){
     res.status(completion2.code).send(
       completion2
