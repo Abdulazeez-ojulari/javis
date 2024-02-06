@@ -138,6 +138,12 @@ const BusinessSchema = new mongoose.Schema(
       required: true,
       default: Date.now(),
     },
+    contactUsMedium: {
+      type: String,
+      enum: ["phone", "email", "both"],
+      default: "both",
+      required: false,
+    },
     id: {}
   },
   { timestamps: true }

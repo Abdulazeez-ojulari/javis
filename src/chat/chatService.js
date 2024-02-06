@@ -620,12 +620,21 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well. 
   If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.
   `
-  if(ticket.isResolved){
-    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been resolved, prompting a "yes or no" response. If the user responds with "no," send a customer resolution message and update the conversation status to "AI closed." but never inform the user, just let them know that they can check back only after ${SLA}. Once the ticket status is "AI closed," dispatch a resolution message to the customer, indicating that the conversation has been closed. Inform them that they can reach out after ${SLA}, and for further inquiries, they can send an email to ${email}. Generate a “conversation closed” status for tracking when the customer has no more questions and inform users the conversation has ended until the next ${SLA}.`
-  }else if(ticket.escalated){
-    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been escalated, prompting a "yes or no" response. If the user responds with "yes," request specifics. If the issue is the same or related, generate a one-time assurance to the user. Inform the user that the issue has been properly escalated, and they will receive feedback within this ${SLA}. Cease responding to the customer until the next ${SLA}.  Generate a “conversation closed” status for tracking when the customer has no more questions and inform users the conversation has ended until the next ${SLA}.`
+  let contact = ""
+  if(business.contactUsMedium === "both"){
+    contact = business.supportEmail
+  }else if(business.contactUsMedium === "both"){
+    contact = business.supportEmail
   }else{
-    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been resolved, prompting a "yes or no" response. If the user responds with "no," send a customer resolution message and update the conversation status to "AI closed." but never inform the user, just let them know that they can check back only after ${SLA}. Once the ticket status is "AI closed," dispatch a resolution message to the customer, indicating that the conversation has been closed. Inform them that they can reach out after ${SLA}, and for further inquiries, they can send an email to ${email}. Generate a “conversation closed” status for tracking when the customer has no more questions and inform users the conversation has ended until the next ${SLA}.`
+    contact = business.phoneNo
+  }
+
+  if(ticket.isResolved){
+    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been resolved, prompting a "yes or no" response. If the user responds with "no," send a customer resolution message. Once the ticket status is resolved, inform them that they can reach out for further inquiries via ${contact}.`
+  }else if(ticket.escalated){
+    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been escalated, prompting a "yes or no" response. If the user responds with "yes," request specifics. If the issue is the same or related, assure the user it's properly escalated, and they will receive feedback within ${SLA}. Cease responding to the customer until the next ${SLA}.`
+  }else{
+    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been resolved, prompting a "yes or no" response. If the user responds with "no," send a customer resolution message. Once the ticket is resolved, inform them that they can reach out for further inquiries via ${contact}.`
   }
 
   response_instructions_chat = response_instructions_chat + `Always make your response simple to read, direct, short, and precise like a human chatting with a user-perfect experience.`
