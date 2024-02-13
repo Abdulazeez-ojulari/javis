@@ -618,7 +618,9 @@ If the user's message includes requests beyond your knowledgebase, do not disclo
 Formal Closing Remarks and Signature:
 At ${business.businessName}, we value your satisfaction and strive to resolve all concerns promptly. Should you have any further queries or require additional assistance, please do not hesitate to reach out.
 <br>
+<br>
 Warm regards,
+<br>
 <br>
 ${business.businessName} Team`
 
