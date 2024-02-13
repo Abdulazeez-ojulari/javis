@@ -621,7 +621,6 @@ At ${business.businessName}, we value your satisfaction and strive to resolve al
 <br>
 Warm regards,
 <br>
-<br>
 ${business.businessName} Team`
 
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
