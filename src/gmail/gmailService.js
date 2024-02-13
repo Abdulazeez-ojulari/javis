@@ -617,9 +617,9 @@ If the user's message includes requests beyond your knowledgebase, do not disclo
 
 Formal Closing Remarks and Signature:
 At ${business.businessName}, we value your satisfaction and strive to resolve all concerns promptly. Should you have any further queries or require additional assistance, please do not hesitate to reach out.
-
+<br>
 Warm regards,
-
+<br>
 ${business.businessName} Team`
 
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
@@ -641,10 +641,12 @@ ${business.businessName} Team`
     bank_name: business.bankName,
   }
 
+  const SLA = business.sla || "6hr"
+
   const responseInstructionsLogic = [
     {
       "role": "system",
-      "content": `response_instructions: ${response_instructions_chat}`
+      "content": `response_instructions: ${response_instructions_chat} Make the email body reduced but include simpaty and ${SLA} resolution time frame`
     },
     {
       "role": "system",
