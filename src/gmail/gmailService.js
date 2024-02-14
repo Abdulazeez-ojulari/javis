@@ -615,10 +615,9 @@ Simply respond as instructed and assure the user that the issue has been escalat
 Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well.
 If the user's message includes requests beyond your knowledgebase, do not disclose that you're an AI or customer support agent and do not tell the user that its request is not in your knowledgebase. Instead, request for user data that could help in fixing their issue and inform them that you will refer them to an agent and that they will receive a notification about their request.
 
-Formal Closing Remarks and Signature:
-At ${business.businessName}, we value your satisfaction and strive to resolve all concerns promptly. Should you have any further queries or require additional assistance, please do not hesitate to reach out.
-<br>
-<br>
+Include Formal Closing Remarks and Signature:
+Once you have addressed the user's query or concern, conclude your response with formal closing remarks and include the business name as a signature. This signifies professionalism and ensures the user feels acknowledged and valued. Use phrases to convey appreciation and commitment to customer service. This closing remark should be followed by a signature line with the business name. Ensure that your tone remains courteous and professional throughout the interaction.
+
 Warm regards,
 <br>
 ${business.businessName} Team`
@@ -647,7 +646,7 @@ ${business.businessName} Team`
   const responseInstructionsLogic = [
     {
       "role": "system",
-      "content": `response_instructions: ${response_instructions_chat} Make the email body reduced but include simpaty and ${SLA} resolution time frame`
+      "content": `response_instructions: ${response_instructions_chat} Make the email body reduced and include ${SLA} resolution time frame`
     },
     {
       "role": "system",
