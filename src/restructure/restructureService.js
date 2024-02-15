@@ -23,7 +23,7 @@ exports.restructureMsg = async (message) => {
 exports.restructureEmail = async (message) => {
     const restructure_instructions = `
     You are a paraphraser.
-    Your job is to only rewrite this text in a better grammatical structure and format it to a email structure. 
+    Your job is to only rewrite this text in a better grammatical structure and format it to an email body structure. 
     If the text is grammatically correct then return the text back only else return the correct text only
     `;
 
