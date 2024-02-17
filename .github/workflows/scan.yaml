@@ -27,5 +27,6 @@ jobs:
         with:
           webhookUrl: '${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}'
           title:  Sonar scan
+          subtitle: (See Analysis)[${{ secrets.SONAR_HOST_URL }}]
           jobStatus: '${{ job.status }}'
        
