@@ -1,0 +1,17 @@
+name: Notify Google Space
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  notify_space:
+    runs-on: ubuntu-latest
+    steps:
+    - name: New Pull Request
+      if: ${{ always() }} # Use always to ensure that the notification is also send on failure of former steps
+      uses: SimonScholz/google-chat-action@main
+      with:
+        webhookUrl: '${{ secrets.GOOGLE_CHAT_WEBHOOK_URL }}'
+        title:  New Pull Request
+       
