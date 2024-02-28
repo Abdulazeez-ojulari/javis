@@ -79,7 +79,7 @@ exports.pay = errorMiddleWare(async (req, res) => {
 
   const paymentData = {
     email: user.email,
-    amount: parseInt(amount) * 100,
+    amount: parseInt(amount, 10) * 100,
     // amount: +amount * 100, // Amount in kobo (100 kobo = 1 Naira)
     currency: "NGN", // Nigerian Naira
     reference, // unique reference for each transaction

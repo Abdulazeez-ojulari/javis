@@ -553,48 +553,48 @@ const { Inventory } = require("../model/inventoryModel");
 //   }
 // };
 
-module.exports.createVector = async (faqs) => {
-  let embedding_array = [];
+// module.exports.createVector = async (faqs) => {
+//   let embedding_array = [];
 
-  for (let i = 0; i < faqs.length; i++) {
-    // console.log(faqs[i])
-    let faq = JSON.stringify(faqs[i]);
-    let completion = await javisEmbeddings(faq);
+//   for (let i = 0; i < faqs.length; i++) {
+//     // console.log(faqs[i])
+//     let faq = JSON.stringify(faqs[i]);
+//     let completion = await javisEmbeddings(faq);
 
-    let embedding = completion.choices[0].embedding
+//     let embedding = completion.choices[0].embedding
 
-    // Create a Python dictionary containing the vector and the original text
-    let embedding_dict = { embedding: embedding, text: faqs[i] };
-    // Store the dictionary in a list.
-    embedding_array.push(embedding_dict);
-  }
+//     // Create a Python dictionary containing the vector and the original text
+//     let embedding_dict = { embedding: embedding, text: faqs[i] };
+//     // Store the dictionary in a list.
+//     embedding_array.push(embedding_dict);
+//   }
 
-  let csv = await generateCSVFile(embedding_array);
+//   let csv = await generateCSVFile(embedding_array);
 
-  fs.writeFile("public/vectors.csv", csv, (err) => {
-    if (err) {
-      console.log(err);
-      return err;
-    }
-    console.log("CSV vectors generated successfully.");
-  });
+//   fs.writeFile("public/vectors.csv", csv, (err) => {
+//     if (err) {
+//       console.log(err);
+//       return err;
+//     }
+//     console.log("CSV vectors generated successfully.");
+//   });
 
-  return;
-};
+//   return;
+// };
 
-const generateCSVFile = async (embeddings) => {
-  let csv = "embedding,text\n";
+// const generateCSVFile = async (embeddings) => {
+//   let csv = "embedding,text\n";
 
-  for (const embed of embeddings) {
-    // console.log("response", products)
+//   for (const embed of embeddings) {
+//     // console.log("response", products)
 
-    let { embedding, text } = embed;
+//     let { embedding, text } = embed;
 
-    csv += `"${embedding}","${text}"\n`;
-  }
+//     csv += `"${embedding}","${text}"\n`;
+//   }
 
-  return csv;
-};
+//   return csv;
+// };
 
 module.exports.processMail = async (promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories) => {
   const customer = ticket.customer
@@ -609,7 +609,7 @@ module.exports.processMail = async (promptMsg, res, faqs, departments, business,
   You are a customer support agent for ${business.businessName}.
 Do not mention that you're an AI or resemble it. Do not include 'AI' or 'ai' or 'A.I.' or 'a.i.' in your response.
 Your task is to generate responses that can fit into a formal email body in html tags [(<p>, <br />), where necessary] based on the knowledge base provided, do not instruct the user to email anyone or call any number nor provide wrong information.
-Replace "\n" with <br> tag and when adding <br> tags make sure if doesn't exceed 2 <br> tags per space.
+Replace "\n" with <br> tag and when adding <br> tags make sure if doesn't exceed 1 <br> tags per space.
 Use the customer's first name in your salutation.
 Simply respond as instructed and assure the user that the issue has been escalated. Your primary role is to facilitate communication and help escalate issues where necessary while maintaining a courteous and professional demeanor.
 Do not provide unneeded information in your response to the user's message. If the user's message includes pleasantries, you should respond with pleasantries as well.
@@ -754,11 +754,11 @@ module.exports.emailCategorization = async (promptMsg, departments, previousMsg,
   // let delimiter3 = "*****";
 
   let mes = previousMsg.reverse().map(msg => { 
-      return msg.content
+      return `${msg.content},${msg.assistantResponse}`
   })
 
   let _agentmsg = previousMsg.filter(msg => { 
-    return msg.role == "assistance"
+    return msg.assistantResponse
   })
 
   console.log(_agentmsg)
@@ -909,7 +909,7 @@ const getFaq = async (promptMsg, faqs, previousMsg) => {
   let prev_similarity_array = []
   // let embeddings = []
   let df = "";
-  df;
+  // df;
 
   for (let i = 0; i < faqs.length; i++) {
     let faqEmbedding = faqs[i]["embeddings"];
@@ -973,7 +973,7 @@ const getInventory = async (promptMsg, inventories, previousMsg) => {
   let prev_similarity_array = []
   // let embeddings = []
   let df = "";
-  df;
+  // df;
 
   for (let i = 0; i < inventories.length; i++) {
     let inventoryEmbedding = inventories[i]["embeddings"];

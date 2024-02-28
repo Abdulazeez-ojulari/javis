@@ -553,51 +553,51 @@ const { Inventory } = require("../model/inventoryModel");
 //   }
 // };
 
-module.exports.createVector = async (faqs) => {
-  let embedding_array = [];
+// module.exports.createVector = async (faqs) => {
+//   let embedding_array = [];
 
-  for (let i = 0; i < faqs.length; i++) {
-    // console.log(faqs[i])
-    let faq = JSON.stringify(faqs[i]);
-    let completion = await javisEmbeddings(faq);
-    if(completion.status === "error"){
-      break;
-    }
+//   for (let i = 0; i < faqs.length; i++) {
+//     // console.log(faqs[i])
+//     let faq = JSON.stringify(faqs[i]);
+//     let completion = await javisEmbeddings(faq);
+//     if(completion.status === "error"){
+//       break;
+//     }
 
-    let embedding = completion.choices[0].embedding
+//     let embedding = completion.choices[0].embedding
 
-    // Create a Python dictionary containing the vector and the original text
-    let embedding_dict = { embedding: embedding, text: faqs[i] };
-    // Store the dictionary in a list.
-    embedding_array.push(embedding_dict);
-  }
+//     // Create a Python dictionary containing the vector and the original text
+//     let embedding_dict = { embedding: embedding, text: faqs[i] };
+//     // Store the dictionary in a list.
+//     embedding_array.push(embedding_dict);
+//   }
 
-  let csv = await generateCSVFile(embedding_array);
+//   let csv = await generateCSVFile(embedding_array);
 
-  fs.writeFile("public/vectors.csv", csv, (err) => {
-    if (err) {
-      console.log(err);
-      return err;
-    }
-    console.log("CSV vectors generated successfully.");
-  });
+//   fs.writeFile("public/vectors.csv", csv, (err) => {
+//     if (err) {
+//       console.log(err);
+//       return err;
+//     }
+//     console.log("CSV vectors generated successfully.");
+//   });
 
-  return;
-};
+//   return;
+// };
 
-const generateCSVFile = async (embeddings) => {
-  let csv = "embedding,text\n";
+// const generateCSVFile = async (embeddings) => {
+//   let csv = "embedding,text\n";
 
-  for (const embed of embeddings) {
-    // console.log("response", products)
+//   for (const embed of embeddings) {
+//     // console.log("response", products)
 
-    let { embedding, text } = embed;
+//     let { embedding, text } = embed;
 
-    csv += `"${embedding}","${text}"\n`;
-  }
+//     csv += `"${embedding}","${text}"\n`;
+//   }
 
-  return csv;
-};
+//   return csv;
+// };
 
 module.exports.processMsg = async (promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories) => {
   const customer = ticket.customer
@@ -623,7 +623,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   let contact = ""
   if(business.contactUsMedium === "both"){
     contact = business.supportEmail
-  }else if(business.contactUsMedium === "both"){
+  }else if(business.contactUsMedium === "email"){
     contact = business.supportEmail
   }else{
     contact = business.phoneNo
@@ -1147,7 +1147,7 @@ const getFaq = async (promptMsg, faqs, previousMsg) => {
   let prev_similarity_array = []
   // let embeddings = []
   let df = "";
-  df;
+  // df;
 
   for (let i = 0; i < faqs.length; i++) {
     let faqEmbedding = faqs[i]["embeddings"];
@@ -1214,7 +1214,7 @@ const getInventory = async (promptMsg, inventories, previousMsg) => {
   let prev_similarity_array = []
   // let embeddings = []
   let df = "";
-  df;
+  // df;
 
   for (let i = 0; i < inventories.length; i++) {
     let inventoryEmbedding = inventories[i]["embeddings"];
