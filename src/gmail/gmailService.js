@@ -764,10 +764,12 @@ module.exports.emailCategorization = async (promptMsg, departments, previousMsg,
   console.log(_agentmsg)
 
   let agentmsg = _agentmsg.reverse().map(msg => { 
-    return msg.content
+    return msg.assistantResponse
   })
 
   mes.push(promptMsg)
+
+  console.log("ree", agentmsg, _agentmsg, mes)
 
   const queryCategorizationLogic = [
     {
