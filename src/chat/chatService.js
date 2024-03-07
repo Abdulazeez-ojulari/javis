@@ -924,12 +924,21 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
 module.exports.msgCategorization = async (promptMsg, departments, previousMsg, newres, res, ticket, businessId, newProductCategories, faqs, inventories, business) => {
 
   let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
+  const SLA = business.sla || "24hr"
   let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
   let company_information = {
     company_description: business.description,
     company_address: business.address,
     account_number: business.accountNo,
     bank_name: business.bankName,
+  }
+  let contact = ""
+  if(business.contactUsMedium === "both"){
+    contact = business.supportEmail
+  }else if(business.contactUsMedium === "email"){
+    contact = business.supportEmail
+  }else{
+    contact = business.phoneNo
   }
   console.log(foundFaq, "faq")
   console.log(foundInventory, "inventory")
@@ -944,9 +953,10 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
   "placingOrder": Determine if the user is ready to place order and has sent payment receipt. return true or false only.
   "css": Give me a customer satisfaction score in percentage. Example: customer satisfaction score: 84%.
   "isResolved": Determine if the user has made a request and the response provided answers the user request. return true or false only.
+  "isCompleted": Determine if user has completed their chat using their current query. return true or false only.
   "product": Determine the product the user is currently talking about based on the user's message and only return one product or return the word others if product cannot be identified. Products to check from <${newProductCategories.length > 0 ? newProductCategories.map(newProductCategory => newProductCategory.name).join('/'): "others"}>. If a product is identified, set it to that product; otherwise, set it to 'others'."
   Ensure that your response adheres to the correct JavaScript JSON format. Always confirm that your JSON response is structured properly
-  JSON response structure that you must follow to retrun your response. {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string; "isResolved": string; "product": string} . You must not add any other key other than the ones provided or modify the keys`;
+  Javascript JSON response structure template that you should follow to retrun your response. {"department": string, "urgency": string, "sentiment": string, "title": string, "type": string, "category": string, "placingOrder": boolean, "css": string, "isResolved": boolean, "isCompleted": boolean, "product": string} . You must not add any other key other than the ones provided or modify the keys and make sure double quotes are placed properly`;
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
   // const escalation_instructions3 = `
@@ -1010,7 +1020,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
     },
   ]
 
-  let completion2 = await javis(queryCategorizationLogic, 200)
+  let completion2 = await javis(queryCategorizationLogic, 500)
   if(completion2.status === "error"){
     res.status(completion2.code).send(
       completion2
@@ -1057,9 +1067,36 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
       placingOrder: categorization.placingOrder,
       css: categorization.css,
       isResolved: categorization.isResolved,
+      isCompleted: categorization.isCompleted,
       product: categorization.product,
       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
       escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization.department : null
+    }
+
+    if(completion3.choices[0].message.content.toLowerCase().includes("true")){
+      const closing_response_instructions = `
+        You are a customer support agent send a holding response informing the user that their concern has been escalated to ${categorization.department}. Please inform the user that they will receive a response within ${SLA}. Encourage them to contact us via ${contact} for any further assistance or inquiries in the future. Avoid using opening and closing remarks in your generated response.
+      `;
+      const closingResponseInstructionsLogin = [
+        {
+            "role": "system",
+            "content": `closing_response_instructions: ${closing_response_instructions}.`
+        },
+        {
+            "role": "assistant",
+            "content": `Informations = Department: ${categorization.department}, Customer Name: ${ticket.customer}, Company Name: ${business.businessName}, Company contact: ${contact}, Customer Issue: ${categorization.title}`
+        },
+      ]
+
+      let completion4 = await javis(closingResponseInstructionsLogin, 200);
+      console.log(completion4.choices[0].message.content)
+      response.closingResponse = completion4.choices[0].message.content
+      if(completion2.status === "error"){
+        res.status(completion2.code).send(
+          completion2
+        )
+        return;
+      }
     }
 
     // if(categorization.product !== undefined && categorization.product !== "null" && categorization.product)
@@ -1107,6 +1144,31 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
     response = response = {
       escalated: completion3.choices[0].message.content.toLowerCase().includes("true"),
       escalation_department: completion3.choices[0].message.content.toLowerCase().includes("true") ? categorization ? categorization.department : "Customer Support" : null
+    }
+    if(completion3.choices[0].message.content.toLowerCase().includes("true")){
+      const closing_response_instructions = `
+        You are a customer support agent send a holding response informing the user that their concern has been escalated to customer support. Please inform the user that they will receive a response within ${SLA}. Encourage them to contact us via ${contact} for any further assistance or inquiries in the future. Avoid using opening and closing remarks in your generated response.
+      `;
+      const closingResponseInstructionsLogin = [
+        {
+            "role": "system",
+            "content": `closing_response_instructions: ${closing_response_instructions}.`
+        },
+        {
+            "role": "assistant",
+            "content": `Informations = Department: ${categorization.department}, Customer Name: ${ticket.customer}, Company Name: ${business.businessName}, Company contact: ${contact}, Customer Issue: ${stringifiedResponse}`
+        },
+      ]
+
+      let completion4 = await javis(closingResponseInstructionsLogin, 200);
+      console.log(completion4.choices[0].message.content)
+      response.closingResponse = completion4.choices[0].message.content
+      if(completion2.status === "error"){
+        res.status(completion2.code).send(
+          completion2
+        )
+        return;
+      }
     }
     console.log(e.message)
   }
