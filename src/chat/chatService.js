@@ -1156,7 +1156,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
         },
         {
             "role": "assistant",
-            "content": `Informations = Department: ${categorization.department}, Customer Name: ${ticket.customer}, Company Name: ${business.businessName}, Company contact: ${contact}, Customer Issue: ${stringifiedResponse}`
+            "content": `Informations = Department: customer support, Customer Name: ${ticket.customer}, Company Name: ${business.businessName}, Company contact: ${contact}, Customer Issue: ${stringifiedResponse}`
         },
       ]
 
