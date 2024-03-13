@@ -19,6 +19,14 @@ let schema = new mongoose.Schema(
     ticketId: { type: mongoose.Schema.Types.ObjectId, required: true, minlength: 1, ref: 'Ticket', index: 1 },
     role: String,
     content: String,
+    email: {
+      type: String,
+    },
+    businessId: {
+      type: String,
+      required: true,
+      minlength: 1,
+    },
     status: {
         type: String,
         required: true,

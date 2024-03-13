@@ -35,6 +35,15 @@ FaqSchema.method("toJSON", function () {
 //     return new Faq(args)
 // }
 
+FaqSchema.index(
+    {
+      "knowledgeBaseId": 1,
+      "embeddings": 1
+    }
+)
+
 const Faq = mongoose.model("Faq", FaqSchema);
+
+Faq.syncIndexes();
 
 exports.Faq = Faq;

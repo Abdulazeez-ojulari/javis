@@ -606,9 +606,11 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   const email= business.supportEmail
   console.log(customer, previousMsg, agentName)
   previousMsg.shift()
+
+  console.log("found faq")
   let foundFaq = await getFaq(promptMsg, faqs, previousMsg)
-  let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
   console.log(foundFaq, "faq")
+  let foundInventory = await getInventory(promptMsg, inventories, previousMsg)
   console.log(foundInventory, "inventory")
   let response_instructions_chat = `
   You are a customer support agent for ${business.businessName} and your name is ${agentName}. 
@@ -632,7 +634,7 @@ module.exports.processMsg = async (promptMsg, res, faqs, departments, business, 
   if(ticket.isResolved){
     response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been resolved, prompting a "yes or no" response. If the user responds with "no," send a customer resolution message. Once the ticket status is resolved, inform them that they can reach out for further inquiries via ${contact}.`
   }else if(ticket.escalated){
-    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been escalated, prompting a "yes or no" response. If the user responds with "yes," request specifics. If the issue is the same or related, assure the user it's properly escalated, and they will receive feedback within ${SLA}. Cease responding to the customer until the next ${SLA}.`
+    response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been escalated, prompting a "yes or no" response. If the user responds with "yes," request specifics. If the issue is the same or related, assure the user it's properly escalated, and they will receive feedback within working ${SLA}. Cease responding to the customer until the next working ${SLA}.`
   }else{
     response_instructions_chat = response_instructions_chat + `Inquire if users have additional questions or concerns beyond what has been resolved, prompting a "yes or no" response. If the user responds with "no," send a customer resolution message. Once the ticket is resolved, inform them that they can reach out for further inquiries via ${contact}.`
   }
@@ -1075,7 +1077,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
 
     if(completion3.choices[0].message.content.toLowerCase().includes("true")){
       const closing_response_instructions = `
-        You are a customer support agent send a holding response informing the user that their concern has been escalated to ${categorization.department}. Please inform the user that they will receive a response within ${SLA}. Encourage them to contact us via ${contact} for any further assistance or inquiries in the future. Avoid using opening and closing remarks in your generated response.
+        You are a customer support agent send a holding response informing the user that their concern has been escalated to ${categorization.department}. Please inform the user that they will receive a response within the business working ${SLA}. Encourage them to contact us via ${contact} for any further assistance or inquiries in the future. Avoid using opening and closing remarks in your generated response.
       `;
       const closingResponseInstructionsLogin = [
         {
@@ -1147,7 +1149,7 @@ module.exports.msgCategorization = async (promptMsg, departments, previousMsg, n
     }
     if(completion3.choices[0].message.content.toLowerCase().includes("true")){
       const closing_response_instructions = `
-        You are a customer support agent send a holding response informing the user that their concern has been escalated to customer support. Please inform the user that they will receive a response within ${SLA}. Encourage them to contact us via ${contact} for any further assistance or inquiries in the future. Avoid using opening and closing remarks in your generated response.
+        You are a customer support agent send a holding response informing the user that their concern has been escalated to customer support. Please inform the user that they will receive a response within the business working ${SLA}. Encourage them to contact us via ${contact} for any further assistance or inquiries in the future. Avoid using opening and closing remarks in your generated response.
       `;
       const closingResponseInstructionsLogin = [
         {

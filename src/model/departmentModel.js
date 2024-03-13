@@ -21,6 +21,12 @@ departmentSchema.method("toJSON", function () {
   return object;
 });
 
+departmentSchema.index(
+  {
+    "businessId": 1
+  }
+)
+
 const Department = mongoose.model("Department", departmentSchema);
 
 // export default Department;

@@ -647,7 +647,7 @@ ${business.businessName} Team`
   const responseInstructionsLogic = [
     {
       "role": "system",
-      "content": `response_instructions: ${response_instructions_chat} Make the email body reduced and include ${SLA} resolution time frame`
+      "content": `response_instructions: ${response_instructions_chat} Make the email body reduced and include business working ${SLA} resolution time frame`
     },
     {
       "role": "system",
@@ -738,12 +738,18 @@ module.exports.emailCategorization = async (promptMsg, departments, previousMsg,
   JSON response format {"department": string; "urgency": string; "sentiment": string; "title": string; "type": string; "category": string; "placingOrder": boolean; "css": string}`;
   // const escalation_instructions = `You are an escalation assistant. You will be provided with an agent_response and the knowledge_base that was used to generate the response. Your task is to determine if the content in the agent_response is generated from or similar to the content in the knowledge_base return either true or false only. i only gave a max_token of 1`;
   // const escalation_instructions2 = `You are an response analyst that analyses response in a boolean format. Your task is to return true if the provided response needs to be escalated, resembles an escalation message, looks like an escalation message, contains the word escalation, includes apology statements else return false. return a boolean "true" or "false".`;
+  // const escalation_instructions3 = `
+  // You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
+  // Check if the response contains the word 'escalation'.
+  // Look for apology statements in the response.
+  // Assess if the message resembles or includes common phrases found in escalation messages.
+  // If the response lacks information or states an inability to assist, consider it for escalation.
+  // Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
+  // `;
+
   const escalation_instructions3 = `
-  You are an escalation detector for response messages. Your task is to evaluate whether a given response should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
-  Check if the response contains the word 'escalation'.
-  Look for apology statements in the response.
-  Assess if the message resembles or includes common phrases found in escalation messages.
-  If the response lacks information or states an inability to assist, consider it for escalation.
+  You are an escalation detector for messages. Your task is to evaluate whether a given message should be escalated. Return true if the response indicates a need for escalation. Consider the following criteria:
+  Check if you can solve the user message can be answered using the knowledge base provided only.
   Return a boolean value 'true' if the response meets any of these criteria; otherwise, return 'false'.
   `;
 
@@ -754,19 +760,18 @@ module.exports.emailCategorization = async (promptMsg, departments, previousMsg,
   // let delimiter3 = "*****";
 
   let mes = previousMsg.reverse().map(msg => { 
-      return `${msg.content},${msg.assistantResponse}`
+      return `${msg.content}`
   })
 
   let _agentmsg = previousMsg.filter(msg => { 
-    return msg.assistantResponse
+    return msg.role == "assistance"
   })
 
   console.log(_agentmsg)
 
   let agentmsg = _agentmsg.reverse().map(msg => { 
-    return msg.assistantResponse
+    return msg.content
   })
-
   mes.push(promptMsg)
 
   console.log("ree", agentmsg, _agentmsg, mes)

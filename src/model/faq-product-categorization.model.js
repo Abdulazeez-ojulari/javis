@@ -25,6 +25,12 @@ FaqProductCatSchema.method("toJSON", function () {
   return object;
 });
 
+FaqProductCatSchema.index(
+  {
+    "businessId": 1,
+  }
+)
+
 const FaqProductCat = mongoose.model(
   "FaqProductCat",
   FaqProductCatSchema

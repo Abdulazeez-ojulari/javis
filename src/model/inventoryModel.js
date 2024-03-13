@@ -58,6 +58,15 @@ schema.method("toJSON", function () {
   return object;
 });
 
+schema.index(
+  {
+    "knowledgeBaseId": 1,
+    "embeddings": 1
+  }
+)
+
 const Inventory = mongoose.model("Inventory", schema);
+
+Inventory.syncIndexes();
 
 exports.Inventory = Inventory;

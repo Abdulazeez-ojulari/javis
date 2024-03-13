@@ -92,8 +92,7 @@ module.exports.mailCategorization = async (req, res) => {
       // .limit(20);
     previousMsg = mail.map((msg) => ({
       role: msg.role,
-      content: msg.content,
-      assistantResponse: msg.assistantResponse,
+      content: msg.content
     }));
     // console.log(previousMsg);
   }

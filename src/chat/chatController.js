@@ -327,6 +327,7 @@ module.exports.generateVectors = async (req, res) => {
 module.exports.processMessage = async (req, res) => {
   let { promptMsg, ticketId } = req.body;
   let { businessId } = req.params;
+  console.log("got to javis")
 
   const knowledge = await KnowledgeBase.findOne({ businessId: businessId });
   if (!knowledge) {
@@ -352,13 +353,20 @@ module.exports.processMessage = async (req, res) => {
   const departments = await Department.find({ businessId: business._id }).select("department -_id");
   const ticket = await Ticket.findById(ticketId).select("customer agentName -_id");
 
+  console.log("get faq")
+
   let faqs = await Faq.find({ knowledgeBaseId: knowledge._id }).select(
     "question response embeddings -_id"
   ).where("embeddings").exists().ne(null);
 
+  console.log("gotten faq")
+
+
   let inventories = await Inventory.find({ knowledgeBaseId: knowledge._id }).select(
     "name image quantity category price status more embeddings -_id"
   ).where("embeddings").exists().ne(null);
+
+  console.log("get inventory")
 
   console.log(promptMsg)
   await processMsg(promptMsg, res, faqs, departments, business, previousMsg, ticket, inventories)
